@@ -10,6 +10,17 @@
     <url>http://maven.apache.org</url>
     <repositories>
         <repository>
+            <id>central</id>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <name>Central Repository</name>
+            <url>http://repo.maven.apache.org/maven2</url>
+        </repository>        
+        <repository>
             <releases>
                 <enabled>true</enabled>
                 <updatePolicy>always</updatePolicy>
@@ -20,9 +31,25 @@
             <url>http://maven.clapper.org/</url>
             <layout>default</layout>
         </repository>
+        <!-- ASCETiC's private repo. TODO This must be removed -->
+        <repository>
+            <id>ascetic-repository</id>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>daily</updatePolicy>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <name>repo</name>
+            <url>https://ascetic-artifactory.cit.tu-berlin.de/artifactory/repo</url>
+        </repository>        
     </repositories>    
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
     <build> 
         <plugins>
@@ -43,23 +70,6 @@
                     <verbose>true</verbose>
                     <extension>true</extension>
                     <catalog>${basedir}/src/jax-ws-catalog.xml</catalog>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>2.0.2</version>
-                <configuration>
-                    <webResources>
-                        <resource>
-                            <directory>src</directory>
-                            <targetPath>WEB-INF</targetPath>
-                            <includes>
-                                <include>jax-ws-catalog.xml</include>
-                                <include>wsdl/**</include>
-                            </includes>
-                        </resource>
-                    </webResources>
                 </configuration>
             </plugin>
             <plugin>
