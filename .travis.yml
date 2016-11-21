@@ -7,8 +7,6 @@
 # This code is licensed under an Apache 2.0 license. Please, refer to the LICENSE.TXT file for more information
 
 language: java
-python:
-  - "3.4"
 
 # SonnarQube Configuration
 addons:
@@ -16,15 +14,7 @@ addons:
   apt:
     packages:
       - oracle-java8-installer
-# command to install dependencies
-install: "pip install pybuilder"
 
 script:
-  # command to compile and build tests
-  - pyb install_dependencies
-  - pyb
-  - ls /usr/lib/jvm/
   - sudo update-java-alternatives --set "java-8-oracle"
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle"
-  # other script steps might be done before running the actual SonarQube analysis
-  - sonar-scanner -X -Dsonar.login="XXXXXXXXXXXXXXXXXX"
