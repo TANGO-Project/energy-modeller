@@ -35,11 +35,11 @@
         <repository>
             <id>ascetic-repository</id>
             <snapshots>
-                <enabled>true</enabled>
+                <enabled>false</enabled>
                 <updatePolicy>daily</updatePolicy>
             </snapshots>
             <releases>
-                <enabled>true</enabled>
+                <enabled>false</enabled>
                 <updatePolicy>never</updatePolicy>
             </releases>
             <name>repo</name>
