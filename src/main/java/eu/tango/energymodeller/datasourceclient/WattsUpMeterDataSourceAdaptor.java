@@ -21,7 +21,7 @@ import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.usage.CurrentUsageRecord;
-import eu.ascetic.ioutils.Settings;
+import eu.ascetic.ioutils.io.Settings;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

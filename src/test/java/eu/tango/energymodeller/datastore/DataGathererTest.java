@@ -16,7 +16,7 @@
 package eu.tango.energymodeller.datastore;
 
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
-import eu.tango.energymodeller.datasourceclient.ZabbixDataSourceAdaptor;
+import eu.tango.energymodeller.datasourceclient.ZabbixDirectDbDataSourceAdaptor;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.energyuser.usage.HostVmLoadFraction;
@@ -56,7 +56,7 @@ public class DataGathererTest {
 
     private static DataGatherer getDataGatherer() {
         if (gatherer == null) {
-            ZabbixDataSourceAdaptor adaptor = new ZabbixDataSourceAdaptor();
+            ZabbixDirectDbDataSourceAdaptor adaptor = new ZabbixDirectDbDataSourceAdaptor();
             DefaultDatabaseConnector connector = new DefaultDatabaseConnector();
             DataGatherer instance = new DataGatherer(adaptor, connector);
             gatherer = instance;
@@ -171,7 +171,7 @@ public class DataGathererTest {
         System.out.println("Custom Test - Code Patch - Line 116- 121");
         Host host = CHOSEN_HOST2;
         DataGatherer instance = getDataGatherer();
-        ZabbixDataSourceAdaptor datasource = new ZabbixDataSourceAdaptor();
+        ZabbixDirectDbDataSourceAdaptor datasource = new ZabbixDirectDbDataSourceAdaptor();
         ArrayList<VmDeployed> vms = instance.getVMsOnHost(host);
         if (!vms.isEmpty()) {
             HostVmLoadFraction fraction = new HostVmLoadFraction(host, (new GregorianCalendar().getTimeInMillis()) / 1000);

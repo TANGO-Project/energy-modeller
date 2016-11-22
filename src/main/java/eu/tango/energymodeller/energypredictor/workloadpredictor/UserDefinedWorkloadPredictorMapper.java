@@ -15,11 +15,11 @@
  */
 package eu.tango.energymodeller.energypredictor.workloadpredictor;
 
+import eu.ascetic.ioutils.io.ResultsStore;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
 import eu.tango.energymodeller.types.energyuser.VmDiskImage;
 import eu.tango.energymodeller.types.usage.VmLoadHistoryRecord;
-import eu.ascetic.ioutils.ResultsStore;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
