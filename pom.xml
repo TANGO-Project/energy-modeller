@@ -9,20 +9,6 @@
     <name>Tango Energy Modeller</name>
     <url>http://maven.apache.org</url>
     <repositories>
-        <!-- ASCETiC's private repo. TODO This must be removed -->
-        <repository>
-            <id>ascetic-repository</id>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>daily</updatePolicy>
-            </snapshots>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <name>repo</name>
-            <url>https://ascetic-artifactory.cit.tu-berlin.de/artifactory/repo</url>
-        </repository>        
         <repository>
             <id>central</id>
             <snapshots>
@@ -174,10 +160,10 @@
             <version>V1.0</version>
         </dependency>
         <dependency>
-            <groupId>eu.ascetic.utils</groupId>
-            <artifactId>ovf-xmlbeans-api</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>     
+	    <groupId>com.github.TANGO-Project</groupId>
+	    <artifactId>ovf-xmlbeans-api</artifactId>
+	    <version>v0.1.0</version>
+	</dependency> 
         <dependency>
             <groupId>org.pacesys</groupId>
             <artifactId>openstack4j</artifactId>
