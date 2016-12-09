@@ -48,7 +48,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 public abstract class AbstractEnergyPredictor implements EnergyPredictorInterface {
 
     protected static final String CONFIG_FILE = "energy-modeller-predictor.properties";
-    private static final String DEFAULT_DATA_SOURCE_PACKAGE = "eu.tnago.energymodeller.datasourceclient";
+    private static final String DEFAULT_DATA_SOURCE_PACKAGE = "eu.tango.energymodeller.datasourceclient";
     private static final String DEFAULT_WORKLOAD_PREDICTOR_PACKAGE = "eu.tango.energymodeller.energypredictor.workloadpredictor";
     private double defaultAssumedCpuUsage = 0.6; //assumed 60 percent usage, by default
     private double defaultPowerOverheadPerHost = 0; //Overhead from DFS etc
