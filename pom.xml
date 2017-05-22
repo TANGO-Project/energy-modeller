@@ -176,9 +176,9 @@
             <version>3.1.1</version>
         </dependency>
         <dependency>
-            <groupId>org</groupId>
-            <artifactId>JCollectd</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+	    <groupId>com.github.TANGO-Project</groupId>
+	    <artifactId>jcollectd</artifactId>
+	    <version>-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <description>The energy modeller for the Tango reference architecture.</description>
