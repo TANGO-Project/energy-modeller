@@ -260,7 +260,8 @@ public abstract class Measurement {
     }
 
     /**
-     * This adds a metric and value to a measurement
+     * This adds a metric and value to a measurement. If item is newer than the
+     * value that already exists then it will be updated.
      *
      * @param item a metric to add to this measurement dataset
      */

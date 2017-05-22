@@ -15,13 +15,13 @@
  */
 package eu.tango.energymodeller.datasourceclient;
 
+import eu.ascetic.ioutils.io.Settings;
 import static eu.tango.energymodeller.datasourceclient.KpiList.POWER_KPI_NAME;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.usage.CurrentUsageRecord;
-import eu.ascetic.ioutils.io.Settings;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
