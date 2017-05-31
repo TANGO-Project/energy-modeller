@@ -5,7 +5,6 @@
  */
 package eu.tango.energymodeller.energypredictor;
 
-import eu.tango.energymodeller.energypredictor.CpuOnlySplinePolynomialEnergyPredictor;
 import eu.tango.energymodeller.datastore.DefaultDatabaseConnector;
 import eu.tango.energymodeller.types.TimePeriod;
 import eu.tango.energymodeller.types.energyuser.Host;
@@ -14,9 +13,10 @@ import eu.tango.energymodeller.types.usage.EnergyUsagePrediction;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -59,7 +59,7 @@ public class CpuOnlySplinePolynomialEnergyPredictorTest {
         CpuOnlySplinePolynomialEnergyPredictor predictor = new CpuOnlySplinePolynomialEnergyPredictor();
         host = setCalibrationData(host);
         host.setRamMb(32244);
-        prediction = predictor.getHostPredictedEnergy(host, vms);
+        prediction = predictor.getHostPredictedEnergy(host, VM.castToWorkloadSource(vms));
         System.out.println("Host: " + host.getHostName());
         System.out.println("VM Count: " + vms.size());
         System.out.println("store values size is: " + host.getCalibrationData().size());

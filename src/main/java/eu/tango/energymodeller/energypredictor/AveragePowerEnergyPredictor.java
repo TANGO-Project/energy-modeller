@@ -18,11 +18,16 @@ package eu.tango.energymodeller.energypredictor;
 import eu.tango.energymodeller.datastore.DefaultDatabaseConnector;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyDivision;
 import eu.tango.energymodeller.types.TimePeriod;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
+import eu.tango.energymodeller.types.energyuser.VmDeployed;
+import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 import eu.tango.energymodeller.types.usage.EnergyUsagePrediction;
 import eu.tango.energymodeller.types.usage.HostEnergyRecord;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -93,10 +98,10 @@ public class AveragePowerEnergyPredictor extends AbstractEnergyPredictor {
     }    
 
     @Override
-    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<VM> virtualMachines, TimePeriod duration) {
+    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> virtualMachines, TimePeriod duration) {
         return predictTotalEnergy(host, duration);
     }
-
+    
     /**
      * This provides a prediction of how much energy is to be used by a VM
      *
@@ -109,11 +114,25 @@ public class AveragePowerEnergyPredictor extends AbstractEnergyPredictor {
      */
     @Override
    public EnergyUsagePrediction getVMPredictedEnergy(VM vm, Collection<VM> virtualMachines, Host host, TimePeriod timePeriod) {
-        EnergyDivision division = getEnergyUsage(host, virtualMachines);
+       return getPredictedEnergy(vm, VM.castToEnergyUser(virtualMachines), host, timePeriod);
+   }    
+
+    /**
+     * This provides a prediction of how much energy is to be used by a VM
+     *
+     * @param vm The vm to be deployed
+     * @param otherUsers The virtual machines giving a workload on the host
+     * machine
+     * @param host The host that the VMs will be running on
+     * @param timePeriod The time period the query should run for.
+     * @return The prediction of the energy to be used.
+     */
+   private EnergyUsagePrediction getPredictedEnergy(EnergyUsageSource vm, Collection<EnergyUsageSource> otherUsers, Host host, TimePeriod timePeriod) {
+        EnergyDivision division = getEnergyUsage(host, otherUsers);
         EnergyUsagePrediction hostAnswer = predictTotalEnergy(host, timePeriod);
         EnergyUsagePrediction generalHostsAnswer = getGeneralHostPredictedEnergy(timePeriod);
-        double generalPower = generalHostsAnswer.getAvgPowerUsed() / (double) virtualMachines.size();
-        double generalEnergy = generalHostsAnswer.getTotalEnergyUsed() / (double) virtualMachines.size();
+        double generalPower = generalHostsAnswer.getAvgPowerUsed() / (double) otherUsers.size();
+        double generalEnergy = generalHostsAnswer.getTotalEnergyUsed() / (double) otherUsers.size();
         hostAnswer.setAvgPowerUsed(hostAnswer.getTotalEnergyUsed()
                 / ((double) TimeUnit.SECONDS.toHours(timePeriod.getDuration())));
         EnergyUsagePrediction answer = new EnergyUsagePrediction(vm);
@@ -125,6 +144,11 @@ public class AveragePowerEnergyPredictor extends AbstractEnergyPredictor {
         double vmsPowerFraction = division.getEnergyUsage(hostAnswer.getAvgPowerUsed(), vm);
         answer.setAvgPowerUsed(vmsPowerFraction + generalPower);
         return answer;
+    }
+
+    @Override
+    public EnergyUsagePrediction getApplicationPredictedEnergy(ApplicationOnHost application, Collection<ApplicationOnHost> applications, Host host, TimePeriod timePeriod) {
+        return getPredictedEnergy(host, null, host, timePeriod);
     }
 
     @Override

@@ -15,11 +15,13 @@
  */
 package eu.tango.energymodeller.datasourceclient;
 
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.usage.CurrentUsageRecord;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -63,6 +65,11 @@ public class EmulatedDataSourceAdaptor implements HostDataSource {
     public List<VmDeployed> getVmList() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+    
+    @Override
+    public List<ApplicationOnHost> getHostApplicationList() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }        
 
     @Override
     public HostMeasurement getHostData(Host host) {

@@ -15,8 +15,8 @@
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare;
 
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
-import eu.tango.energymodeller.types.energyuser.VM;
 import java.util.Collection;
 
 /**
@@ -24,14 +24,14 @@ import java.util.Collection;
  * @author Richard
  */
 public interface EnergyShareRule {
-    
+
     /**
      * Translates a hosts energy usage into the VMs energy usage. This method
      * generates the fractions by which to allocate energy, to each VM.
      * @param host The host to analyse
-     * @param vms The VMs that are on/to be on the host
+     * @param user The VMs or application that are on/to be on the host
      * @return The fraction of energy used per host.
      */
-    public EnergyDivision getEnergyUsage(Host host, Collection<VM> vms);
-    
+    public EnergyDivision getEnergyUsage(Host host, Collection<EnergyUsageSource> user);
+  
 }

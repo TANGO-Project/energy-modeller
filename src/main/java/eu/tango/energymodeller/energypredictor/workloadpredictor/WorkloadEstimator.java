@@ -15,10 +15,11 @@
  */
 package eu.tango.energymodeller.energypredictor.workloadpredictor;
 
-import eu.tango.energymodeller.datastore.DatabaseConnector;
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
+import eu.tango.energymodeller.datastore.DatabaseConnector;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
+import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 import java.util.Collection;
 
 /**
@@ -26,7 +27,7 @@ import java.util.Collection;
  *
  * @author Richard Kavanagh
  */
-public interface WorkloadEstimator {
+public interface WorkloadEstimator<T extends WorkloadSource> {
 
     /**
      * This estimates a physical hosts CPU utilisation. It is based upon which
@@ -35,7 +36,7 @@ public interface WorkloadEstimator {
      * @param virtualMachines The virtual machines that induce the workload.
      * @return The estimated CPU utilisation of the physical host.
      */
-    public double getCpuUtilisation(Host host, Collection<VM> virtualMachines);
+    public double getCpuUtilisation(Host host, Collection<T> virtualMachines);
 
     /**
      * This sets the data source that is to be used for querying current data. 

@@ -15,11 +15,9 @@
  */
 package eu.tango.energymodeller.energypredictor.workloadpredictor;
 
-import eu.tango.energymodeller.datastore.DatabaseConnector;
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
-import eu.tango.energymodeller.types.energyuser.Host;
-import eu.tango.energymodeller.types.energyuser.VM;
-import java.util.Collection;
+import eu.tango.energymodeller.datastore.DatabaseConnector;
+import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 
 /**
  * This produces workload estimates for the purpose of providing better 
@@ -27,13 +25,13 @@ import java.util.Collection;
  *
  * @author Richard Kavanagh
  */
-public abstract class AbstractWorkloadEstimator implements WorkloadEstimator {
+public abstract class AbstractWorkloadEstimator<AT extends WorkloadSource> implements WorkloadEstimator<AT> {
 
     protected DatabaseConnector database = null;
     protected HostDataSource datasource = null;
 
-    @Override
-    public abstract double getCpuUtilisation(Host host, Collection<VM> virtualMachines);
+//    @Override
+//    public abstract double getCpuUtilisation(Host host, Collection<T> virtualMachines);
 
     @Override
     public void setDataSource(HostDataSource datasource) {

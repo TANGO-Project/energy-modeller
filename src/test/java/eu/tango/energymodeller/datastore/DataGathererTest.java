@@ -19,7 +19,7 @@ import eu.tango.energymodeller.datasourceclient.VmMeasurement;
 import eu.tango.energymodeller.datasourceclient.ZabbixDirectDbDataSourceAdaptor;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
-import eu.tango.energymodeller.types.energyuser.usage.HostVmLoadFraction;
+import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -174,7 +174,7 @@ public class DataGathererTest {
         ZabbixDirectDbDataSourceAdaptor datasource = new ZabbixDirectDbDataSourceAdaptor();
         ArrayList<VmDeployed> vms = instance.getVMsOnHost(host);
         if (!vms.isEmpty()) {
-            HostVmLoadFraction fraction = new HostVmLoadFraction(host, (new GregorianCalendar().getTimeInMillis()) / 1000);
+            HostEnergyUserLoadFraction fraction = new HostEnergyUserLoadFraction(host, (new GregorianCalendar().getTimeInMillis()) / 1000);
             List<VmMeasurement> vmMeasurements = datasource.getVmData(vms);
             fraction.setFraction(vmMeasurements);
             for (VmMeasurement vmMeasurement : vmMeasurements) {

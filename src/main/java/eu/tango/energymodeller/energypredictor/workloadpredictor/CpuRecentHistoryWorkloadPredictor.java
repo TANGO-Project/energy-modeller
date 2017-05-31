@@ -17,7 +17,7 @@ package eu.tango.energymodeller.energypredictor.workloadpredictor;
 
 import eu.tango.energymodeller.energypredictor.CpuOnlyEnergyPredictor;
 import eu.tango.energymodeller.types.energyuser.Host;
-import eu.tango.energymodeller.types.energyuser.VM;
+import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 import java.io.File;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +33,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
  *
  * @author Richard Kavanagh
  */
-public class CpuRecentHistoryWorkloadPredictor extends AbstractWorkloadEstimator {
+public class CpuRecentHistoryWorkloadPredictor extends AbstractWorkloadEstimator<WorkloadSource> {
 
     private int cpuUtilObservationTimeMin = 15;
     private int cpuUtilObservationTimeSec = 0;
@@ -91,13 +91,13 @@ public class CpuRecentHistoryWorkloadPredictor extends AbstractWorkloadEstimator
      *
      * @param host The host for which the average CPU utilisation over the last
      * n seconds will be calculated for.
-     * @param virtualMachines The set of virtual machines that are on the
-     * physical host in question.
+     * @param workloadsource The set of virtual machines or applications that are 
+     * on the physical host in question.
      * @return The average recent CPU utilisation based upon the energy
      * predictor's configured observation window.
      */
     @Override
-    public double getCpuUtilisation(Host host, Collection<VM> virtualMachines) {
+    public double getCpuUtilisation(Host host, Collection<WorkloadSource> workloadsource) {
         return datasource.getCpuUtilisation(host, cpuUtilObservationTimeSecTotal);
     }
 

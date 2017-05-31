@@ -18,7 +18,7 @@ package eu.tango.energymodeller.energypredictor.vmenergyshare.historic;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
-import eu.tango.energymodeller.types.energyuser.usage.HostVmLoadFraction;
+import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import eu.tango.energymodeller.types.usage.HostEnergyRecord;
 import java.util.Calendar;
 import java.util.Collection;
@@ -41,7 +41,7 @@ public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadB
     protected Host host;
     protected final HashSet<VM> vms = new HashSet<>();
     protected List<HostEnergyRecord> energyUsage;
-    protected List<HostVmLoadFraction> loadFraction;
+    protected List<HostEnergyUserLoadFraction> loadFraction;
 
     /**
      * This creates a load based division mechanism for the specified host, that
@@ -118,13 +118,13 @@ public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadB
      */
     @Override
     public long getDuration(VmDeployed vm) {
-        HostVmLoadFraction first = null;
-        HostVmLoadFraction last = loadFraction.get(0);
-        for (HostVmLoadFraction current : loadFraction) {
-            if (current.getVMs().contains(vm) && first == null) {
+        HostEnergyUserLoadFraction first = null;
+        HostEnergyUserLoadFraction last = loadFraction.get(0);
+        for (HostEnergyUserLoadFraction current : loadFraction) {
+            if (current.getEnergyUsageSources().contains(vm) && first == null) {
                 first = current;
             }
-            if (current.getVMs().contains(vm)) {
+            if (current.getEnergyUsageSources().contains(vm)) {
                 last = current;
             }            
         }
@@ -233,7 +233,7 @@ public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadB
      * @param loadFraction The load fraction data to use.
      */
     @Override
-    public void setLoadFraction(List<HostVmLoadFraction> loadFraction) {
+    public void setLoadFraction(List<HostEnergyUserLoadFraction> loadFraction) {
         /**
          * The base assumption is that the energy usage records match 1:1 in
          * time frame with the load fraction and are in sorted order.
@@ -249,7 +249,7 @@ public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadB
     public void cleanData() {
 
         if (energyUsage.size() != loadFraction.size()) {
-            LinkedHashMap<HostEnergyRecord, HostVmLoadFraction> cleanedData = cleanData(loadFraction, energyUsage);
+            LinkedHashMap<HostEnergyRecord, HostEnergyUserLoadFraction> cleanedData = cleanData(loadFraction, energyUsage);
             energyUsage.clear();
             energyUsage.addAll(cleanedData.keySet());
             loadFraction.clear();
@@ -265,14 +265,14 @@ public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadB
      * @param hostData The host's energy usage dataset
      * @return The mappings between each dataset elements
      */
-    public LinkedHashMap<HostEnergyRecord, HostVmLoadFraction> cleanData(Collection<HostVmLoadFraction> vmData, List<HostEnergyRecord> hostData) {
-        LinkedHashMap<HostEnergyRecord, HostVmLoadFraction> answer = new LinkedHashMap<>();
+    public LinkedHashMap<HostEnergyRecord, HostEnergyUserLoadFraction> cleanData(Collection<HostEnergyUserLoadFraction> vmData, List<HostEnergyRecord> hostData) {
+        LinkedHashMap<HostEnergyRecord, HostEnergyUserLoadFraction> answer = new LinkedHashMap<>();
         //Make a copy and compare times remove them each time.
-        LinkedList<HostVmLoadFraction> vmDataCopy = new LinkedList<>();
+        LinkedList<HostEnergyUserLoadFraction> vmDataCopy = new LinkedList<>();
         vmDataCopy.addAll(vmData);
         LinkedList<HostEnergyRecord> hostDataCopy = new LinkedList<>();
         hostDataCopy.addAll(hostData);
-        HostVmLoadFraction vmHead = vmDataCopy.pop();
+        HostEnergyUserLoadFraction vmHead = vmDataCopy.pop();
         HostEnergyRecord hostHead = hostDataCopy.pop();
         while (!vmDataCopy.isEmpty() && !hostDataCopy.isEmpty()) {
             if (vmHead.getTime() == hostHead.getTime()) {

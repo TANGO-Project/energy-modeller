@@ -18,7 +18,7 @@ package eu.tango.energymodeller.datastore;
 import eu.tango.energymodeller.types.TimePeriod;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
-import eu.tango.energymodeller.types.energyuser.usage.HostVmLoadFraction;
+import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import eu.tango.energymodeller.types.usage.HostEnergyRecord;
 import eu.tango.energymodeller.types.usage.VmLoadHistoryBootRecord;
 import eu.tango.energymodeller.types.usage.VmLoadHistoryRecord;
@@ -170,7 +170,7 @@ public interface DatabaseConnector {
      * @param time The time when the measurements were taken.
      * @param load The summary of the VM load data on the host.
      */
-    public void writeHostVMHistoricData(Host host, long time, HostVmLoadFraction load);
+    public void writeHostVMHistoricData(Host host, long time, HostEnergyUserLoadFraction load);
 
     /**
      * This gets VM utilisation data for a given physical host from the
@@ -181,7 +181,7 @@ public interface DatabaseConnector {
      * null all records will be returned.
      * @return The load readings taken for a given host.
      */
-    public Collection<HostVmLoadFraction> getHostVmHistoryLoadData(Host host, TimePeriod timePeriod);
+    public Collection<HostEnergyUserLoadFraction> getHostVmHistoryLoadData(Host host, TimePeriod timePeriod);
 
     /**
      * This returns the overall average CPU utilisation for a given tag.

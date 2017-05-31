@@ -15,8 +15,8 @@
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare;
 
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
-import eu.tango.energymodeller.types.energyuser.VM;
 import java.util.Collection;
 
 /**
@@ -35,10 +35,10 @@ public class DefaultEnergyShareRule implements EnergyShareRule {
      * @return The fraction of energy used per host.
      */
     @Override
-    public EnergyDivision getEnergyUsage(Host host, Collection<VM> vms) {
+    public EnergyDivision getEnergyUsage(Host host, Collection<EnergyUsageSource> vms) {
         EnergyDivision answer = new EnergyDivision(host);
-        for (VM vm : vms) {
-            answer.addVmWeight(vm, 1);
+        for (EnergyUsageSource vm : vms) {
+            answer.addWeight(vm, 1);
         }
         return answer;
     }

@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Richard Kavanagh
  */
-public abstract class AbstractVMHistoryWorkloadEstimator extends AbstractWorkloadEstimator {
+public abstract class AbstractVMHistoryWorkloadEstimator extends AbstractWorkloadEstimator<VM> {
 
     /**
      * This gets the average CPU utilisation for a VM given the app tags that it
@@ -42,7 +42,7 @@ public abstract class AbstractVMHistoryWorkloadEstimator extends AbstractWorkloa
      * @return The average utilisation of all application tags that a VM has.
      */
     public abstract VmLoadHistoryRecord getAverageCpuUtilisation(VM vm);
-
+    
     @Override
     public boolean requiresVMInformation() {
         return true;

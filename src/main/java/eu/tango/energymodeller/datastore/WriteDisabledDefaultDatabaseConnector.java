@@ -17,7 +17,7 @@ package eu.tango.energymodeller.datastore;
 
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
-import eu.tango.energymodeller.types.energyuser.usage.HostVmLoadFraction;
+import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import java.util.Collection;
 
 /**
@@ -72,7 +72,7 @@ public class WriteDisabledDefaultDatabaseConnector extends DefaultDatabaseConnec
     }
     
     @Override
-    public void writeHostVMHistoricData(Host host, long time, HostVmLoadFraction load) {
+    public void writeHostVMHistoricData(Host host, long time, HostEnergyUserLoadFraction load) {
         /**
          * Do nothing, the aim is to be able to run another data gatherer along
          * side the main one, thus only one should be allowed to write to the

@@ -18,7 +18,7 @@ package eu.tango.energymodeller.energypredictor.vmenergyshare.historic;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
-import eu.tango.energymodeller.types.energyuser.usage.HostVmLoadFraction;
+import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import eu.tango.energymodeller.types.usage.HostEnergyRecord;
 import java.util.Calendar;
 import java.util.Collection;
@@ -130,6 +130,6 @@ public interface HistoricLoadBasedDivision {
      *
      * @param loadFraction The load fraction data to use.
      */
-    public void setLoadFraction(List<HostVmLoadFraction> loadFraction);
+    public void setLoadFraction(List<HostEnergyUserLoadFraction> loadFraction);
     
 }

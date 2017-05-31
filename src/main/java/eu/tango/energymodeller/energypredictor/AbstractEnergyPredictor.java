@@ -15,21 +15,26 @@
  */
 package eu.tango.energymodeller.energypredictor;
 
+import eu.tango.energymodeller.datasourceclient.HostDataSource;
+import eu.tango.energymodeller.datasourceclient.WattsUpMeterDataSourceAdaptor;
+import eu.tango.energymodeller.datasourceclient.ZabbixDirectDbDataSourceAdaptor;
 import eu.tango.energymodeller.datastore.DatabaseConnector;
 import eu.tango.energymodeller.datastore.DefaultDatabaseConnector;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.DefaultEnergyShareRule;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyDivision;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyShareRule;
+import eu.tango.energymodeller.energypredictor.workloadpredictor.AbstractVMHistoryWorkloadEstimator;
 import eu.tango.energymodeller.energypredictor.workloadpredictor.CpuRecentHistoryWorkloadPredictor;
 import eu.tango.energymodeller.energypredictor.workloadpredictor.WorkloadEstimator;
-import eu.tango.energymodeller.datasourceclient.HostDataSource;
-import eu.tango.energymodeller.datasourceclient.WattsUpMeterDataSourceAdaptor;
-import eu.tango.energymodeller.datasourceclient.ZabbixDirectDbDataSourceAdaptor;
 import eu.tango.energymodeller.types.TimePeriod;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
+import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 import eu.tango.energymodeller.types.usage.EnergyUsagePrediction;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
@@ -236,8 +241,36 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
      * @param vms The VMs that are on/to be on the host
      * @return The fraction of energy or used per host.
      */
-    public EnergyDivision getEnergyUsage(Host host, Collection<VM> vms) {
-        return energyShareRule.getEnergyUsage(host, vms);
+    public EnergyDivision getEnergyUsageForVMs(Host host, Collection<VM> vms) {
+        ArrayList<EnergyUsageSource> energyUsers = new ArrayList<>();
+        energyUsers.addAll(vms);
+        return energyShareRule.getEnergyUsage(host, energyUsers);
+    }
+    
+    /**
+     * This uses the current energy share rule for the energy predictor allowing
+     * for the translation between host energy usage and VMs energy usage.
+     *
+     * @param host The host to analyse
+     * @param apps The apps that are on/to be on the host
+     * @return The fraction of energy or used per host.
+     */
+    public EnergyDivision getEnergyUsageForApps(Host host, Collection<ApplicationOnHost> apps) {
+        ArrayList<EnergyUsageSource> energyUsers = new ArrayList<>();
+        energyUsers.addAll(apps);
+        return energyShareRule.getEnergyUsage(host, energyUsers);
+    }    
+
+    /**
+     * This uses the current energy share rule for the energy predictor allowing
+     * for the translation between host energy usage and VMs energy usage.
+     *
+     * @param host The host to analyse
+     * @param energyUser The VMs that are on/to be on the host
+     * @return The fraction of energy or used per host.
+     */
+    public EnergyDivision getEnergyUsage(Host host, Collection<EnergyUsageSource> energyUser) {
+        return energyShareRule.getEnergyUsage(host, energyUser);
     }
 
     /**
@@ -349,14 +382,29 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
      * the next hour.
      *
      * @param host The host to get the energy prediction for
-     * @param virtualMachines The virtual machines giving a workload on the host
+     * @param workloadSource The virtual machines or apps providing a workload on the host
      * machine
      * @return The prediction of the energy to be used.
      */
     @Override
-    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<VM> virtualMachines) {
+    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> workloadSource) {
         TimePeriod duration = new TimePeriod(new GregorianCalendar(), 1, TimeUnit.HOURS);
-        return getHostPredictedEnergy(host, virtualMachines, duration);
+        return getHostPredictedEnergy(host, workloadSource, duration);
+    }
+
+    @Override
+    /**
+     * This provides a prediction of how much energy is to be used by a application, 
+     * over the next hour.
+     *
+     * @param app The application to be deployed
+     * @param applications The giving a workload on the host machine
+     * @param host The host that the applications will be running on
+     * @return The prediction of the energy to be used.
+     */
+    public EnergyUsagePrediction getApplicationPredictedEnergy(ApplicationOnHost app, Collection<ApplicationOnHost> applications, Host host) {
+        TimePeriod duration = new TimePeriod(new GregorianCalendar(), TimeUnit.HOURS.toSeconds(1));
+        return getApplicationPredictedEnergy(app, applications, host, duration);
     }
 
     /**
@@ -420,13 +468,13 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
      *
      * @param host The host for which the average CPU utilisation over the last
      * n seconds will be calculated for.
-     * @param virtualMachines
+     * @param energyUser
      * @return The average recent CPU utilisation based upon the energy
      * predictor's configured observation window.
      */
-    protected double getCpuUtilisation(Host host, Collection<VM> virtualMachines) {
-        if (workloadEstimator.requiresVMInformation()) {
-            return workloadEstimator.getCpuUtilisation(host, virtualMachines);
+    protected double getCpuUtilisation(Host host, Collection<WorkloadSource> energyUser) {
+        if (workloadEstimator instanceof AbstractVMHistoryWorkloadEstimator && workloadEstimator.requiresVMInformation()) {
+            return workloadEstimator.getCpuUtilisation(host, energyUser);
         } else {
             return workloadEstimator.getCpuUtilisation(host, null);
         }

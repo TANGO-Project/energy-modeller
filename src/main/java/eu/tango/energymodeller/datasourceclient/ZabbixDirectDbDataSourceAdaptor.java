@@ -24,6 +24,7 @@ import static eu.tango.energymodeller.datasourceclient.KpiList.MEMORY_TOTAL_KPI_
 import static eu.tango.energymodeller.datasourceclient.KpiList.POWER_KPI_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.VM_PHYSICAL_HOST_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.VM_PHYSICAL_HOST_NAME_2;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
@@ -498,6 +499,14 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
     public List<VmDeployed> getVmList() {
         return getVmList(vmGroup);
     }
+    
+    @Override
+    public List<ApplicationOnHost> getHostApplicationList() {
+        /*
+        * Zabbix doesn't store this information thus an empty list is returned.
+        */
+        return new ArrayList<>();
+    }    
 
     public List<VmDeployed> getVmList(String groupName) {
         List<VmDeployed> answer = new ArrayList<>();

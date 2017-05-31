@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 University of Leeds
+ * Copyright 2014-17 University of Leeds
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -15,13 +15,13 @@
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare;
 
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
-import eu.tango.energymodeller.types.energyuser.VM;
 import java.util.HashMap;
 
 /**
- * This class provides a way of assigning weights to VMs to indicate how much of
- * a hosts energy usage should be allocated to each VM.
+ * This class provides a way of assigning weights to VMs or applications to 
+ * indicate how much of a hosts energy usage should be allocated to them.
  *
  * This is expected to be used particularly in regards to prediction where load
  * data is not available, hence fractioning energy usage cannot simply use
@@ -32,7 +32,7 @@ import java.util.HashMap;
 public class EnergyDivision {
 
     private Host host;
-    private final HashMap<VM, Double> vmWeight = new HashMap<>();
+    private final HashMap<EnergyUsageSource, Double> userWeight = new HashMap<>();
     private double sumOfWeights = 0; // A cached sum of all weights assigned.
     private boolean considerIdleEnergy = false;
 
@@ -68,51 +68,51 @@ public class EnergyDivision {
      * This gets the VMs held in this division record and their associated
      * weights.
      *
-     * @return the vmWeight
+     * @return the weight
      */
-    public HashMap<VM, Double> getVmWeight() {
-        return vmWeight;
+    public HashMap<EnergyUsageSource, Double> getWeight() {
+        return userWeight;
     }
-
+    
     /**
-     * This adds a VM and its associated weight to the energy division. If the
+     * This adds a energy user and its associated weight to the energy division. If the
      * VM is already present the weight assigned will get updated.
      *
-     * @param vm The VM to add to the energy division
+     * @param user The VM or application to add to the energy division
      * @param weight The weight to assign the VM. The weight must be positive,
      * in order for it to be added.
      */
-    public void addVmWeight(VM vm, double weight) {
+    public void addWeight(EnergyUsageSource user, double weight) {
         if (weight >= 0.0) {
             sumOfWeights += weight;
-            Double previous = vmWeight.put(vm, weight);
+            Double previous = userWeight.put(user, weight);
             //If the vms was already added remove the previous weight.
             if (previous != null) {
                 sumOfWeights -= previous;
             }
         }
     }
-
+    
     /**
-     * This removes a VM from the energy division record.
+     * This removes a energy user from the energy division record.
      *
-     * @param vm The VM to remove from the energy division
+     * @param energyUser The energy user to remove from the energy division
      */
-    public void removeVM(VM vm) {
-        vmWeight.remove(vm);
-    }
+    public void removeEnergyUser(EnergyUsageSource energyUser) {
+        userWeight.remove(energyUser);
+    }    
 
     /**
-     * This takes a VM and shows the energy that it uses relative to the weights
+     * This takes a energy user and shows the energy that it uses relative to the weights
      * assigned in this energy division record.
      *
      * @param hostEnergyUsage The amount of energy or power used by a given
      * host.
-     * @param vm The VM to get the energy value from
+     * @param energyUser The VM to get the energy value from
      * @return The amount of energy used by the given VM.
      */
-    public double getEnergyUsage(double hostEnergyUsage, VM vm) {
-        double vmsWeight = vmWeight.get(vm);
+    public double getEnergyUsage(double hostEnergyUsage, EnergyUsageSource energyUser) {
+        double vmsWeight = userWeight.get(energyUser);
         if (considerIdleEnergy) {
             //active energy usage of a VM
             double activeEnergy = (hostEnergyUsage - host.getIdlePowerConsumption());
@@ -124,7 +124,7 @@ public class EnergyDivision {
              * Fraction off the energy associated with the host been idle
              * evenly.
              */
-            answer = answer + host.getIdlePowerConsumption() / vmWeight.size();
+            answer = answer + host.getIdlePowerConsumption() / userWeight.size();
             return answer;
         } else {
             return (vmsWeight / sumOfWeights) * hostEnergyUsage;

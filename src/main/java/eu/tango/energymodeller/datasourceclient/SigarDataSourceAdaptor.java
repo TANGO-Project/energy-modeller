@@ -17,6 +17,7 @@ package eu.tango.energymodeller.datasourceclient;
 
 import eu.ascetic.ioutils.io.Settings;
 import static eu.tango.energymodeller.datasourceclient.KpiList.POWER_KPI_NAME;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
@@ -176,13 +177,16 @@ public class SigarDataSourceAdaptor implements HostDataSource {
         answer.add(host);
         return answer;
     }
+    
+    @Override
+    public List<ApplicationOnHost> getHostApplicationList() {
+        return new ArrayList<>();
+    }    
 
     @Override
     public List<GeneralPurposePowerConsumer> getGeneralPowerConsumerList() {
         return new ArrayList<>();
     }
-    
-    
 
     @Override
     public List<VmDeployed> getVmList() {

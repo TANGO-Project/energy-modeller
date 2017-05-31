@@ -313,7 +313,7 @@ public class EnergyModellerTest {
         Host host;
         Collection<VM> virtualMachines = new ArrayList<>();
         host = instance.getHost(HOST_NAME);
-        EnergyUsagePrediction result = instance.getHostPredictedEnergy(host, virtualMachines);
+        EnergyUsagePrediction result = instance.getHostPredictedEnergy(host, VM.castToWorkloadSource(virtualMachines));
         assert (result != null);
         assert (result.getEnergyUser().contains(host));
         System.out.println("Predicted Usage On Host: " + host.getHostName());

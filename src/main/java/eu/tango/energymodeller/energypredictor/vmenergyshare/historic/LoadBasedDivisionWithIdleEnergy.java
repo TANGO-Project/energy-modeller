@@ -18,7 +18,7 @@ package eu.tango.energymodeller.energypredictor.vmenergyshare.historic;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
-import eu.tango.energymodeller.types.energyuser.usage.HostVmLoadFraction;
+import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import eu.tango.energymodeller.types.usage.HostEnergyRecord;
 
 /**
@@ -76,11 +76,11 @@ public class LoadBasedDivisionWithIdleEnergy extends AbstractHistoricLoadBasedDi
         for (int i = 0; i <= recordCount - 2; i++) {
             HostEnergyRecord energy1 = energyUsage.get(i);
             HostEnergyRecord energy2 = energyUsage.get(i + 1);
-            HostVmLoadFraction load1 = loadFraction.get(i);
-            HostVmLoadFraction load2 = loadFraction.get(i + 1);
-            if (load1.getVMs().contains(deployed) && load2.getVMs().contains(deployed)) {
+            HostEnergyUserLoadFraction load1 = loadFraction.get(i);
+            HostEnergyUserLoadFraction load2 = loadFraction.get(i + 1);
+            if (load1.getEnergyUsageSources().contains(deployed) && load2.getEnergyUsageSources().contains(deployed)) {
                 long timePeriod = energy2.getTime() - energy1.getTime();
-                double vmCount = load1.getVMs().size() + load2.getVMs().size() / 2;
+                double vmCount = load1.getEnergyUsageSources().size() + load2.getEnergyUsageSources().size() / 2;
                 double vmIdlePower = idlePower / vmCount;
                 double idleEnergy = idlePower * (((double) timePeriod) / 3600);
                 double idleVMEnergy = vmIdlePower * (((double) timePeriod) / 3600);

@@ -18,6 +18,7 @@ package eu.tango.energymodeller.energypredictor.workloadpredictor;
 import eu.tango.energymodeller.datastore.WorkloadStatisticsCache;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
+import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 import eu.tango.energymodeller.types.usage.VmLoadHistoryRecord;
 import java.util.Collection;
 

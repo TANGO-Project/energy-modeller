@@ -15,8 +15,11 @@
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare;
 
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
+import eu.tango.energymodeller.types.energyuser.VmDeployed;
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -30,14 +33,20 @@ public class VMCPUCountEnergyShareRule implements EnergyShareRule {
      * Translates a hosts energy usage into the VMs energy usage.
      * This takes the count of VMs CPU cores and divides energy out accordingly.
      * @param host The host to analyse
-     * @param vms The VMs that are on/to be on the host
+     * @param energyUsers The VMs that are on/to be on the host
      * @return The fraction of energy used per host.
      */
     @Override
-    public EnergyDivision getEnergyUsage(Host host, Collection<VM> vms) {
+    public EnergyDivision getEnergyUsage(Host host, Collection<EnergyUsageSource> energyUsers) {
+        ArrayList<VmDeployed> vms = new ArrayList<>();
+        for (EnergyUsageSource vm : energyUsers) {
+            if (vm.getClass().equals(VmDeployed.class)) {
+                vms.add((VmDeployed) vm);
+            }
+        }
         EnergyDivision answer = new EnergyDivision(host);
         for (VM vm : vms) {
-            answer.addVmWeight(vm, vm.getCpus());
+            answer.addWeight(vm, vm.getCpus());
         }
         return answer;
     }

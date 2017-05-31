@@ -21,7 +21,7 @@ import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.energyuser.VmDiskImage;
 import eu.tango.energymodeller.types.energyuser.usage.HostEnergyCalibrationData;
 import eu.tango.energymodeller.types.energyuser.usage.HostProfileData;
-import eu.tango.energymodeller.types.energyuser.usage.HostVmLoadFraction;
+import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import eu.tango.energymodeller.types.usage.HostEnergyRecord;
 import eu.tango.energymodeller.types.usage.VmLoadHistoryBootRecord;
 import eu.tango.energymodeller.types.usage.VmLoadHistoryRecord;
@@ -572,7 +572,7 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
     }
 
     @Override
-    public void writeHostVMHistoricData(Host host, long time, HostVmLoadFraction load) {
+    public void writeHostVMHistoricData(Host host, long time, HostEnergyUserLoadFraction load) {
         connection = getConnection(connection);
         if (connection == null || host == null) {
             return;
@@ -580,8 +580,8 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
         try (PreparedStatement preparedStatement = connection.prepareStatement(
                 "INSERT INTO vm_measurement (host_id, vm_id, clock, cpu_load, power_overhead) VALUES (?, ?, ? , ?, ?);")) {
             preparedStatement.setInt(1, host.getId());
-            double averageOverhead = load.getHostPowerOffset() / load.getVMs().size();
-            for (VmDeployed vm : load.getVMs()) {
+            double averageOverhead = load.getHostPowerOffset() / load.getEnergyUsageSources().size();
+            for (VmDeployed vm : load.getEnergyUsageSourcesAsVMs()) {
                 preparedStatement.setInt(2, vm.getId());
                 preparedStatement.setLong(3, time);
                 preparedStatement.setDouble(4, load.getFraction(vm));
@@ -614,9 +614,9 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
     }
 
     @Override
-    public Collection<HostVmLoadFraction> getHostVmHistoryLoadData(Host host, TimePeriod timePeriod) {
+    public Collection<HostEnergyUserLoadFraction> getHostVmHistoryLoadData(Host host, TimePeriod timePeriod) {
         HashMap<String, VmDeployed> vmCache = new HashMap<>();
-        List<HostVmLoadFraction> answer = new ArrayList<>();
+        List<HostEnergyUserLoadFraction> answer = new ArrayList<>();
         connection = getConnection(connection);
         if (connection == null || host == null) {
             return answer;
@@ -644,11 +644,11 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
                 ArrayList<ArrayList<Object>> results = resultSetToArray(resultSet);
                 long lastClock = Long.MIN_VALUE;
                 long currentClock;
-                HostVmLoadFraction currentHostLoadFraction = null;
+                HostEnergyUserLoadFraction currentHostLoadFraction = null;
                 for (ArrayList<Object> measurement : results) {
                     currentClock = (long) measurement.get(3); //clock is the 3rd item)
                     if (currentClock != lastClock || currentHostLoadFraction == null) {
-                        currentHostLoadFraction = new HostVmLoadFraction(host, currentClock);
+                        currentHostLoadFraction = new HostEnergyUserLoadFraction(host, currentClock);
                         VmDeployed vm = getVM((int) measurement.get(1), (String) measurement.get(2), host, vmCache);
                         currentHostLoadFraction.addFraction(vm, (double) measurement.get(4)); //load is the fourth item
                         currentHostLoadFraction.setHostPowerOffset((double) measurement.get(5)); //power overhead is fifth item

@@ -15,6 +15,7 @@
  */
 package eu.tango.energymodeller.datasourceclient;
 
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
@@ -84,6 +85,13 @@ public interface HostDataSource {
      */
     public List<VmDeployed> getVmList();
 
+    /**
+     * This provides a list of applications running on a particular host
+     *
+     * @return A list of applications running on the hosts.
+     */
+    public List<ApplicationOnHost> getHostApplicationList();    
+    
     /**
      * This provides for the named host all the information that is available.
      *

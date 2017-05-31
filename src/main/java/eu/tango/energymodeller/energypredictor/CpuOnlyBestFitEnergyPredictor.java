@@ -16,8 +16,10 @@
 package eu.tango.energymodeller.energypredictor;
 
 import eu.tango.energymodeller.types.TimePeriod;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
+import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 import eu.tango.energymodeller.types.usage.EnergyUsagePrediction;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -68,13 +70,18 @@ public class CpuOnlyBestFitEnergyPredictor extends AbstractEnergyPredictor {
     }    
 
     @Override
-    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<VM> virtualMachines, TimePeriod timePeriod) {
-        return getBestFit(host).getHostPredictedEnergy(host, virtualMachines, timePeriod);
+    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> workload, TimePeriod timePeriod) {
+        return getBestFit(host).getHostPredictedEnergy(host, workload, timePeriod);
     }
 
     @Override
     public EnergyUsagePrediction getVMPredictedEnergy(VM vm, Collection<VM> virtualMachines, Host host, TimePeriod timePeriod) {
         return getBestFit(host).getVMPredictedEnergy(vm, virtualMachines, host, timePeriod);
+    }
+
+    @Override
+    public EnergyUsagePrediction getApplicationPredictedEnergy(ApplicationOnHost application, Collection<ApplicationOnHost> applications, Host host, TimePeriod timePeriod) {
+        return getBestFit(host).getApplicationPredictedEnergy(application, applications, host, timePeriod);
     }
 
     @Override

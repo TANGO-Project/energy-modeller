@@ -67,7 +67,7 @@ public class AveragePowerEnergyPredictorTest {
 
         AveragePowerEnergyPredictor predictor = new AveragePowerEnergyPredictor();
         host.setRamMb(32244);
-        prediction = predictor.getHostPredictedEnergy(host, vms);
+        prediction = predictor.getHostPredictedEnergy(host, VM.castToWorkloadSource(vms));
         System.out.println("Host: " + host.getHostName());
         System.out.println("VM Count: " + vms.size());
         System.out.println("store values size is: " + host.getCalibrationData().size());

@@ -276,6 +276,6 @@ public class VmDeployed extends VM {
         List<VM> answer = new ArrayList<>();
         answer.addAll(virtualMachines);
         return answer;
-    }    
+    }   
 
 }

@@ -15,22 +15,24 @@
  */
 package eu.tango.energymodeller.energypredictor;
 
+import eu.ascetic.ioutils.caching.LRUCache;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyDivision;
 import eu.tango.energymodeller.types.TimePeriod;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
+import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 import eu.tango.energymodeller.types.energyuser.usage.HostEnergyCalibrationData;
 import eu.tango.energymodeller.types.usage.EnergyUsagePrediction;
-import eu.ascetic.ioutils.caching.LRUCache;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
+import org.apache.commons.math3.exception.NumberIsTooSmallException;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
-import org.apache.commons.math3.exception.NumberIsTooSmallException;
 
 /**
  * This implements the CPU only polynomial energy predictor for the ASCETiC
@@ -94,7 +96,7 @@ public class CpuOnlyPolynomialEnergyPredictor extends AbstractEnergyPredictor {
     }
 
     @Override
-    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<VM> virtualMachines, TimePeriod duration) {
+    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> virtualMachines, TimePeriod duration) {
         EnergyUsagePrediction wattsUsed;
         if (getDefaultAssumedCpuUsage() == -1) {
             wattsUsed = predictTotalEnergy(host, getCpuUtilisation(host, virtualMachines), duration);
@@ -116,10 +118,10 @@ public class CpuOnlyPolynomialEnergyPredictor extends AbstractEnergyPredictor {
      */
     @Override
     public EnergyUsagePrediction getVMPredictedEnergy(VM vm, Collection<VM> virtualMachines, Host host, TimePeriod timePeriod) {
-        EnergyDivision division = getEnergyUsage(host, virtualMachines);
+        EnergyDivision division = getEnergyUsageForVMs(host, virtualMachines);
         EnergyUsagePrediction hostAnswer;
         if (getDefaultAssumedCpuUsage() == -1) {
-            hostAnswer = predictTotalEnergy(host, getCpuUtilisation(host, virtualMachines), timePeriod);
+            hostAnswer = predictTotalEnergy(host, getCpuUtilisation(host, VM.castToWorkloadSource(virtualMachines)), timePeriod);
         } else {
             hostAnswer = predictTotalEnergy(host, getDefaultAssumedCpuUsage(), timePeriod);
         }
@@ -138,6 +140,31 @@ public class CpuOnlyPolynomialEnergyPredictor extends AbstractEnergyPredictor {
         answer.setAvgPowerUsed(vmsPowerFraction + generalPower);
         return answer;
     }
+    
+    @Override
+    public EnergyUsagePrediction getApplicationPredictedEnergy(ApplicationOnHost app, Collection<ApplicationOnHost> apps, Host host, TimePeriod timePeriod) {
+        EnergyDivision division = getEnergyUsageForApps(host, apps);
+        EnergyUsagePrediction hostAnswer;
+        if (getDefaultAssumedCpuUsage() == -1) {
+            hostAnswer = predictTotalEnergy(host, getCpuUtilisation(host, ApplicationOnHost.castToWorkloadSource(apps)), timePeriod);
+        } else {
+            hostAnswer = predictTotalEnergy(host, getDefaultAssumedCpuUsage(), timePeriod);
+        }
+        hostAnswer.setAvgPowerUsed(hostAnswer.getTotalEnergyUsed()
+                / ((double) TimeUnit.SECONDS.toHours(timePeriod.getDuration())));
+        EnergyUsagePrediction generalHostsAnswer = getGeneralHostPredictedEnergy(timePeriod);
+        double generalPower = generalHostsAnswer.getAvgPowerUsed() / (double) apps.size();
+        double generalEnergy = generalHostsAnswer.getTotalEnergyUsed() / (double) apps.size();
+        EnergyUsagePrediction answer = new EnergyUsagePrediction(app);
+        answer.setDuration(hostAnswer.getDuration());
+        //Find the fraction to be associated with the VM
+        double vmsEnergyFraction = division.getEnergyUsage(hostAnswer.getTotalEnergyUsed(), app);
+        division.setConsiderIdleEnergy(isConsiderIdleEnergy());
+        answer.setTotalEnergyUsed(vmsEnergyFraction + generalEnergy);
+        double vmsPowerFraction = division.getEnergyUsage(hostAnswer.getAvgPowerUsed(), app);
+        answer.setAvgPowerUsed(vmsPowerFraction + generalPower);
+        return answer;
+    }  
 
     /**
      * This predicts the total amount of energy used by a host.

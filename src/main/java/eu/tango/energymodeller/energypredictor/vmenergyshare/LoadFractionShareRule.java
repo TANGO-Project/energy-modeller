@@ -15,11 +15,13 @@
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare;
 
+import eu.tango.energymodeller.datasourceclient.Measurement;
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
-import eu.tango.energymodeller.types.energyuser.usage.HostVmLoadFraction;
+import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -33,14 +35,14 @@ import java.util.logging.Logger;
  */
 public class LoadFractionShareRule implements EnergyShareRule {
 
-    private HashMap<VmDeployed, Double> fractions = new HashMap<>();
+    private HashMap<EnergyUsageSource, Double> fractions = new HashMap<>();
     
     @Override
-    public EnergyDivision getEnergyUsage(Host host, Collection<VM> vms) {
+    public EnergyDivision getEnergyUsage(Host host, Collection<EnergyUsageSource> energyUsers) {
         EnergyDivision answer = new EnergyDivision(host);
-        for (VM vm : vms) {
-            VmDeployed deployed = (VmDeployed) vm;
-            answer.addVmWeight(vm, fractions.get(deployed));
+        for (EnergyUsageSource energyUser : energyUsers) {
+            VmDeployed deployed = (VmDeployed) energyUser;
+            answer.addWeight(energyUser, fractions.get(deployed));
             Logger.getLogger(LoadFractionShareRule.class.getName()).log(Level.FINE, "VM: {0} Ratio: {1}", new Object[]{deployed.getName(), fractions.get(deployed)});
         }
         return answer;
@@ -52,15 +54,15 @@ public class LoadFractionShareRule implements EnergyShareRule {
      * fraction data.
      */
     public void setVmMeasurements(List<VmMeasurement> vmMeasurements) {
-        fractions = HostVmLoadFraction.getFraction(vmMeasurements);
-    }   
+        fractions = HostEnergyUserLoadFraction.getFraction(vmMeasurements);
+    }
 
     /**
      * This returns the data that indicates which VMs should take which fraction
      * of the overall energy.
      * @return the fractioning of the host energy data.
      */
-    public HashMap<VmDeployed, Double> getFractions() {
+    public HashMap<EnergyUsageSource, Double> getFractions() {
         return fractions;
     }
 
@@ -69,7 +71,7 @@ public class LoadFractionShareRule implements EnergyShareRule {
      * of the overall energy to be directly set.
      * @param fractions the fractioning of the host energy data to set.
      */
-    public void setFractions(HashMap<VmDeployed, Double> fractions) {
+    public void setFractions(HashMap<EnergyUsageSource, Double> fractions) {
         this.fractions = fractions;
     }
 

@@ -19,11 +19,12 @@ import eu.tango.energymodeller.datasourceclient.HostDataSource;
 import eu.tango.energymodeller.datasourceclient.HostMeasurement;
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyShareRule;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
-import eu.tango.energymodeller.types.energyuser.usage.HostVmLoadFraction;
+import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -349,7 +350,7 @@ public class DataGatherer implements Runnable {
             Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Obtaining list of vms on host {0}", host.getHostName());
             ArrayList<VmDeployed> vms = getVMsOnHost(host, vmList);
             if (!vms.isEmpty()) {
-                HostVmLoadFraction fraction = new HostVmLoadFraction(host, measurement.getClock());
+                HostEnergyUserLoadFraction fraction = new HostEnergyUserLoadFraction(host, measurement.getClock());
                 Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Obtaining specific vm information");
                 List<VmMeasurement> vmMeasurements = datasource.getVmData(vms);
                 if (useWorkloadCache) {
@@ -714,6 +715,16 @@ public class DataGatherer implements Runnable {
         }
         return answer;
     }
+    
+    /**
+     * This gets a list of the applications running on a host machine.
+     *
+     * @param host The host machine to get the application list for
+     * @return The list of applications running on the specified host
+     */
+    public ArrayList<ApplicationOnHost> getApplicationsOnHost(Host host) {
+        return (ArrayList<ApplicationOnHost>) datasource.getHostApplicationList();
+    }    
 
     /**
      * This sets if this data gatherer should log to disk VM data and write the

@@ -32,12 +32,14 @@ import eu.tango.energymodeller.energypredictor.vmenergyshare.historic.HistoricLo
 import eu.tango.energymodeller.energypredictor.vmenergyshare.historic.LoadBasedDivision;
 import eu.tango.energymodeller.types.OVFConverterFactory;
 import eu.tango.energymodeller.types.TimePeriod;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
-import eu.tango.energymodeller.types.energyuser.usage.HostVmLoadFraction;
+import eu.tango.energymodeller.types.energyuser.WorkloadSource;
+import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import eu.tango.energymodeller.types.usage.CurrentUsageRecord;
 import eu.tango.energymodeller.types.usage.EnergyUsagePrediction;
 import eu.tango.energymodeller.types.usage.HistoricUsageRecord;
@@ -320,7 +322,7 @@ public class EnergyModeller {
         HistoricUsageRecord answer = new HistoricUsageRecord(vm);
         Host host = vm.getAllocatedTo();
         List<HostEnergyRecord> hostsData = database.getHostHistoryData(host, timePeriod);
-        List<HostVmLoadFraction> loadFractionData = (List<HostVmLoadFraction>) database.getHostVmHistoryLoadData(host, timePeriod);
+        List<HostEnergyUserLoadFraction> loadFractionData = (List<HostEnergyUserLoadFraction>) database.getHostVmHistoryLoadData(host, timePeriod);
         HistoricLoadBasedDivision shareRule;
         try {
             shareRule = (HistoricLoadBasedDivision) historicEnergyDivisionMethod.newInstance();
@@ -332,7 +334,7 @@ public class EnergyModeller {
                     + "failed to be created, falling back to defaults.", ex);
         }
         //Fraction off energy used based upon this share rule.
-        for (VmDeployed deployed : HostVmLoadFraction.getVMs(loadFractionData)) {
+        for (VmDeployed deployed : HostEnergyUserLoadFraction.getEnergyUsersAsVMs(loadFractionData)) {
             shareRule.addVM(((VM) deployed));
         }
         shareRule.setEnergyUsage(hostsData);
@@ -513,7 +515,7 @@ public class EnergyModeller {
         }
         ArrayList<VmDeployed> otherVms = dataGatherer.getVMsOnHost(host);
         ArrayList<VmDeployed> vmsDeployedOnHost = new ArrayList<>();
-        ArrayList<VM> vmsOnHost = new ArrayList<>();
+        ArrayList<EnergyUsageSource> vmsOnHost = new ArrayList<>();
         vmsOnHost.addAll(otherVms);
         vmsOnHost.add(vm);
         if (rule.getClass().equals(LoadFractionShareRule.class)) {
@@ -549,6 +551,74 @@ public class EnergyModeller {
         HashSet<CurrentUsageRecord> answer = new HashSet<>();
         for (VmDeployed vm : vms) {
             answer.add(getCurrentEnergyForVM(vm));
+        }
+        return answer;
+    }
+
+    /**
+     * This returns the power consumption for a named application.
+     *
+     * @param app A reference to the application
+     * @return The current power usage record for the named application.
+     *
+     * Current Values: Watts, current and voltage
+     *
+     */
+    public CurrentUsageRecord getCurrentEnergyForApplication(ApplicationOnHost app) {
+        EnergyShareRule rule;
+        try {
+            rule = (EnergyShareRule) currentEnergyDivisionMethod.newInstance();
+        } catch (InstantiationException | IllegalAccessException ex) {
+            rule = new DefaultEnergyShareRule();
+        }
+        Host host = app.getAllocatedTo();
+        if (host == null) {
+            CurrentUsageRecord answer = new CurrentUsageRecord(app);
+            answer.setTime(Calendar.getInstance());
+            answer.setPower(0);
+            Logger.getLogger(EnergyModeller.class.getName()).log(Level.SEVERE,
+                    "The application {0} host was not correctly detected!", app.getName());
+        }
+        ArrayList<ApplicationOnHost> otherApps = dataGatherer.getApplicationsOnHost(host);
+        ArrayList<ApplicationOnHost> appsDeployedOnHost = new ArrayList<>();
+        ArrayList<EnergyUsageSource> AppsOnHost = new ArrayList<>();
+        AppsOnHost.addAll(otherApps);
+        AppsOnHost.add(app);
+//TODO Fails on load fraction share rule Fix here
+        //Find a means to query individual load for applications
+//        if (rule.getClass().equals(LoadFractionShareRule.class)) {
+//            appsDeployedOnHost.addAll(otherApps);
+//            appsDeployedOnHost.add(app);
+//            ((LoadFractionShareRule) rule).setVmMeasurements(datasource.getVmData(appsDeployedOnHost));
+//        }
+        CurrentUsageRecord hostAnswer = datasource.getCurrentEnergyUsage(host);
+        EnergyDivision divider = rule.getEnergyUsage(host, AppsOnHost);
+        divider.setConsiderIdleEnergy(considerIdleEnergyCurrentVm);
+        CurrentUsageRecord answer = new CurrentUsageRecord(app);
+        answer.setTime(hostAnswer.getTime());
+        answer.setPower(divider.getEnergyUsage(hostAnswer.getPower(), app));
+        return answer;
+    }
+
+    /**
+     * This provides for a collection of applications the amount of energy 
+     * currently in use.
+     *
+     * @param apps The set of applications that are running.
+     * @return The value returned should be separated on per app basis. This
+     * allows for a set of values to be queried at the same time and also
+     * aggregated correctly.
+     *
+     * Envisaged purpose: Determining the amount of energy being used/having
+     * been used by an SLA.
+     *
+     * Current Values: Watts, current and voltage
+     *
+     */
+    public HashSet<CurrentUsageRecord> getCurrentEnergyForApplication(Collection<ApplicationOnHost> apps) {
+        HashSet<CurrentUsageRecord> answer = new HashSet<>();
+        for (ApplicationOnHost app : apps) {
+            answer.add(getCurrentEnergyForApplication(app));
         }
         return answer;
     }
@@ -660,10 +730,11 @@ public class EnergyModeller {
         }
         return predictor.getVMPredictedEnergy(vmImage, vMsOnHost, host, duration);
     }
-    
+
     /**
      * This provides an estimation for the total amount of energy used during
      * transfer of a VM from one physical host to another.
+     *
      * @param vm The VM to transfer
      * @param destination The host to transfer the VM to
      * @param duration The duration of the transfer
@@ -686,7 +757,7 @@ public class EnergyModeller {
         energyUsers.addAll(originPredict.getEnergyUser());
         energyUsers.addAll(destinationPredict.getEnergyUser());
         double power = originPredict.getAvgPowerUsed() + destinationPredict.getAvgPowerUsed();
-        double energy = originPredict.getTotalEnergyUsed()+ destinationPredict.getTotalEnergyUsed();
+        double energy = originPredict.getTotalEnergyUsed() + destinationPredict.getTotalEnergyUsed();
         EnergyUsagePrediction answer = new EnergyUsagePrediction(energyUsers, power, energy);
         return answer;
     }
@@ -695,31 +766,31 @@ public class EnergyModeller {
      * This provides the amount of energy predicted to be used by a given host.
      *
      * @param host The host that the energy prediction is for
-     * @param virtualMachines The VMs that are on the host.
+     * @param workload The VMs or apps that are on the host.
      * @return the predicted average power and total energy usage for a physical
      * host.
      */
-    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<VM> virtualMachines) {
-        return predictor.getHostPredictedEnergy(host, virtualMachines);
+    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> workload) {
+        return predictor.getHostPredictedEnergy(host, workload);
     }
 
     /**
      * This provides the amount of energy predicted to be used by a given host.
      *
      * @param host The host that the energy prediction is for
-     * @param virtualMachines The VMs that are on the host.
+     * @param workload The VMs or apps that are on the host.
      * @param duration The period of time the estimate should run for.
      * @return the predicted average power and total energy usage for a physical
      * host.
      */
-    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<VM> virtualMachines, TimePeriod duration) {
+    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> workload, TimePeriod duration) {
         if (duration != null && !duration.isValid()) {
             Logger.getLogger(EnergyModeller.class.getName()).log(Level.SEVERE,
                     "The time period passed to the energy modeller was invalid. "
                     + " Please check the start and end times used. {0}", duration.toString());
             return null;
         }
-        return predictor.getHostPredictedEnergy(host, virtualMachines, duration);
+        return predictor.getHostPredictedEnergy(host, workload, duration);
     }
 
     //Use a program called stress, benchmarking tool to test this
@@ -767,8 +838,7 @@ public class EnergyModeller {
      * @param sort The sort order for the list of hosts. A list of prefabricated
      * comparators are available in the energy user comparators package. If the
      * sort comparator is null the natural order of hosts will be provided.
-     * @see
-     * eu.tango.energymodeller.types.energyuser.comparators;
+     * @see eu.tango.energymodeller.types.energyuser.comparators;
      * @return The list of hosts the energy modeller knows about.
      */
     public List<Host> getHostList(Comparator<Host> sort) {
@@ -912,7 +982,7 @@ public class EnergyModeller {
     public double getHostPowerUnallocatedToVMs() {
         return getHostsTotalCurrentPowerConsumption() - getVmTotalCurrentPowerConsumption();
     }
-    
+
     /**
      * This permanently stops the energy modeller from running, closing threads
      * and ensuring it no longer consumes resources.

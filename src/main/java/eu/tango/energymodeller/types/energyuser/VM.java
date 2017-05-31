@@ -15,8 +15,10 @@
  */
 package eu.tango.energymodeller.types.energyuser;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * This class represents an energy user of the ASCETiC project and in particular
@@ -28,7 +30,7 @@ import java.util.HashSet;
  * @author Richard Kavanagh
  *
  */
-public class VM extends EnergyUsageSource {
+public class VM extends EnergyUsageSource implements WorkloadSource {
 
     private int cpus;
     private int ramMb;
@@ -348,5 +350,61 @@ public class VM extends EnergyUsageSource {
     public boolean containsApplication(String appId) {
         return applicationTags.contains(appId);
     }
+    
+    /**
+     * This casts a vm deployed collection into a energy usage source collection.
+     *
+     * @param virtualMachines The virtual machine collection to cast into its
+     * parent type.
+     * @return The collection of vms in its super type. This is backed by a
+     * hashset.
+     */
+    public static Collection<EnergyUsageSource> castToEnergyUser(Collection<VM> virtualMachines) {
+        Collection<EnergyUsageSource> answer = new HashSet<>();
+        answer.addAll(virtualMachines);
+        return answer;
+    }
+    
+    /**
+     * This casts a vm deployed list into a energy user list.
+     *
+     * @param virtualMachines The virtual machine list to cast into its parent
+     * type.
+     * @return The list of vms in its super type. This is backed by an array
+     * list.
+     */
+    public static List<EnergyUsageSource> castToEnergyUser(List<VM> virtualMachines) {
+        List<EnergyUsageSource> answer = new ArrayList<>();
+        answer.addAll(virtualMachines);
+        return answer;
+    }        
+
+    /**
+     * This casts a vm list into a workload source list.
+     *
+     * @param virtualMachines The virtual machine list to cast into its parent
+     * type.
+     * @return The list of vms in its super type. This is backed by an array
+     * list.
+     */
+    public static List<WorkloadSource> castToWorkloadSource(List<VM> virtualMachines) {
+        List<WorkloadSource> answer = new ArrayList<>();
+        answer.addAll(virtualMachines);
+        return answer;
+    }
+    
+    /**
+     * This casts a vm collection into a workload source collection.
+     *
+     * @param virtualMachines The virtual machine collection to cast into its
+     * parent type.
+     * @return The collection of vms in its super type. This is backed by a
+     * hashset.
+     */
+    public static Collection<WorkloadSource> castToWorkloadSource(Collection<VM> virtualMachines) {
+        Collection<WorkloadSource> answer = new HashSet<>();
+        answer.addAll(virtualMachines);
+        return answer;
+    }      
 
 }

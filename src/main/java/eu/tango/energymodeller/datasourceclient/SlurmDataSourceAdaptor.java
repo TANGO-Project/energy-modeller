@@ -15,20 +15,25 @@
  */
 package eu.tango.energymodeller.datasourceclient;
 
+import eu.ascetic.ioutils.caching.LRUCache;
 import eu.ascetic.ioutils.io.Settings;
 import static eu.tango.energymodeller.datasourceclient.KpiList.POWER_KPI_NAME;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.usage.CurrentUsageRecord;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListenerAdapter;
 
@@ -47,6 +52,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
     private SlurmDataSourceAdaptor.SlurmTailer fileTailer;
     private final Settings settings = new Settings("energy-modeller-slurm-config.properties");
     private final LinkedList<SlurmDataSourceAdaptor.CPUUtilisation> cpuMeasure = new LinkedList<>();
+    private final LRUCache<Integer, ApplicationOnHost> appCache = new LRUCache<Integer, ApplicationOnHost>(10,50);
 
     public SlurmDataSourceAdaptor() {
         startup(1);
@@ -118,6 +124,91 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
     @Override
     public List<VmDeployed> getVmList() {
         return new ArrayList<>();
+    }
+
+    @Override
+    public List<ApplicationOnHost> getHostApplicationList() {
+        ArrayList<ApplicationOnHost> answer = new ArrayList<>();
+        try {
+
+            /*
+             * This queries what jobs are currently running, it outputs
+             * "JOBID, NAME, TIME, NODELIST (REASON)"
+             * One line per job and space separated.
+             * 
+             * The output looks like:
+             * 
+             * 3845 RK-BENCH 0:03 ns57
+             */
+            String maincmd = "squeue | awk 'NR> 1 {split($0,values,\"[ \\t\\n]+\"); "
+                    + "printf values[1] \" \" ; printf values[2] \" \"; "
+                    + "printf values[4] \" \";"
+                    + "printf values[7] \" \" ; "
+                    + "print values[9]}'";
+            String cmd[] = {"/bin/sh",
+                "-c",
+                maincmd};
+            ArrayList<String> output = execCmd(cmd);
+            for (String line : output) {
+                System.out.println("output: " + line);
+                if (line != null || !line.isEmpty()) {
+                    line = line.trim();
+                    String[] items = line.split(" ");
+                    try {
+                        Host host = getHostByName(items[3]);
+                        int appId = Integer.parseInt(items[0]);
+                        if (appCache.get(appId) != null) {
+                            /**
+                             * Get the cached copy, avoids duplicating objects
+                             */
+                            answer.add(appCache.get(appId));
+                            continue;
+                        }
+                        String name = items[1];
+                        String duration = items[2]; //to parse into duration
+                        String[] durationSplit = duration.split(":"); //0:03 i.e. mins:seconds
+                        long min = Long.parseLong(durationSplit[0]);
+                        long seconds = Long.parseLong(durationSplit[1]);
+                        seconds = seconds + TimeUnit.MINUTES.toSeconds(min);
+                        long currentTime = System.currentTimeMillis();
+                        long startTime = currentTime - TimeUnit.SECONDS.toMillis(seconds);
+                        GregorianCalendar start = new GregorianCalendar();
+                        start.setTimeInMillis(startTime);
+                        ApplicationOnHost app = new ApplicationOnHost(appId, name, host);
+                        app.setCreated(start);
+                        answer.add(app);
+                        appCache.put(appId, app);
+                    } catch (NumberFormatException ex) {
+                        Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE,
+                                "Unexpected number format", ex);
+                    }
+                }
+            }
+
+        } catch (IOException ex) {
+            Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return answer;
+    }
+
+    /**
+     * This executes a command and returns the output as a line of strings.
+     *
+     * @param cmd The command to execute
+     * @return A list of output broken down by line
+     * @throws java.io.IOException
+     */
+    private static ArrayList<String> execCmd(String[] cmd) throws java.io.IOException {
+        ArrayList<String> output = new ArrayList<>();
+        Process proc = Runtime.getRuntime().exec(cmd);
+        java.io.InputStream is = proc.getInputStream();
+        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+        String val = "";
+        while (s.hasNextLine()) {
+            val = s.next();
+            output.add(val);
+        }
+        return output;
     }
 
     @Override

@@ -15,13 +15,15 @@
  */
 package eu.tango.energymodeller.energypredictor;
 
+import eu.ascetic.ioutils.caching.LRUCache;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyDivision;
 import eu.tango.energymodeller.types.TimePeriod;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
+import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 import eu.tango.energymodeller.types.energyuser.usage.HostEnergyCalibrationData;
 import eu.tango.energymodeller.types.usage.EnergyUsagePrediction;
-import eu.ascetic.ioutils.caching.LRUCache;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -98,7 +100,7 @@ public class CpuOnlySplinePolynomialEnergyPredictor extends AbstractEnergyPredic
     }
 
     @Override
-    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<VM> virtualMachines, TimePeriod duration) {
+    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> virtualMachines, TimePeriod duration) {
         EnergyUsagePrediction wattsUsed;
         if (getDefaultAssumedCpuUsage() == -1) {
             wattsUsed = predictTotalEnergy(host, getCpuUtilisation(host, virtualMachines), duration);
@@ -120,10 +122,10 @@ public class CpuOnlySplinePolynomialEnergyPredictor extends AbstractEnergyPredic
      */
     @Override
     public EnergyUsagePrediction getVMPredictedEnergy(VM vm, Collection<VM> virtualMachines, Host host, TimePeriod timePeriod) {
-        EnergyDivision division = getEnergyUsage(host, virtualMachines);
+        EnergyDivision division = getEnergyUsageForVMs(host, virtualMachines);
         EnergyUsagePrediction hostAnswer;
         if (getDefaultAssumedCpuUsage() == -1) {
-            hostAnswer = predictTotalEnergy(host, getCpuUtilisation(host, virtualMachines), timePeriod);
+            hostAnswer = predictTotalEnergy(host, getCpuUtilisation(host, VM.castToWorkloadSource(virtualMachines)), timePeriod);
         } else {
             hostAnswer = predictTotalEnergy(host, getDefaultAssumedCpuUsage(), timePeriod);
         }
@@ -140,6 +142,31 @@ public class CpuOnlySplinePolynomialEnergyPredictor extends AbstractEnergyPredic
         answer.setTotalEnergyUsed(vmsEnergyFraction + generalEnergy);
         double vmsPowerFraction = division.getEnergyUsage(hostAnswer.getAvgPowerUsed(), vm);
         answer.setAvgPowerUsed(vmsPowerFraction + generalPower);
+        return answer;
+    }
+
+    @Override
+    public EnergyUsagePrediction getApplicationPredictedEnergy(ApplicationOnHost application, Collection<ApplicationOnHost> applications, Host host, TimePeriod timePeriod) {
+        EnergyDivision division = getEnergyUsageForApps(host, applications);
+        EnergyUsagePrediction hostAnswer;
+        if (getDefaultAssumedCpuUsage() == -1) {
+            hostAnswer = predictTotalEnergy(host, getCpuUtilisation(host, ApplicationOnHost.castToWorkloadSource(applications)), timePeriod);
+        } else {
+            hostAnswer = predictTotalEnergy(host, getDefaultAssumedCpuUsage(), timePeriod);
+        }
+        hostAnswer.setAvgPowerUsed(hostAnswer.getTotalEnergyUsed()
+                / ((double) TimeUnit.SECONDS.toHours(timePeriod.getDuration())));
+        EnergyUsagePrediction generalHostsAnswer = getGeneralHostPredictedEnergy(timePeriod);
+        double generalPower = generalHostsAnswer.getAvgPowerUsed() / (double) applications.size();
+        double generalEnergy = generalHostsAnswer.getTotalEnergyUsed() / (double) applications.size();
+        EnergyUsagePrediction answer = new EnergyUsagePrediction(application);
+        answer.setDuration(hostAnswer.getDuration());
+        //Find the fraction to be associated with the VM
+        double appEnergyFraction = division.getEnergyUsage(hostAnswer.getTotalEnergyUsed(), application);
+        division.setConsiderIdleEnergy(isConsiderIdleEnergy());
+        answer.setTotalEnergyUsed(appEnergyFraction + generalEnergy);
+        double appPowerFraction = division.getEnergyUsage(hostAnswer.getAvgPowerUsed(), application);
+        answer.setAvgPowerUsed(appPowerFraction + generalPower);
         return answer;
     }
 

@@ -15,15 +15,15 @@
  */
 package eu.tango.energymodeller.datastore;
 
+import eu.ascetic.ioutils.io.GenericLogger;
+import eu.ascetic.ioutils.io.ResultsStore;
+import eu.tango.energymodeller.datasourceclient.HostMeasurement;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyDivision;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyShareRule;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.LoadFractionShareRule;
-import eu.tango.energymodeller.datasourceclient.HostMeasurement;
-import eu.tango.energymodeller.types.energyuser.VM;
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
-import eu.tango.energymodeller.types.energyuser.usage.HostVmLoadFraction;
-import eu.ascetic.ioutils.io.GenericLogger;
-import eu.ascetic.ioutils.io.ResultsStore;
+import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -69,12 +69,12 @@ public class VmEnergyUsageLogger extends GenericLogger<VmEnergyUsageLogger.Pair>
      * @param vmLoadFraction The VM load fraction data.
      * @param store The storage that this data will be written to disk for.
      */
-    public void writebody(HostMeasurement hostMeasurement, HostVmLoadFraction vmLoadFraction, ResultsStore store) {
+    public void writebody(HostMeasurement hostMeasurement, HostEnergyUserLoadFraction vmLoadFraction, ResultsStore store) {
         store.setDelimeter(" ");
-        ArrayList<VM> vmsArr = new ArrayList<>();
-        vmsArr.addAll(vmLoadFraction.getVMs());
+        ArrayList<EnergyUsageSource> vmsArr = new ArrayList<>();
+        vmsArr.addAll(vmLoadFraction.getEnergyUsageSources());
         if (rule.getClass().equals(LoadFractionShareRule.class)) {
-            ArrayList<HostVmLoadFraction> loadFractionData = new ArrayList<>();
+            ArrayList<HostEnergyUserLoadFraction> loadFractionData = new ArrayList<>();
             loadFractionData.add(vmLoadFraction);
             ((LoadFractionShareRule) rule).setFractions(loadFractionData.get(0).getFraction());
             Logger.getLogger(VmEnergyUsageLogger.class.getName()).log(Level.FINE, "Using Load Fraction Share Rule");
@@ -84,7 +84,7 @@ public class VmEnergyUsageLogger extends GenericLogger<VmEnergyUsageLogger.Pair>
         EnergyDivision division = rule.getEnergyUsage(hostMeasurement.getHost(), vmsArr);
         division.setConsiderIdleEnergy(considerIdleEnergy);
 
-        for (VmDeployed vm : vmLoadFraction.getVMs()) {
+        for (VmDeployed vm : vmLoadFraction.getEnergyUsageSourcesAsVMs()) {
             if (vm.getAllocatedTo() == null) {
                 vm.setAllocatedTo(hostMeasurement.getHost());
             }
@@ -151,7 +151,7 @@ public class VmEnergyUsageLogger extends GenericLogger<VmEnergyUsageLogger.Pair>
     public class Pair {
 
         private final HostMeasurement host;
-        private final HostVmLoadFraction vmLoadFraction;
+        private final HostEnergyUserLoadFraction vmLoadFraction;
 
         /**
          * This creates a new pair object that links host energy records toVM
@@ -160,7 +160,7 @@ public class VmEnergyUsageLogger extends GenericLogger<VmEnergyUsageLogger.Pair>
          * @param host The host energy record
          * @param vmLoadFraction The VM load fraction data.
          */
-        public Pair(HostMeasurement host, HostVmLoadFraction vmLoadFraction) {
+        public Pair(HostMeasurement host, HostEnergyUserLoadFraction vmLoadFraction) {
             this.host = host;
             this.vmLoadFraction = vmLoadFraction;
         }
@@ -180,7 +180,7 @@ public class VmEnergyUsageLogger extends GenericLogger<VmEnergyUsageLogger.Pair>
          *
          * @return the vmLoadFraction The VM load fraction data
          */
-        public HostVmLoadFraction getVmLoadFraction() {
+        public HostEnergyUserLoadFraction getVmLoadFraction() {
             return vmLoadFraction;
         }
     }

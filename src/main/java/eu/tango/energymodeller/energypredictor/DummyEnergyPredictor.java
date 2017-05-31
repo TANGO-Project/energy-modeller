@@ -16,9 +16,11 @@
 package eu.tango.energymodeller.energypredictor;
 
 import eu.tango.energymodeller.types.TimePeriod;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.CandidateVMHostMapping;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
+import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 import eu.tango.energymodeller.types.usage.EnergyUsagePrediction;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,7 +41,7 @@ public class DummyEnergyPredictor extends AbstractEnergyPredictor {
     HashMap<Host, Double> tempTotalEnergyUsed = new HashMap<>();
 
     @Override
-    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<VM> virtualMachines, TimePeriod duration) {
+    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> virtualMachines, TimePeriod duration) {
         EnergyUsagePrediction answer = new EnergyUsagePrediction(host);
         answer.setDuration(duration);
         if (tempAvgPowerUsed.containsKey(host)) {
@@ -71,6 +73,27 @@ public class DummyEnergyPredictor extends AbstractEnergyPredictor {
             double tempEnergy = Math.random() * 20;
             temp2AvgPowerUsed.put(new CandidateVMHostMapping(vm, host), tempPower);
             temp2TotalEnergyUsed.put(new CandidateVMHostMapping(vm, host), tempEnergy);
+            answer.setAvgPowerUsed(tempPower);
+            answer.setTotalEnergyUsed(tempEnergy);
+        }
+        return answer;
+    }
+    
+    HashMap<ApplicationOnHost, Double> temp3AvgPowerUsed = new HashMap<>();
+    HashMap<ApplicationOnHost, Double> temp3TotalEnergyUsed = new HashMap<>();    
+
+    @Override
+    public EnergyUsagePrediction getApplicationPredictedEnergy(ApplicationOnHost app, Collection<ApplicationOnHost> applications, Host host, TimePeriod timePeriod) {
+        EnergyUsagePrediction answer = new EnergyUsagePrediction(app);
+        answer.setDuration(timePeriod);
+        if (tempAvgPowerUsed.containsKey(host)) {
+            answer.setAvgPowerUsed(temp3AvgPowerUsed.get(app));
+            answer.setTotalEnergyUsed(temp3TotalEnergyUsed.get(app));
+        } else {
+            double tempPower = Math.random() * 20;
+            double tempEnergy = Math.random() * 20;
+            temp3AvgPowerUsed.put(app, tempPower);
+            temp3TotalEnergyUsed.put(app, tempEnergy);
             answer.setAvgPowerUsed(tempPower);
             answer.setTotalEnergyUsed(tempEnergy);
         }

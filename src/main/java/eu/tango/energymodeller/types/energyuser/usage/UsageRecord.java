@@ -15,39 +15,39 @@
  */
 package eu.tango.energymodeller.types.energyuser.usage;
 
-import eu.tango.energymodeller.types.energyuser.VmDeployed;
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import java.util.Objects;
 
 /**
- * The purpose of this class is to give a record of the VMs usage. In doing so
- * it allows for the energy to be fractioned based upon the record provided.
- * @author Richard
+ * The purpose of this class is to give a record of the VMs or applications usage. 
+ * In doing so it allows for the energy to be fractioned based upon the record provided.
+ * @author Richard Kavanagh
  */
-public class VmUsageRecord implements Comparable<VmUsageRecord> {
+public class UsageRecord implements Comparable<UsageRecord> {
 
-    private final VmDeployed vm;
+    private final EnergyUsageSource energyUser;
     private final long time;
     private final double load;    
 
     /**
-     * This creates a new VM usage record that indicates how much load
-     * has been induced by a given vm.
-     * @param vm The vm that induced the load
+     * This creates a new energy usage record that indicates how much load
+     * has been induced by a given vm or application.
+     * @param energyUser The vm or app that induced the load
      * @param time The time when the load was induced.
      * @param load The percentage of full system load that was induced.
      */
-    public VmUsageRecord(VmDeployed vm, long time, double load) {
-        this.vm = vm;
+    public UsageRecord(EnergyUsageSource energyUser, long time, double load) {
+        this.energyUser = energyUser;
         this.time = time;
         this.load = load;
     }
 
     /**
-     * This returns the vm that induced the load for this usage record.
-     * @return The vm that induced the load
+     * This returns the energy user that induced the load for this usage record.
+     * @return The vm or application that induced the load
      */
-    public VmDeployed getVm() {
-        return vm;
+    public EnergyUsageSource getEnergyUser() {
+        return energyUser;
     }
 
     /**
@@ -69,9 +69,9 @@ public class VmUsageRecord implements Comparable<VmUsageRecord> {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof VmUsageRecord) {
-            VmUsageRecord compareTo = (VmUsageRecord) obj; 
-            return ((time == compareTo.getTime()) && vm.equals(compareTo.getVm()));
+        if (obj instanceof UsageRecord) {
+            UsageRecord compareTo = (UsageRecord) obj; 
+            return ((time == compareTo.getTime()) && energyUser.equals(compareTo.getEnergyUser()));
         }
         return false;
     }
@@ -79,7 +79,7 @@ public class VmUsageRecord implements Comparable<VmUsageRecord> {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 59 * hash + Objects.hashCode(this.vm);
+        hash = 59 * hash + Objects.hashCode(this.energyUser);
         hash = 59 * hash + (int) (this.time ^ (this.time >>> 32));
         return hash;
     }
@@ -90,7 +90,7 @@ public class VmUsageRecord implements Comparable<VmUsageRecord> {
      * @return -1 if the before, 0 if at the same time 1 if in the future.
      */
     @Override
-    public int compareTo(VmUsageRecord usageRecord) {
+    public int compareTo(UsageRecord usageRecord) {
         return Long.valueOf(this.time).compareTo(usageRecord.getTime());
     }    
    

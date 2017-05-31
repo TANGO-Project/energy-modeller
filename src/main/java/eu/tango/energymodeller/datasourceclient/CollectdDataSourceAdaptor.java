@@ -15,6 +15,7 @@
  */
 package eu.tango.energymodeller.datasourceclient;
 
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
@@ -30,7 +31,7 @@ import org.jcollectd.agent.protocol.Dispatcher;
 import org.jcollectd.server.protocol.UdpReceiver;
 
 /**
- * This adaptor allows for the use of collectD as a data source.
+ * This adaptor allows for the use of CollectD as a data source.
  *
  * @author Richard Kavanagh
  */
@@ -91,6 +92,11 @@ public class CollectdDataSourceAdaptor implements HostDataSource, Dispatcher {
 
     @Override
     public List<VmDeployed> getVmList() {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<ApplicationOnHost> getHostApplicationList() {
         return new ArrayList<>();
     }
 
