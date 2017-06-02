@@ -31,6 +31,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,7 +53,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
     private SlurmDataSourceAdaptor.SlurmTailer fileTailer;
     private final Settings settings = new Settings("energy-modeller-slurm-config.properties");
     private final LinkedList<SlurmDataSourceAdaptor.CPUUtilisation> cpuMeasure = new LinkedList<>();
-    private final LRUCache<Integer, ApplicationOnHost> appCache = new LRUCache<Integer, ApplicationOnHost>(10,50);
+    private final LRUCache<Integer, ApplicationOnHost> appCache = new LRUCache<>(10, 50);
 
     public SlurmDataSourceAdaptor() {
         startup(1);
@@ -151,7 +152,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             ArrayList<String> output = execCmd(cmd);
             for (String line : output) {
                 System.out.println("output: " + line);
-                if (line != null || !line.isEmpty()) {
+                if (line != null && !line.isEmpty()) {
                     line = line.trim();
                     String[] items = line.split(" ");
                     try {
@@ -306,11 +307,11 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
     }
 
     /**
-     * Given the key value of the adaption detail this returns its value.
+     * Given a key this returns its parameter's value.
      *
-     * @param key The key name for the actuation parameter
+     * @param key The key name for the parameter to return
      * @param parseString The string to split and get the property value from
-     * @return The value of the adaptation detail else null.
+     * @return The value of the parameter else null.
      */
     public static String getValue(String key, String parseString) {
         String[] args = parseString.split(";");
@@ -323,11 +324,11 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
     }
 
     /**
-     * Given the key value of the adaption detail this returns its value.
+     * Given a key this returns its parameter's value.
      *
-     * @param key The key name for the actuation parameter
+     * @param key The key name for the parameter to return
      * @param parseString The string to split and get the property value from
-     * @return The value of the adaptation detail else null.
+     * @return The value of the parameter else null.
      */
     public static String getValue(String key, String[] parseString) {
         for (String arg : parseString) {
@@ -344,6 +345,137 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
      * data.
      */
     private class SlurmTailer extends TailerListenerAdapter {
+
+        /**
+         * This reads in the Gres string, this string represents Generic
+         * Resource Scheduling (GRES). Usually either GPUs or Intel Many
+         * Integrated Core (MIC) processors
+         *
+         * @param values The parsed list of metrics.
+         * @param measurement The measurement to add the metrics to
+         * @param clock The timestamp for the new metric values
+         * @return The newly adjusted measurement
+         */
+        private HostMeasurement readGresString(String[] values, HostMeasurement measurement, long clock) {
+            String gresString = getValue("Gres", values);
+            /*
+             * Example gresString = "gpu:teslak20:2"
+             * or "craynetwork:3,hbm:0"
+             * or gpus:2*cpu,disk=50G
+             * The original string this is parsed from is: "Gres=gpu:teslak20:2"
+             */
+            boolean hasGraphicsCard = gresString.contains("gpu");
+            boolean hasMic = gresString.contains("mic"); //Many Integrated Core
+            boolean hasAccelerator = !gresString.equals("(null)");
+            measurement.addMetric(new MetricValue(KpiList.HAS_GPU, KpiList.HAS_GPU, hasGraphicsCard + "", clock));
+            measurement.addMetric(new MetricValue(KpiList.HAS_MIC, KpiList.HAS_MIC, hasMic + "", clock));
+            measurement.addMetric(new MetricValue(KpiList.HAS_ACCELERATOR, KpiList.HAS_ACCELERATOR, hasAccelerator + "", clock));
+            String[] gresStringSplit = gresString.split(",");
+            for (String dataItem : gresStringSplit) {
+                boolean gpu = dataItem.contains("gpu");
+                boolean mic = dataItem.contains("mic");
+                String[] dataItemSplit = dataItem.split(":");
+                String gpuName = dataItemSplit[1];
+                int gpuCount = 1;
+                if (dataItemSplit.length > 2) {
+                    try {
+                        gpuCount = Integer.parseInt(dataItemSplit[2].trim());
+                    } catch (NumberFormatException ex) {
+                        Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE,
+                                "Unexpected number format", ex);
+                    }
+                }
+                if (gpu) {
+                    measurement.addMetric(new MetricValue(KpiList.GPU_NAME, KpiList.GPU_NAME, gpuName, clock));
+                    measurement.addMetric(new MetricValue(KpiList.GPU_COUNT, KpiList.GPU_COUNT, gpuCount + "", clock));
+                } else if (mic) {
+                    measurement.addMetric(new MetricValue(KpiList.MIC_NAME, KpiList.MIC_NAME, gpuName, clock));
+                    measurement.addMetric(new MetricValue(KpiList.MIC_COUNT, KpiList.MIC_COUNT, gpuCount + "", clock));
+                }
+
+            }
+            return measurement;
+        }
+
+        /**
+         * This reads in the GresUsed string, this string represents Generic
+         * Resource Scheduling (GRES). Usually either GPUs or Intel Many
+         * Integrated Core (MIC) processors
+         *
+         * @param values The parsed list of metrics.
+         * @param measurement The measurement to add the metrics to
+         * @param clock The timestamp for the new metric values
+         * @return The newly adjusted measurement
+         */
+        private HostMeasurement readGresUsedString(String[] values, HostMeasurement measurement, long clock) {
+            String gresString = getValue("GresUsed", values);
+            String[] gresStringSplit = gresString.split(",");
+            for (String dataItem : gresStringSplit) {
+                boolean gpu = dataItem.contains("gpu");
+                boolean mic = dataItem.contains("mic");
+                String[] dataItemSplit = dataItem.split(":");
+                String gpuUsed = "";
+                for (String item : dataItemSplit) {
+                    if (!item.isEmpty() && Character.isDigit(item.charAt(0))) {
+                        int used = new Scanner(item).useDelimiter("[^\\d]+").nextInt();
+                        gpuUsed = used + "";
+                        break;
+                    }
+                }
+                if (gpu) {
+                    measurement.addMetric(new MetricValue(KpiList.GPU_USED, KpiList.GPU_USED, gpuUsed, clock));
+                } else if (mic) {
+                    measurement.addMetric(new MetricValue(KpiList.MIC_USED, KpiList.MIC_USED, gpuUsed, clock));
+                }
+
+            }
+            return measurement;
+        }
+
+        /**
+         * This reads in generic metrics from SLURM that the data source adaptor
+         * is not necessarily expecting.
+         *
+         * @param values The parsed list of metrics.
+         * @param measurement The measurement to add the metrics to
+         * @param clock The timestamp for the new metric values
+         * @return The newly adjusted measurement
+         */
+        private HostMeasurement readGenericMetrics(String[] values, HostMeasurement measurement, long clock) {
+            //The general case is to add all metric values into the list.
+            for (String value : values) {
+                String[] valueSplit = value.split("=");
+                try {
+                    switch (valueSplit.length) {
+                        case 2: //Most common case
+                            measurement.addMetric(new MetricValue(valueSplit[0].trim(), valueSplit[0].trim(), valueSplit[1].trim(), clock));
+                            break;
+                        case 1: //In cases such as AllocTRES, leave the metric there but report the empty value
+                            measurement.addMetric(new MetricValue(valueSplit[0].trim(), valueSplit[0].trim(), "", clock));
+                            break;
+                        default: //Cases such as CfgTRES=cpu=32,mem=64408M
+                            int params = value.split("=").length;
+                            valueSplit = value.split("[=,]");
+                            /*
+                             * CfgTRES=cpu=32,mem=64408M becomes
+                             * [CfgTRES, cpu, 32, mem, 64408M]
+                             * Thus end result should be:
+                             * [CfgTRES:cpu, 32] i.e. index 0:1 , 2
+                             * [CfgTRES:mem, 64408M] i.e. index 0:3 , 5
+                             */
+                            for (int i = 1; i <= params; i++) {
+                                String name = valueSplit[0].trim() + ":" + valueSplit[i * 2 - 1].trim();
+                                measurement.addMetric(new MetricValue(name, name, valueSplit[i * 2].trim(), clock));
+                            }
+                            //System.out.println("Parsing had an issue with : " + value);
+                            break;
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            return measurement;
+        }
 
         @Override
         public void handle(String line) {
@@ -368,6 +500,9 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                 HostMeasurement measurement = new HostMeasurement(host, clock);
                 measurement.addMetric(new MetricValue(KpiList.POWER_KPI_NAME, KpiList.POWER_KPI_NAME, watts, clock));
                 measurement.addMetric(new MetricValue(KpiList.ENERGY_KPI_NAME, KpiList.ENERGY_KPI_NAME, wattskwh, clock));
+                readGresString(values, measurement, clock);
+                readGresUsedString(values, measurement, clock);
+                readGenericMetrics(values, measurement, clock);
                 double cpuUtil = (Double.valueOf(getValue("CPULoad", values))) / (Double.valueOf(getValue("CPUTot", values)));
                 valid = valid && validatedAddMetric(measurement, new MetricValue(KpiList.CPU_SPOT_USAGE_KPI_NAME, KpiList.CPU_SPOT_USAGE_KPI_NAME, cpuUtil * 100 + "", clock));
                 valid = valid && validatedAddMetric(measurement, new MetricValue(KpiList.CPU_IDLE_KPI_NAME, KpiList.CPU_IDLE_KPI_NAME, ((1 - cpuUtil)) * 100 + "", clock));
@@ -378,19 +513,6 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
 
                 valid = valid && validatedAddMetric(measurement, new MetricValue(KpiList.MEMORY_AVAILABLE_KPI_NAME, KpiList.MEMORY_AVAILABLE_KPI_NAME, (int) (Double.valueOf(getValue("FreeMem", values)) / 1048576) + "", clock));
                 valid = valid && validatedAddMetric(measurement, new MetricValue(KpiList.MEMORY_TOTAL_KPI_NAME, KpiList.MEMORY_TOTAL_KPI_NAME, (int) (Double.valueOf(getValue("RealMemory", values)) / 1048576) + "", clock));
-
-                //The general case is to add all metric values into the list.
-                for (String value : values) {
-                    try {
-                        if (value.split("=").length == 2) {
-                            measurement.addMetric(new MetricValue(value.split("=")[0].trim(), value.split("=")[0].trim(), value.split("=")[1].trim(), clock));
-                        } else {
-                            System.out.println("Parsing had an issue with : " + value);
-                        }
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                }
 
                 if (!valid) {
                     return;

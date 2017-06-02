@@ -18,7 +18,7 @@ package eu.tango.energymodeller.datasourceclient;
 /**
  * This lists all known KPI constants, it should therefore not be instantiated.
  *
- * @author Richard
+ * @author Richard Kavanagh
  */
 public abstract class KpiList {
 
@@ -61,5 +61,15 @@ public abstract class KpiList {
     //physical host mapping
     public static final String VM_PHYSICAL_HOST_NAME = "physical_host";
     public static final String VM_PHYSICAL_HOST_NAME_2 = "physical.host";
+    //accelerators
+    public static final String HAS_ACCELERATOR = "has_accelerator";
+    public static final String HAS_GPU = "has_gpu";
+    public static final String GPU_NAME = "gpu_name";
+    public static final String GPU_COUNT = "gpu_count";
+    public static final String GPU_USED = "gpu_used";
+    public static final String HAS_MIC = "has_many_integrated_core";
+    public static final String MIC_NAME = "mic_name";
+    public static final String MIC_COUNT = "mic_count";    
+    public static final String MIC_USED = "mic_used";    
 
 }
