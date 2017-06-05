@@ -40,6 +40,7 @@ public class CollectdDataSourceAdaptor implements HostDataSource, Dispatcher {
     private final HashMap<String, Host> knownHosts = new HashMap<>();
     private final HashMap<Host, HostMeasurement> recentMeasurements = new HashMap<>();
     private final UdpReceiver reciever = new UdpReceiver();
+    private CollectDNotificationHandler handler = null;
     private final Thread recieverThread = new Thread(reciever);
     
     public CollectdDataSourceAdaptor() {
@@ -234,11 +235,28 @@ public class CollectdDataSourceAdaptor implements HostDataSource, Dispatcher {
         toUpdate.setClock(clock);        
         return toUpdate;
     }
+    
+    /**
+     * This sets a handler for CollectD notifications.
+     * @param handler The handler to read CollectD notification events
+     */
+    public void setNotificationHandler(CollectDNotificationHandler handler) {
+        this.handler = handler;
+    }
 
+    /**
+     * This gets the handler for CollectD notifications. 
+     * @return The handler to read CollectD notification events
+     */
+    public CollectDNotificationHandler getNotificationHandler() {
+        return handler;
+    }
+    
     @Override
     public void dispatch(Notification notification) {
-        System.out.println(notification);
-        System.out.println("The aim of this data source adaptor is to focus on reading Values");
+        if (handler != null) {
+            handler.dispatch(notification);
+        }
     }
 
 }
