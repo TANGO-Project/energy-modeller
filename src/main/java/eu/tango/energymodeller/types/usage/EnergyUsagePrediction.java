@@ -30,7 +30,7 @@ import java.util.Objects;
  * Avg Watts that is expected to use over time by the VM Predicted energy used
  * (kWh) during life of VM or during the duration of a specified period
  *
- * @author Richard
+ * @author Richard Kavanagh
  */
 public class EnergyUsagePrediction extends EnergyUsageRecord implements Comparable<EnergyUsagePrediction> {
 

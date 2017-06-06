@@ -28,7 +28,7 @@ import java.util.HashSet;
  *
  * Watts, current and voltage.
  *
- * @author Richard
+ * @author Richard Kavanagh
  */
 public class CurrentUsageRecord extends EnergyUsageRecord {
 

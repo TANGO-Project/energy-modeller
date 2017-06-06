@@ -22,7 +22,7 @@ import java.util.Objects;
  * This is the object representation of a record held in the database regarding
  * a hosts energy usage.
  *
- * @author Richard
+ * @author Richard Kavanagh
  */
 public class HostEnergyRecord implements Comparable<HostEnergyRecord> {
 

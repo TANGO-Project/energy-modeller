@@ -12,6 +12,9 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ * 
+ * This is being developed for the TANGO Project: http://tango-project.eu
+ * 
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare.historic;
 
@@ -34,7 +37,7 @@ import java.util.concurrent.TimeUnit;
  * The aim of this class is to provide the base methods for any implementation
  * of a Load based division mechanism that examines historical records.
  *
- * @author Richard
+ * @author Richard Kavanagh
  */
 public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadBasedDivision {
 

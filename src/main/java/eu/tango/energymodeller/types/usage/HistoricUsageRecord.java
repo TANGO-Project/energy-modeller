@@ -12,6 +12,9 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ * 
+ * This is being developed for the TANGO Project: http://tango-project.eu
+ * 
  */
 package eu.tango.energymodeller.types.usage;
 
@@ -27,7 +30,7 @@ import java.util.HashSet;
  * Avg Current (useful??) Avg Voltage (useful??) kWh of energy used since
  * instantiation/boot
  *
- * @author Richard
+ * @author Richard Kavanagh
  */
 public class HistoricUsageRecord extends EnergyUsageRecord {
 

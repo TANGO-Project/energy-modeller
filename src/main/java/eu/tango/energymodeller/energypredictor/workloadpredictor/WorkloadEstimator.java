@@ -12,13 +12,15 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ * 
+ * This is being developed for the TANGO Project: http://tango-project.eu
+ * 
  */
 package eu.tango.energymodeller.energypredictor.workloadpredictor;
 
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
 import eu.tango.energymodeller.datastore.DatabaseConnector;
 import eu.tango.energymodeller.types.energyuser.Host;
-import eu.tango.energymodeller.types.energyuser.VM;
 import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 import java.util.Collection;
 

@@ -22,7 +22,7 @@ import java.util.Collection;
 /**
  * This represents the sources by which energy may be used within the energy modellers
  * framework. Namely a VM, (instantiated or not) and a host machine.
- * @author Richard
+ * @author Richard Kavanagh
  */
 public abstract class EnergyUsageRecord {
 

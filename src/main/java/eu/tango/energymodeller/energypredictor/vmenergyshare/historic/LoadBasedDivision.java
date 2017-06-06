@@ -12,6 +12,9 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ * 
+ * This is being developed for the TANGO Project: http://tango-project.eu
+ * 
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare.historic;
 
@@ -28,7 +31,7 @@ import eu.tango.energymodeller.types.usage.HostEnergyRecord;
  * Energy is fractioned out taking into account the amount of load has been
  * placed on each machine. This is done by ratio.
  *
- * @author Richard
+ * @author Richard Kavanagh
  */
 public class LoadBasedDivision extends AbstractHistoricLoadBasedDivision {
 
