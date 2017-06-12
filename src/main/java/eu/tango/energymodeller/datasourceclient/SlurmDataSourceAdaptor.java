@@ -78,6 +78,32 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         System.out.println("Scraping from Slurm output file");
     }
 
+    /**
+     * The host string from SLURM follows a format that must be parsed into a list
+     * of separate hosts. This method achieves this. 
+     * @param hostList The list of hosts in a compressed format.
+     * examples include: "ns54" or "ns[54-56]" or "ns[54-56],ns[58-60]" or "ns54,ns56"
+     * @return The list of hosts in an array ready for processing.
+     */
+    private ArrayList<String> getHostList(String hostList) {
+        ArrayList<String> answer = new ArrayList<>();
+        String[] partialAnswer = hostList.split(",");
+        for (String part : partialAnswer) {
+            if (part.contains("[")) { //test if host is in range i.e. node[51-54]
+                String hostPrefix = part.substring(0, part.indexOf("["));
+                Scanner parser = new Scanner(part).useDelimiter("[^0-9]+");
+                int start = parser.nextInt();
+                int end = parser.nextInt();
+                for (int i = start; i <= end; i++) {
+                    answer.add(hostPrefix + i);
+                }
+            } else {
+                answer.add(part); //Host name is singular, e.g. ns54
+            }
+        }
+        return answer;
+    }
+
     @Override
     public Host getHostByName(String hostname) {
         return hosts.get(hostname);
@@ -150,13 +176,12 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                 "-c",
                 maincmd};
             ArrayList<String> output = execCmd(cmd);
-            for (String line : output) {
+            for (String line : output) { //Each line represents a different application
                 System.out.println("output: " + line);
                 if (line != null && !line.isEmpty()) {
                     line = line.trim();
                     String[] items = line.split(" ");
                     try {
-                        Host host = getHostByName(items[3]);
                         int appId = Integer.parseInt(items[0]);
                         if (appCache.get(appId) != null) {
                             /**
@@ -175,10 +200,14 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                         long startTime = currentTime - TimeUnit.SECONDS.toMillis(seconds);
                         GregorianCalendar start = new GregorianCalendar();
                         start.setTimeInMillis(startTime);
-                        ApplicationOnHost app = new ApplicationOnHost(appId, name, host);
-                        app.setCreated(start);
-                        answer.add(app);
-                        appCache.put(appId, app);
+                        ArrayList<String> hostStrings = getHostList(items[3]);
+                        for (String hostStr : hostStrings) {
+                            Host host = getHostByName(hostStr);
+                            ApplicationOnHost app = new ApplicationOnHost(appId, name, host);
+                            app.setCreated(start);
+                            answer.add(app);
+                            appCache.put(appId, app);
+                        }
                     } catch (NumberFormatException ex) {
                         Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE,
                                 "Unexpected number format", ex);
