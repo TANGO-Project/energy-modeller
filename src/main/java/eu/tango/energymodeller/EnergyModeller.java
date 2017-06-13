@@ -582,7 +582,7 @@ public class EnergyModeller {
             Logger.getLogger(EnergyModeller.class.getName()).log(Level.SEVERE,
                     "The application {0} host was not correctly detected!", app.getName());
         }
-        ArrayList<ApplicationOnHost> otherApps = dataGatherer.getApplicationsOnHost(host);
+        ArrayList<ApplicationOnHost> otherApps = dataGatherer.getApplications(host);
         ArrayList<ApplicationOnHost> appsDeployedOnHost = new ArrayList<>();
         ArrayList<EnergyUsageSource> AppsOnHost = new ArrayList<>();
         AppsOnHost.addAll(otherApps);
@@ -888,6 +888,17 @@ public class EnergyModeller {
     public ArrayList<VmDeployed> getVMsOnHost(Host host) {
         return dataGatherer.getVMsOnHost(host);
     }
+    
+    /**
+     * This gets the list of applications on a named host that the energy modeller knows
+     * about.
+     *
+     * @param host The host to get the applications for
+     * @return The list of applications that are currently running on the named host.
+     */
+    public ArrayList<ApplicationOnHost> getApplicationsOnHost(Host host) {
+        return dataGatherer.getApplications(host);
+    }
 
     /**
      * This given a name of a VM provides the object representation of it. Note:
@@ -914,6 +925,19 @@ public class EnergyModeller {
     public VmDeployed getVM(int vmId) {
         return dataGatherer.getVm(vmId);
     }
+    
+    /**
+     * This given a name of an application and its deployment id it provides the 
+     * object representation of it.
+     *
+     * @param name The name of the VM
+     * @param deploymentId
+     * @return The VM with the specified name, null if not known to the energy
+     * modeller.
+     */
+    public ArrayList<ApplicationOnHost> getApplication(String name, int deploymentId) {
+        return dataGatherer.getApplication(name, deploymentId);
+    }    
 
     /**
      * This sets information about the VM that describes the applications, that

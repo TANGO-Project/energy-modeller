@@ -177,7 +177,6 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                 maincmd};
             ArrayList<String> output = execCmd(cmd);
             for (String line : output) { //Each line represents a different application
-                System.out.println("output: " + line);
                 if (line != null && !line.isEmpty()) {
                     line = line.trim();
                     String[] items = line.split(" ");

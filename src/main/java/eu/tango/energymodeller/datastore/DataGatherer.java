@@ -715,16 +715,55 @@ public class DataGatherer implements Runnable {
         }
         return answer;
     }
-    
+
     /**
      * This gets a list of the applications running on a host machine.
      *
      * @param host The host machine to get the application list for
      * @return The list of applications running on the specified host
      */
-    public ArrayList<ApplicationOnHost> getApplicationsOnHost(Host host) {
+    public ArrayList<ApplicationOnHost> getApplications(Host host) {
+        ArrayList<ApplicationOnHost> answer = new ArrayList<>();
+        if (host == null) {
+            return answer;
+        }
+        for (ApplicationOnHost app : datasource.getHostApplicationList()) {
+            if (host.equals(app.getAllocatedTo())) {
+                answer.add(app);
+            }
+        }
+        return answer;
+    }
+
+    /**
+     * This gets a list of the applications running on a host machine.
+     *
+     * @return The list of applications running on the specified host
+     */
+    public ArrayList<ApplicationOnHost> getApplications() {
         return (ArrayList<ApplicationOnHost>) datasource.getHostApplicationList();
-    }    
+    }
+    
+    /**
+     * This gets a list of the applications running on a host machine.
+     *
+     * @param name The name of the application
+     * @param deploymentId The id of the application
+     * @return The list of applications running on the specified host
+     */
+    public ArrayList<ApplicationOnHost> getApplication(String name, int deploymentId) {
+        ArrayList<ApplicationOnHost> answer = new ArrayList<>();
+        for (ApplicationOnHost app : datasource.getHostApplicationList()) {
+            if (app.getName().equals(name) && app.getId() == deploymentId) {
+                /**
+                 * The application may run over several hosts therefore multiple
+                 * records may be expected.
+                 */
+                answer.add(app);
+            }
+        }
+        return answer;
+    }
 
     /**
      * This sets if this data gatherer should log to disk VM data and write the
