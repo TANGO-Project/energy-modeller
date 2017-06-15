@@ -12,12 +12,16 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ * 
+ * This is being developed for the TANGO Project: http://tango-project.eu
+ * 
  */
 package eu.tango.energymodeller.types.energyuser;
 
 import eu.tango.energymodeller.types.energyuser.usage.HostEnergyCalibrationData;
 import eu.tango.energymodeller.types.energyuser.usage.HostProfileData;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Objects;
 
 /**
@@ -37,7 +41,8 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
     private boolean available = true;
     private int ramMb;
     private double diskGb;
-
+    private HashSet<Accelerator> accelerator = new HashSet<>();
+            
     private ArrayList<HostEnergyCalibrationData> calibrationData = new ArrayList<>();
     private ArrayList<HostProfileData> hostProfileData = new ArrayList<>();
 
@@ -430,5 +435,87 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
         }
         this.diskGb = diskGb;
     }
+    
+    /**
+     * Indicates if this host has an accelerator or not
+     * @return if the host has any type of accelerator or not 
+     */
+    public boolean hasAccelerator () {
+        return !accelerator.isEmpty();
+    }
+    
+    /**
+     * Indicates if this host has an GPU as an accelerator or not
+     * @return If the host has a GPU or not
+     */
+    public boolean hasGpu () {
+        for (Accelerator current : accelerator) {
+            if (current.getAccelerator().equals(Accelerator.AcceleratorType.GPU))
+                return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Indicates if this host has a Intel Many Integrated Core (MIC) processor 
+     * as an accelerator or not
+     * @return if the host has a Intel Many Integrated Core (MIC) processor 
+     */
+    public boolean hasMic () {
+        for (Accelerator current : accelerator) {
+            if (current.getAccelerator().equals(Accelerator.AcceleratorType.MIC))
+                return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Adds an accelerator to the physical host
+     * @param accelerator Indicates which accelerator to add to the host.
+     */
+    public void addAccelerator(Accelerator accelerator) {
+        this.accelerator.add(accelerator);
+    }
+    
+    /**
+     * Adds an accelerator to the physical host
+     * @param accelerator Indicates which accelerator to add to the host.
+     */
+    public void addAccelerator(Accelerator.AcceleratorType accelerator) {
+        this.accelerator.add(new Accelerator("",1, accelerator));
+    }    
+    
+    /**
+     * Adds an accelerator to the physical host
+     * @param accelerator Indicates which accelerator to add to the host.
+     */
+    public void addAccelerator(HashSet<Accelerator> accelerator) {
+        this.accelerator.addAll(accelerator);
+    } 
+    
+    /**
+     * Removes an accelerator to the physical host
+     * @param accelerator Indicates which accelerator to remove from the host.
+     */
+    public void removeAccelerator(Accelerator accelerator) {
+        this.accelerator.remove(accelerator);
+    }
+    
+    /**
+     * Removes an accelerator to the physical host
+     * @param accelerator Indicates which accelerator to remove from the host.
+     */
+    public void removeAccelerator(HashSet<Accelerator> accelerator) {
+        this.accelerator.removeAll(accelerator);
+    }
+    
+    /**
+     * This provides the list of accelerators for this physical host.
+     * @return The list of accelerators this host has.
+     */
+    public HashSet<Accelerator> listAccelerators() {
+        return accelerator;
+    }
+    
 
 }

@@ -12,12 +12,16 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ * 
+ * This is being developed for the TANGO Project: http://tango-project.eu
+ * 
  */
 package eu.tango.energymodeller.datasourceclient;
 
 import eu.ascetic.ioutils.caching.LRUCache;
 import eu.ascetic.ioutils.io.Settings;
 import static eu.tango.energymodeller.datasourceclient.KpiList.POWER_KPI_NAME;
+import eu.tango.energymodeller.types.energyuser.Accelerator;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
@@ -79,10 +83,11 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
     }
 
     /**
-     * The host string from SLURM follows a format that must be parsed into a list
-     * of separate hosts. This method achieves this. 
-     * @param hostList The list of hosts in a compressed format.
-     * examples include: "ns54" or "ns[54-56]" or "ns[54-56],ns[58-60]" or "ns54,ns56"
+     * The host string from SLURM follows a format that must be parsed into a
+     * list of separate hosts. This method achieves this.
+     *
+     * @param hostList The list of hosts in a compressed format. examples
+     * include: "ns54" or "ns[54-56]" or "ns[54-56],ns[58-60]" or "ns54,ns56"
      * @return The list of hosts in an array ready for processing.
      */
     private ArrayList<String> getHostList(String hostList) {
@@ -403,22 +408,24 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                 boolean gpu = dataItem.contains("gpu");
                 boolean mic = dataItem.contains("mic");
                 String[] dataItemSplit = dataItem.split(":");
-                String gpuName = dataItemSplit[1];
-                int gpuCount = 1;
+                String acceleratorName = dataItemSplit[1];
+                int acceleratorCount = 1;
                 if (dataItemSplit.length > 2) {
                     try {
-                        gpuCount = Integer.parseInt(dataItemSplit[2].trim());
+                        acceleratorCount = Integer.parseInt(dataItemSplit[2].trim());
                     } catch (NumberFormatException ex) {
                         Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE,
                                 "Unexpected number format", ex);
                     }
                 }
                 if (gpu) {
-                    measurement.addMetric(new MetricValue(KpiList.GPU_NAME, KpiList.GPU_NAME, gpuName, clock));
-                    measurement.addMetric(new MetricValue(KpiList.GPU_COUNT, KpiList.GPU_COUNT, gpuCount + "", clock));
+                    measurement.getHost().addAccelerator(new Accelerator(acceleratorName, acceleratorCount, Accelerator.AcceleratorType.GPU));
+                    measurement.addMetric(new MetricValue(KpiList.GPU_NAME, KpiList.GPU_NAME, acceleratorName, clock));
+                    measurement.addMetric(new MetricValue(KpiList.GPU_COUNT, KpiList.GPU_COUNT, acceleratorCount + "", clock));
                 } else if (mic) {
-                    measurement.addMetric(new MetricValue(KpiList.MIC_NAME, KpiList.MIC_NAME, gpuName, clock));
-                    measurement.addMetric(new MetricValue(KpiList.MIC_COUNT, KpiList.MIC_COUNT, gpuCount + "", clock));
+                    measurement.getHost().addAccelerator(new Accelerator(acceleratorName, acceleratorCount, Accelerator.AcceleratorType.MIC));
+                    measurement.addMetric(new MetricValue(KpiList.MIC_NAME, KpiList.MIC_NAME, acceleratorName, clock));
+                    measurement.addMetric(new MetricValue(KpiList.MIC_COUNT, KpiList.MIC_COUNT, acceleratorCount + "", clock));
                 }
 
             }
