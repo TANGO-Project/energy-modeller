@@ -499,14 +499,22 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
     public List<VmDeployed> getVmList() {
         return getVmList(vmGroup);
     }
-    
+
+    @Override
+    public List<ApplicationOnHost> getHostApplicationList(JOB_STATUS state) {
+        /*
+         * Zabbix doesn't store this information thus an empty list is returned.
+         */
+        return new ArrayList<>();
+    }
+
     @Override
     public List<ApplicationOnHost> getHostApplicationList() {
         /*
-        * Zabbix doesn't store this information thus an empty list is returned.
-        */
+         * Zabbix doesn't store this information thus an empty list is returned.
+         */
         return new ArrayList<>();
-    }    
+    }
 
     public List<VmDeployed> getVmList(String groupName) {
         List<VmDeployed> answer = new ArrayList<>();

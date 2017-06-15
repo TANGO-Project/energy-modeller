@@ -307,11 +307,6 @@ public class WattsUpMeterDataSourceAdaptor implements HostDataSource {
     public List<VmDeployed> getVmList() {
         return new ArrayList<>();
     }
-    
-    @Override
-    public List<ApplicationOnHost> getHostApplicationList() {
-        return new ArrayList<>();
-    }
 
     @Override
     public List<EnergyUsageSource> getHostAndVmList() {
@@ -320,6 +315,16 @@ public class WattsUpMeterDataSourceAdaptor implements HostDataSource {
         return answer;
     }
 
+    @Override
+    public List<ApplicationOnHost> getHostApplicationList(JOB_STATUS state) {
+        return new ArrayList<>();
+    }    
+    
+    @Override
+    public List<ApplicationOnHost> getHostApplicationList() {
+        return new ArrayList<>();
+    }    
+    
     @Override
     public HostMeasurement getHostData(Host host) {
         while (current == null) {

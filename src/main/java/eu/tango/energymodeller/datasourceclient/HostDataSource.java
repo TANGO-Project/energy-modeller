@@ -31,6 +31,8 @@ import java.util.List;
  */
 public interface HostDataSource {
 
+    public enum JOB_STATUS {PENDING, RUNNING, SUSPENDED, COMPLETING, COMPLETED };
+    
     /**
      * This returns a host given its unique name.
      *
@@ -84,6 +86,15 @@ public interface HostDataSource {
      * @return A list of vms for the energy modeller.
      */
     public List<VmDeployed> getVmList();
+
+    /**
+     * This provides a list of applications running on a particular host
+     *
+     * @param state The job status, null for all (which is equivalent to the 
+     * call getHostApplicationList()
+     * @return A list of applications running on the hosts.
+     */
+    public List<ApplicationOnHost> getHostApplicationList(JOB_STATUS state);    
 
     /**
      * This provides a list of applications running on a particular host

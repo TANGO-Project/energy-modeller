@@ -66,6 +66,11 @@ public class EmulatedDataSourceAdaptor implements HostDataSource {
     }
     
     @Override
+    public List<ApplicationOnHost> getHostApplicationList(JOB_STATUS state) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }    
+    
+    @Override
     public List<ApplicationOnHost> getHostApplicationList() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }        

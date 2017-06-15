@@ -160,7 +160,29 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
 
     @Override
     public List<ApplicationOnHost> getHostApplicationList() {
+        return getHostApplicationList(null);
+    }
+    
+    @Override
+    public List<ApplicationOnHost> getHostApplicationList(JOB_STATUS state) {
         ArrayList<ApplicationOnHost> answer = new ArrayList<>();
+        
+        /**
+         * squeue has various jobs states that are possible: see:
+         * https://slurm.schedmd.com/squeue.html
+         * 
+         * namely:
+         * PENDING (PD), RUNNING (R), SUSPENDED (S), STOPPED (ST), 
+         * COMPLETING (CG), COMPLETED (CD), CONFIGURING (CF), 
+         * CANCELLED (CA), FAILED (F), TIMEOUT (TO), PREEMPTED (PR), 
+         * BOOT_FAIL (BF) , NODE_FAIL (NF), REVOKED (RV), and SPECIAL_EXIT (SE)
+         */
+        String jobState;
+        if (state == null) {
+            jobState = "";
+        } else {
+            jobState = "-t " + state.name();
+        }
         try {
 
             /*
@@ -172,7 +194,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
              * 
              * 3845 RK-BENCH 0:03 ns57
              */
-            String maincmd = "squeue | awk 'NR> 1 {split($0,values,\"[ \\t\\n]+\"); "
+            String maincmd = "squeue " + jobState + "| awk 'NR> 1 {split($0,values,\"[ \\t\\n]+\"); "
                     + "printf values[1] \" \" ; printf values[2] \" \"; "
                     + "printf values[4] \" \";"
                     + "printf values[7] \" \" ; "
@@ -237,10 +259,10 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         Process proc = Runtime.getRuntime().exec(cmd);
         java.io.InputStream is = proc.getInputStream();
         java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
-        String val = "";
+        String outputLine;
         while (s.hasNextLine()) {
-            val = s.next();
-            output.add(val);
+            outputLine = s.next();
+            output.add(outputLine);
         }
         return output;
     }

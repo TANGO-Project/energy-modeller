@@ -100,6 +100,11 @@ public class CollectdDataSourceAdaptor implements HostDataSource, Dispatcher {
     }
 
     @Override
+    public List<ApplicationOnHost> getHostApplicationList(JOB_STATUS state) {
+        return new ArrayList<>();
+    }
+
+    @Override
     public List<ApplicationOnHost> getHostApplicationList() {
         return new ArrayList<>();
     }

@@ -179,6 +179,11 @@ public class SigarDataSourceAdaptor implements HostDataSource {
     }
     
     @Override
+    public List<ApplicationOnHost> getHostApplicationList(JOB_STATUS state) {
+        return new ArrayList<>();
+    }    
+    
+    @Override
     public List<ApplicationOnHost> getHostApplicationList() {
         return new ArrayList<>();
     }    
