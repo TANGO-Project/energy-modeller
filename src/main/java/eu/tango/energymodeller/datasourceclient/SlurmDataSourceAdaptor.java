@@ -79,7 +79,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             Thread tailerThread = new Thread(tailer);
             tailerThread.setDaemon(true);
             tailerThread.start();
-            System.out.println("Scraping from Slurm output file");            
+            System.out.println("Scraping from Slurm output file");
         } else {
             //Parse directly from SLURM
             String hostsList = settings.getString("energy.modeller.slurm.hosts", "ns[52-53]");
@@ -91,7 +91,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         }
         if (settings.isChanged()) {
             settings.save("energy-modeller-slurm-config.properties");
-        }        
+        }
     }
 
     /**
@@ -287,8 +287,8 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE, null, ex);
         }
         return new ArrayList<>();
-    }    
-    
+    }
+
     @Override
     public HostMeasurement getHostData(Host host) {
         return current.get(host.getHostName());
@@ -600,11 +600,14 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                          * [CfgTRES:cpu, 32] i.e. index 0:1 , 2
                          * [CfgTRES:mem, 64408M] i.e. index 0:3 , 5
                          */
-                        for (int i = 1; i <= params; i++) {
-                            String name = valueSplit[0].trim() + ":" + valueSplit[i * 2 - 1].trim();
-                            measurement.addMetric(new MetricValue(name, name, valueSplit[i * 2].trim(), clock));
+                        try {
+                            for (int i = 1; i <= params; i++) {
+                                String name = valueSplit[0].trim() + ":" + valueSplit[i * 2 - 1].trim();
+                                measurement.addMetric(new MetricValue(name, name, valueSplit[i * 2].trim(), clock));
+                            }
+                        } catch (Exception ex) {
+                            System.out.println("Parsing had an issue with : " + value);
                         }
-                        //System.out.println("Parsing had an issue with : " + value);
                         break;
                 }
             } catch (Exception ex) {
@@ -617,7 +620,8 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
 
     /**
      * Parses a line from slurm and adds the data into the data source adaptor.
-     * @param line 
+     *
+     * @param line
      */
     private void parse(String line) {
         try {
