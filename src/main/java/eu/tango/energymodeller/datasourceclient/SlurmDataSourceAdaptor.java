@@ -72,9 +72,6 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
     public final void startup(int interval) {
         String filename = settings.getString("energy.modeller.slurm.scrape.file", "slurm-host-data.log");
         boolean useFileScraper = settings.getBoolean("energy.modeller.slurm.scrape.from.file", false);
-        if (settings.isChanged()) {
-            settings.save("energy-modeller-slurm-config.properties");
-        }
         if (useFileScraper) {
             File scrapeFile = new File(filename);
             fileTailer = new SlurmDataSourceAdaptor.SlurmTailer();
@@ -82,6 +79,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             Thread tailerThread = new Thread(tailer);
             tailerThread.setDaemon(true);
             tailerThread.start();
+            System.out.println("Scraping from Slurm output file");            
         } else {
             //Parse directly from SLURM
             String hostsList = settings.getString("energy.modeller.slurm.hosts", "ns[52-53]");
@@ -89,8 +87,11 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             Thread pollerThread = new Thread(poller);
             pollerThread.setDaemon(true);
             pollerThread.start();
+            System.out.println("Reading from SLURM directly");
         }
-        System.out.println("Scraping from Slurm output file");
+        if (settings.isChanged()) {
+            settings.save("energy-modeller-slurm-config.properties");
+        }        
     }
 
     /**
