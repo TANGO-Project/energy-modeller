@@ -281,7 +281,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             "-c",
             mainCmd};
         try {
-            execCmd(cmd);
+            return execCmd(cmd);
         } catch (IOException ex) {
             Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE, null, ex);
         }
