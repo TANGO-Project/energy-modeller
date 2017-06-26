@@ -35,10 +35,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSource, Comparable<ApplicationOnHost> {
 
+    public enum JOB_STATUS {PENDING, RUNNING, SUSPENDED, COMPLETING, COMPLETED };
+    
     private int id;
     private String name;
     private Host allocatedTo;
     private Calendar created;
+    private JOB_STATUS status;
 
     /**
      * Creates an instance of an application which is to be allocated power 
@@ -138,6 +141,22 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
      */
     public Host getAllocatedTo() {
         return allocatedTo;
+    }
+
+    /**
+     * This gets the jobs status
+     * @return The status of this job when it was last measured.
+     */
+    public JOB_STATUS getStatus() {
+        return status;
+    }
+
+    /**
+     * This sets the status of this job
+     * @param status The new status of this job
+     */
+    public void setStatus(JOB_STATUS status) {
+        this.status = status;
     }
 
     /**
@@ -260,5 +279,21 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         answer.addAll(applications);
         return answer;
     }       
+
+    /**
+     * This takes a list of applications and returns only the list on a named host.
+     * @param applications The list of all applications
+     * @param host The host to find its list of applications for
+     * @return The list of applications on the named host
+     */
+    public static List<ApplicationOnHost> filter(List<ApplicationOnHost> applications, Host host) {
+                List<ApplicationOnHost> answer = new ArrayList<>();
+        for (ApplicationOnHost application : applications) {
+            if (application.allocatedTo.equals(host)) {
+                answer.add(application);
+            }
+        }
+        return answer;
+    }    
     
 }

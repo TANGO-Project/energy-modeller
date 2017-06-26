@@ -64,6 +64,10 @@ public abstract class KpiList {
     //physical host mapping
     public static final String VM_PHYSICAL_HOST_NAME = "physical_host";
     public static final String VM_PHYSICAL_HOST_NAME_2 = "physical.host";
+    //applications metrics
+    public static final String APPS_ALLOCATED_TO_HOST_COUNT = "app_on_host_count";
+    public static final String APPS_RUNNING_ON_HOST_COUNT = "app_on_host_count";
+    public static final String APPS_STATUS = "application_status";
     //accelerators
     public static final String HAS_ACCELERATOR = "has_accelerator";
     public static final String HAS_GPU = "has_gpu";
