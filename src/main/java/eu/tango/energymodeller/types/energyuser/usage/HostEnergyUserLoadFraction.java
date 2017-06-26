@@ -18,6 +18,7 @@ package eu.tango.energymodeller.types.energyuser.usage;
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -87,6 +88,22 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
         }
         return vms;
     }
+    
+    /**
+     * This returns the set of energy usage sources that this fraction of host
+     * load describes.
+     *
+     * @return The energy usage sources that have been deployed on this host.
+     */
+    public Collection<ApplicationOnHost> getEnergyUsageSourcesAsApps() {
+        ArrayList<ApplicationOnHost> apps = new ArrayList<>();
+        for (EnergyUsageSource app : fraction.keySet()) {
+            if (app instanceof ApplicationOnHost) {
+                apps.add((ApplicationOnHost) app);
+            }
+        }
+        return apps;
+    }    
 
     /**
      * The time that this record represents, in UTC time.
@@ -139,14 +156,14 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
      */
     public static HashMap<EnergyUsageSource, Double> getFraction(List<VmMeasurement> load) {
         return getFraction(load, false);
-    }    
-
+    } 
+          
     /**
-     * This takes a set of vm usage records and calculates the fraction of
-     * system load each vm is responsible for.
+     * This takes a set of usage records and calculates the fraction of
+     * system load each energy user is responsible for.
      *
      * @param load The load that was induced on the system.
-     * @return The fraction of the load associated with each deployed vm.
+     * @return The fraction of the load associated with each deployed energy user (app or vm).
      */
     public static HashMap<EnergyUsageSource, Double> getFraction(Collection<UsageRecord> load) {
         HashMap<EnergyUsageSource, Double> answer = new HashMap<>();
@@ -224,7 +241,22 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
             answer.addAll(hostVmLoadFraction.getEnergyUsageSourcesAsVMs());
         }
         return answer;
-    }    
+    }
+    
+    /**
+     * This utility function goes through a list of HostEnergyUserLoadFraction
+     * and lists the Applications that were involved.
+     *
+     * @param fractionData The collection of load fraction data to parse.
+     * @return The list of Apps listed in the load fraction data.
+     */
+    public static HashSet<ApplicationOnHost> getEnergyUsersAsApps(Collection<HostEnergyUserLoadFraction> fractionData) {
+        HashSet<ApplicationOnHost> answer = new HashSet<>();
+        for (HostEnergyUserLoadFraction hostAppLoadFraction : fractionData) {
+            answer.addAll(hostAppLoadFraction.getEnergyUsageSourcesAsApps());
+        }
+        return answer;
+    }        
     
     /**
      * This utility function goes through a list of HostEnergyUserLoadFraction
@@ -267,6 +299,23 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
             return answer;
         }
     }
+    
+    /**
+     * This provides the data that shows the fraction of load a specific VM is
+     * responsible for.
+     *
+     * @param application The application to get the load information for
+     * @return The fraction between 0..1 of how much load was induced and 0 if
+     * the Application was not found.
+     */
+    public double getFraction(ApplicationOnHost application) {
+        Double answer = fraction.get(application);
+        if (answer == null) {
+            return 0;
+        } else {
+            return answer;
+        }
+    }    
 
     /**
      * This comparison orders load fraction records by time.
