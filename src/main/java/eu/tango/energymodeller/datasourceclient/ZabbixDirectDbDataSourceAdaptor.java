@@ -25,6 +25,7 @@ import static eu.tango.energymodeller.datasourceclient.KpiList.POWER_KPI_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.VM_PHYSICAL_HOST_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.VM_PHYSICAL_HOST_NAME_2;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost.JOB_STATUS;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;

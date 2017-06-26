@@ -16,6 +16,7 @@
 package eu.tango.energymodeller.datasourceclient;
 
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost.JOB_STATUS;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
@@ -30,8 +31,6 @@ import java.util.List;
  * @author Richard Kavanagh
  */
 public interface HostDataSource {
-
-    public enum JOB_STATUS {PENDING, RUNNING, SUSPENDED, COMPLETING, COMPLETED };
     
     /**
      * This returns a host given its unique name.

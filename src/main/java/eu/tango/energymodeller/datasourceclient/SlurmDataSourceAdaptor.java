@@ -21,8 +21,12 @@ package eu.tango.energymodeller.datasourceclient;
 import eu.ascetic.ioutils.caching.LRUCache;
 import eu.ascetic.ioutils.io.Settings;
 import static eu.tango.energymodeller.datasourceclient.KpiList.POWER_KPI_NAME;
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_ALLOCATED_TO_HOST_COUNT;
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_RUNNING_ON_HOST_COUNT;
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_STATUS;
 import eu.tango.energymodeller.types.energyuser.Accelerator;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost.JOB_STATUS;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
@@ -175,6 +179,23 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         return getHostApplicationList(null);
     }
 
+    /**
+     * This filters a list of applications by their current status
+     *
+     * @param apps The list of applications to filter
+     * @param state The status to filter the job by
+     * @return The list of filtered applications
+     */
+    public List<ApplicationOnHost> getHostApplicationList(List<ApplicationOnHost> apps, JOB_STATUS state) {
+        List<ApplicationOnHost> answer = new ArrayList<>();
+        for (ApplicationOnHost app : apps) {
+            if (app.getStatus().equals(state)) {
+                answer.add(app);
+            }
+        }
+        return answer;
+    }
+
     @Override
     public List<ApplicationOnHost> getHostApplicationList(JOB_STATUS state) {
         ArrayList<ApplicationOnHost> answer = new ArrayList<>();
@@ -238,6 +259,9 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                         Host host = getHostByName(hostStr);
                         ApplicationOnHost app = new ApplicationOnHost(appId, name, host);
                         app.setCreated(start);
+                        if (state != null) {
+                            app.setStatus(state);
+                        }
                         answer.add(app);
                         appCache.put(appId, app);
                     }
@@ -357,6 +381,88 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             answer.add(vmData);
         }
         return answer;
+    }
+
+    /**
+     * This provides for the named application all the information that is
+     * available.
+     *
+     * @param application The host to get the measurement data for.
+     * @return The host measurement data
+     */
+    public ApplicationMeasurement getApplicationData(ApplicationOnHost application) {
+        for (HostMeasurement measure : current.values()) {
+            if (measure.getHost().getHostName().equals(application.getName())) {
+                ApplicationMeasurement answer = new ApplicationMeasurement(application, measure.getClock());
+                answer.setMetrics(measure.getMetrics());
+                appendApplicationData(answer, measure);
+                return answer;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * This lists for all applications all the metric data on them.
+     *
+     * @return A list of application measurements
+     */
+    public List<ApplicationMeasurement> getApplicationData() {
+        List<ApplicationOnHost> apps = getHostApplicationList();
+        ArrayList<ApplicationMeasurement> answer = new ArrayList<>();
+        for (HostMeasurement measure : current.values()) {
+            List<ApplicationOnHost> appsOnThisHost = ApplicationOnHost.filter(apps, measure.getHost());
+            for (ApplicationOnHost appOnThisHost : appsOnThisHost) {
+                ApplicationMeasurement appData = new ApplicationMeasurement(
+                        appOnThisHost,
+                        measure.getClock());
+                appData.setMetrics(measure.getMetrics());
+                appendApplicationData(appData, measure);
+                answer.add(appData);
+            }
+        }
+        return answer;
+    }
+
+    /**
+     * This takes a list of applications and provides all the metric data on
+     * them.
+     *
+     * @param appList The list of applications to get the data from
+     * @return A list of application measurements
+     */
+    public List<ApplicationMeasurement> getApplicationData(List<ApplicationOnHost> appList) {
+        if (appList == null) {
+            return getApplicationData();
+        }
+        ArrayList<ApplicationMeasurement> answer = new ArrayList<>();
+        for (ApplicationOnHost app : appList) {
+
+            HostMeasurement measure = current.get(app.getAllocatedTo().getHostName());
+            ApplicationMeasurement appData = new ApplicationMeasurement(
+                    app,
+                    measure.getClock());
+            appData.setMetrics(measure.getMetrics());
+            appendApplicationData(appData, measure);
+            answer.add(appData);
+        }
+        return answer;
+    }
+
+    private ApplicationMeasurement appendApplicationData(ApplicationMeasurement appData, HostMeasurement measure) {
+        List<ApplicationOnHost> appsOnThisHost = ApplicationOnHost.filter(getHostApplicationList(), measure.getHost());
+        List<ApplicationOnHost> appsRunningOnThisHost = getHostApplicationList(appsOnThisHost, JOB_STATUS.RUNNING);
+        //loop through the refreshed data and update the apps job status.
+        for (ApplicationOnHost app : appsOnThisHost) {
+            if (app.equals(appData.getApplication())) {
+                appData.getApplication().setStatus(app.getStatus());
+                break;
+            }
+        }        
+        appData.addMetric(new MetricValue(APPS_STATUS, APPS_STATUS, appData.getApplication().getStatus().name(), measure.getClock()));
+        appData.addMetric(new MetricValue(APPS_ALLOCATED_TO_HOST_COUNT, APPS_ALLOCATED_TO_HOST_COUNT, appsOnThisHost.size() + "", measure.getClock()));
+        appData.addMetric(new MetricValue(APPS_RUNNING_ON_HOST_COUNT, APPS_RUNNING_ON_HOST_COUNT, appsRunningOnThisHost.size() + "", measure.getClock()));
+        return appData;
     }
 
     @Override

@@ -15,6 +15,7 @@
  */
 package eu.tango.energymodeller.types.energyuser.usage;
 
+import eu.tango.energymodeller.datasourceclient.ApplicationMeasurement;
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
@@ -148,6 +149,17 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
     }
     
     /**
+     * This takes a collection of application load measurement data (load data) and
+     * determines the fraction of the overall load which a application is responsible
+     * for.
+     *
+     * @param load The load that was induced upon the host, by the set of Vms
+     */
+    public void setApplicationFraction(List<ApplicationMeasurement> load) {
+        fraction = getApplicationFraction(load);
+    }    
+    
+    /**
      * This takes a set of vm usage records and calculates the fraction of
      * system load each vm is responsible for.
      *
@@ -224,6 +236,52 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
             } else {
                 answer.put(loadMeasure.getVm(), (loadMeasure.getCpuUtilisation() / totalLoad));
             }
+        }
+        return answer;
+    }
+    
+    /**
+     * This takes a set of application usage records and calculates the fraction of
+     * system load each application is responsible for.
+     *
+     * @param load The load that was induced on the system.
+     * @return The fraction of the load associated with each deployed vm.
+     */
+    public static HashMap<EnergyUsageSource, Double> getApplicationFraction(List<ApplicationMeasurement> load) {
+        HashMap<EnergyUsageSource, Double> answer = new HashMap<>();
+        double totalLoad = 0.0;
+        try {
+            for (ApplicationMeasurement loadMeasure : load) {
+                totalLoad = totalLoad + loadMeasure.getCpuUtilisation();
+                Logger.getLogger(HostEnergyUserLoadFraction.class.getName()).
+                        log(Level.FINE, "App: {0} CPU: {1}", new Object[]{loadMeasure.getApplication().getName(), loadMeasure.getCpuUtilisation()});
+            }
+        } catch (NullPointerException ex) {
+            Logger.getLogger(HostEnergyUserLoadFraction.class.getName()).log(Level.WARNING, "Using fallback due to no CPU load information.");
+            /**
+             * This occurs if the monitoring infrastructure provides no CPU 
+             * utilisation information for a application.
+             */
+            for (ApplicationMeasurement loadMeasure : load) {
+                answer.put(loadMeasure.getApplication(), 1.0);
+            }
+            return answer;
+        }
+        /**
+         * This is an error handling state, if the data indicates no load was
+         * induced whatsoever. Avoids divide by zero errors.
+         */
+        if (totalLoad == 0) {
+            Logger.getLogger(HostEnergyUserLoadFraction.class.getName()).log(Level.WARNING, 
+                    "Using fallback due to no CPU total load being equal to zero.");
+            double count = load.size();
+            for (ApplicationMeasurement loadMeasure : load) {
+                answer.put(loadMeasure.getApplication(), (1 / count));
+            }
+            return answer;
+        }
+        for (ApplicationMeasurement loadMeasure : load) {
+            answer.put(loadMeasure.getApplication(), (loadMeasure.getCpuUtilisation() / totalLoad));
         }
         return answer;
     }

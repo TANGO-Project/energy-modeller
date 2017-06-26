@@ -15,8 +15,10 @@
  */
 package eu.tango.energymodeller.datastore;
 
+import eu.tango.energymodeller.datasourceclient.ApplicationMeasurement;
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
 import eu.tango.energymodeller.datasourceclient.HostMeasurement;
+import eu.tango.energymodeller.datasourceclient.SlurmDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyShareRule;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
@@ -55,10 +57,13 @@ public class DataGatherer implements Runnable {
     private final HashMap<Host, Long> lastTimeStampSeen = new HashMap<>();
     private static final String CONFIG_FILE = "energy-modeller-data-gatherer.properties";
     private boolean logVmsToDisk = false;
+    private boolean logAppsToDisk = false;
     private String loggerOutputFile = "VmEnergyUsageData.txt";
+    private String appLoggerOutputFile = "AppEnergyUsageData.txt";
     private boolean performDataGathering = false;
     private boolean loggerConsiderIdleEnergy = true;
     private VmEnergyUsageLogger vmUsageLogger = null;
+    private ApplicationEnergyUsageLogger appUsageLogger = null;
     private boolean useWorkloadCache = false;
     private WorkloadStatisticsCache workloadCache = null;
 
@@ -86,8 +91,12 @@ public class DataGatherer implements Runnable {
             config.setAutoSave(true); //This will save the configuration file back to disk. In case the defaults need setting.
             logVmsToDisk = config.getBoolean("energy.modeller.data.gatherer.log.vms", logVmsToDisk);
             config.setProperty("energy.modeller.data.gatherer.log.vms", logVmsToDisk);
+            logAppsToDisk = config.getBoolean("energy.modeller.data.gatherer.log.apps", logAppsToDisk);
+            config.setProperty("energy.modeller.data.gatherer.log.apps", logAppsToDisk);
             loggerOutputFile = config.getString("energy.modeller.data.gatherer.log.vms.filename", loggerOutputFile);
             config.setProperty("energy.modeller.data.gatherer.log.vms.filename", loggerOutputFile);
+            loggerOutputFile = config.getString("energy.modeller.data.gatherer.log.apps.filename", appLoggerOutputFile);
+            config.setProperty("energy.modeller.data.gatherer.log.apps.filename", appLoggerOutputFile);
             loggerConsiderIdleEnergy = config.getBoolean("energy.modeller.data.gatherer.log.consider_idle_energy", loggerConsiderIdleEnergy);
             config.setProperty("energy.modeller.data.gatherer.log.consider_idle_energy", loggerConsiderIdleEnergy);
             useWorkloadCache = config.getBoolean("energy.modeller.data.gatherer.log.use_workload_cache", useWorkloadCache);
@@ -267,6 +276,13 @@ public class DataGatherer implements Runnable {
             vmUsageLoggerThread.setDaemon(true);
             vmUsageLoggerThread.start();
         }
+        if (logAppsToDisk && performDataGathering) {
+            appUsageLogger = new ApplicationEnergyUsageLogger(new File(appLoggerOutputFile), true);
+            appUsageLogger.setConsiderIdleEnergy(loggerConsiderIdleEnergy);
+            Thread appUsageLoggerThread = new Thread(appUsageLogger);
+            appUsageLoggerThread.setDaemon(true);
+            appUsageLoggerThread.start();
+        }
         /**
          * Polls the data source and write values to the database.
          */
@@ -363,6 +379,19 @@ public class DataGatherer implements Runnable {
                 if (vmUsageLogger != null) {
                     Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Logging out to Zabbix file");
                     vmUsageLogger.printToFile(vmUsageLogger.new Pair(measurement, fraction));
+                }
+            }
+            List<ApplicationOnHost> apps = datasource.getHostApplicationList(ApplicationOnHost.JOB_STATUS.RUNNING);
+            if (!apps.isEmpty() && datasource instanceof SlurmDataSourceAdaptor) {
+                Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Obtaining specific app information");
+                List<ApplicationMeasurement> appMeasurements = ((SlurmDataSourceAdaptor)datasource).getApplicationData(apps);
+                HostEnergyUserLoadFraction fraction = new HostEnergyUserLoadFraction(host, measurement.getClock());
+                fraction.setFraction(appMeasurements);
+                fraction.setHostPowerOffset(hostOffset);
+                //TODO Write this data to the database
+                if (appUsageLogger != null) {
+                    Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Logging out to Zabbix file, for applications");
+                    appUsageLogger.printToFile(appUsageLogger.new Pair(measurement, fraction));
                 }
             }
         }
@@ -743,7 +772,7 @@ public class DataGatherer implements Runnable {
     public ArrayList<ApplicationOnHost> getApplications() {
         return (ArrayList<ApplicationOnHost>) datasource.getHostApplicationList();
     }
-    
+
     /**
      * This gets a list of the applications running on a host machine.
      *
