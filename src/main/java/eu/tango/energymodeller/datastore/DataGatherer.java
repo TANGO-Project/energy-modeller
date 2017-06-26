@@ -386,7 +386,7 @@ public class DataGatherer implements Runnable {
                 Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Obtaining specific app information");
                 List<ApplicationMeasurement> appMeasurements = ((SlurmDataSourceAdaptor)datasource).getApplicationData(apps);
                 HostEnergyUserLoadFraction fraction = new HostEnergyUserLoadFraction(host, measurement.getClock());
-                fraction.setFraction(appMeasurements);
+                fraction.setApplicationFraction(appMeasurements);
                 fraction.setHostPowerOffset(hostOffset);
                 //TODO Write this data to the database
                 if (appUsageLogger != null) {
