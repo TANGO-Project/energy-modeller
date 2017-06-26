@@ -219,17 +219,28 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         /*
          * This queries what jobs are currently running, it outputs
          * "JOBID, NAME, TIME, NODELIST (REASON)"
+         * "JOBID, JOB_NAME, USER, STATUS, TIME, NODELIST (REASON)"
          * One line per job and space separated.
          * 
+         * squeue -t RUNNING -l | awk 'NR> 1 {split($0,values,"[ \t\n]+"); 
+         * printf values[1] " " ; printf values[2] " "; printf values[4] " "; 
+         * printf values[5] " "; printf values[6] " "; printf values[7] " " ; 
+         * print values[10]}'
+         *
          * The output looks like:
          * 
-         * 3845 RK-BENCH 0:03 ns57
+         * 3009 RK-BENCH Kavanagr RUNNING 8:06 ns52
+         *        
          */
-        String maincmd = "squeue " + jobState + "| awk 'NR> 1 {split($0,values,\"[ \\t\\n]+\"); "
-                + "printf values[1] \" \" ; printf values[2] \" \"; "
+        String maincmd = "squeue " + jobState + "-l | awk 'NR> 2 {split($0,values,\"[ \\t\\n]+\"); "
+                + "printf values[1] \" \" ; "
+                + "printf values[2] \" \"; "
                 + "printf values[4] \" \";"
+                + "printf values[5] \" \";"
+                + "printf values[6"
+                + "] \" \";"
                 + "printf values[7] \" \" ; "
-                + "print values[9]}'";
+                + "print values[10]}'";
         ArrayList<String> output = execCmd(maincmd);
         for (String line : output) { //Each line represents a different application
             if (line != null && !line.isEmpty()) {
@@ -241,11 +252,14 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                         /**
                          * Get the cached copy, avoids duplicating objects
                          */
-                        answer.add(appCache.get(appId));
+                        ApplicationOnHost cachedApp = appCache.get(appId);
+                        cachedApp.setStatus(ApplicationOnHost.JOB_STATUS.valueOf(items[3]));
+                        answer.add(cachedApp);
                         continue;
                     }
                     String name = items[1];
-                    String duration = items[2]; //to parse into duration
+                    String status = items[3];
+                    String duration = items[4]; //to parse into duration
                     String[] durationSplit = duration.split(":"); //0:03 i.e. mins:seconds
                     long min = Long.parseLong(durationSplit[0]);
                     long seconds = Long.parseLong(durationSplit[1]);
@@ -254,13 +268,15 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                     long startTime = currentTime - TimeUnit.SECONDS.toMillis(seconds);
                     GregorianCalendar start = new GregorianCalendar();
                     start.setTimeInMillis(startTime);
-                    ArrayList<String> hostStrings = getHostList(items[3]);
+                    ArrayList<String> hostStrings = getHostList(items[6]);
                     for (String hostStr : hostStrings) {
                         Host host = getHostByName(hostStr);
                         ApplicationOnHost app = new ApplicationOnHost(appId, name, host);
                         app.setCreated(start);
                         if (state != null) {
                             app.setStatus(state);
+                        } else {
+                            app.setStatus(ApplicationOnHost.JOB_STATUS.valueOf(status));
                         }
                         answer.add(app);
                         appCache.put(appId, app);
