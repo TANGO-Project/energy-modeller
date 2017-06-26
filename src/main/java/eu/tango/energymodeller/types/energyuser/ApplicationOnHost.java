@@ -105,36 +105,36 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
     }
 
     /**
-     * This sets which host this VM is allocated to.
+     * This sets which host this application is allocated to.
      *
-     * @param allocatedTo The host this vm is allocated to
+     * @param allocatedTo The host this app is allocated to
      */
     public void setAllocatedTo(Host allocatedTo) {
         this.allocatedTo = allocatedTo;
     }
 
     /**
-     * This gets the date the VM was instantiated.
+     * This gets the date the application was started.
      *
-     * @return The boot time of the VM.
+     * @return The start time of the application.
      */
     public Calendar getCreated() {
         return created;
     }
 
     /**
-     * This sets the date the VM was instantiated.
+     * This sets the date the application was instantiated.
      *
-     * @param created The boot time of the VM.
+     * @param created The boot time of the application.
      */
     public void setCreated(Calendar created) {
         this.created = created;
     }
 
     /**
-     * This indicates which host this VM is allocated to.
+     * This indicates which host this application is allocated to.
      *
-     * @return the allocatedTo The host this vm is allocated to
+     * @return the allocatedTo The host this app is allocated to
      */
     public Host getAllocatedTo() {
         return allocatedTo;
@@ -157,8 +157,8 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
     }
 
     /**
-     * This returns the time in seconds that have passed since this VM was
-     * booted.
+     * This returns the time in seconds that have passed since this application 
+     * was started.
      *
      * @return The time in seconds since boot. This returns -1 if the created
      * date is unknown.
