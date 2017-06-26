@@ -382,6 +382,7 @@ public class DataGatherer implements Runnable {
                 }
             }
             List<ApplicationOnHost> apps = datasource.getHostApplicationList(ApplicationOnHost.JOB_STATUS.RUNNING);
+            apps = ApplicationOnHost.filter(apps, host);
             if (!apps.isEmpty() && datasource instanceof SlurmDataSourceAdaptor) {
                 Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Obtaining specific app information");
                 List<ApplicationMeasurement> appMeasurements = ((SlurmDataSourceAdaptor)datasource).getApplicationData(apps);
