@@ -12,9 +12,9 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * This is being developed for the TANGO Project: http://tango-project.eu
- * 
+ *
  */
 package eu.tango.energymodeller.types.energyuser;
 
@@ -35,17 +35,22 @@ import java.util.concurrent.TimeUnit;
  */
 public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSource, Comparable<ApplicationOnHost> {
 
-    public enum JOB_STATUS {PENDING, RUNNING, SUSPENDED, COMPLETING, COMPLETED };
-    
+    public enum JOB_STATUS {
+
+        PENDING, RUNNING, SUSPENDED, COMPLETING, COMPLETED
+    };
+
     private int id;
     private String name;
     private Host allocatedTo;
     private Calendar created;
+    private Calendar deadline;
     private JOB_STATUS status;
 
     /**
-     * Creates an instance of an application which is to be allocated power 
+     * Creates an instance of an application which is to be allocated power
      * consumption
+     *
      * @param id The id of the application
      * @param name The name of the application
      * @param allocatedTo The host the application is allocated to
@@ -57,8 +62,9 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
     }
 
     /**
-     * Creates an instance of an application which is to be allocated power 
+     * Creates an instance of an application which is to be allocated power
      * consumption
+     *
      * @param id The id of the application
      * @param name The name of the application
      * @param allocatedTo The host the application is allocated to
@@ -70,7 +76,7 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         this.allocatedTo = allocatedTo;
         this.created = created;
     }
-    
+
     /**
      * This gets the id associated with this application (process id number).
      *
@@ -78,8 +84,8 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
      */
     public int getId() {
         return id;
-    }    
-    
+    }
+
     /**
      * This sets the process id associated with this application.
      *
@@ -135,6 +141,35 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
     }
 
     /**
+     * Gets the deadline of the application if it has one, null is returned if
+     * no deadline is set.
+     *
+     * @return The deadline of the application, null if not set.
+     */
+    public Calendar getDeadline() {
+        return deadline;
+    }
+
+    /**
+     * This sets the deadline of the application
+     *
+     * @param deadline The new deadline of the application, to discard the
+     * deadline the value that should be passed is null.
+     */
+    public void setDeadline(Calendar deadline) {
+        this.deadline = deadline;
+    }
+
+    /**
+     * Indicates if this application has a deadline set
+     *
+     * @return True only if a deadline for the application has been set.
+     */
+    public boolean hasDeadline() {
+        return deadline != null;
+    }
+
+    /**
      * This indicates which host this application is allocated to.
      *
      * @return the allocatedTo The host this app is allocated to
@@ -145,6 +180,7 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
 
     /**
      * This gets the jobs status
+     *
      * @return The status of this job when it was last measured.
      */
     public JOB_STATUS getStatus() {
@@ -153,6 +189,7 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
 
     /**
      * This sets the status of this job
+     *
      * @param status The new status of this job
      */
     public void setStatus(JOB_STATUS status) {
@@ -176,7 +213,7 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
     }
 
     /**
-     * This returns the time in seconds that have passed since this application 
+     * This returns the time in seconds that have passed since this application
      * was started.
      *
      * @return The time in seconds since boot. This returns -1 if the created
@@ -190,7 +227,7 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         long bootTimeMilliSecs = created.getTimeInMillis();
         return TimeUnit.MILLISECONDS.toSeconds(currentTime - bootTimeMilliSecs);
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof ApplicationOnHost) {
@@ -199,7 +236,7 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         }
         return false;
 
-    }    
+    }
 
     @Override
     public int hashCode() {
@@ -216,20 +253,20 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
 
     @Override
     public String toString() {
-        return "name: " + name + 
-        " id: " + id +
-        "host : " + allocatedTo +
-        "started: " + created;
-    }   
+        return "name: " + name
+                + " id: " + id
+                + "host : " + allocatedTo
+                + "started: " + created;
+    }
 
     /**
-     * This casts a application on host collection into a energy usage source 
+     * This casts a application on host collection into a energy usage source
      * collection.
      *
-     * @param applications The application collection to cast into its
-     * parent type.
-     * @return The collection of applications in its super type. This is backed by a
-     * hashset.
+     * @param applications The application collection to cast into its parent
+     * type.
+     * @return The collection of applications in its super type. This is backed
+     * by a hashset.
      */
     public static Collection<EnergyUsageSource> castToEnergyUser(Collection<ApplicationOnHost> applications) {
         Collection<EnergyUsageSource> answer = new HashSet<>();
@@ -242,23 +279,23 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
      *
      * @param applications The application on host list to cast into its parent
      * type.
-     * @return The list of applications in its super type. This is backed by an array
-     * list.
+     * @return The list of applications in its super type. This is backed by an
+     * array list.
      */
     public static List<EnergyUsageSource> castToEnergyUser(List<ApplicationOnHost> applications) {
         List<EnergyUsageSource> answer = new ArrayList<>();
         answer.addAll(applications);
         return answer;
     }
-    
+
     /**
-     * This casts a application on host collection into a workload source 
+     * This casts a application on host collection into a workload source
      * collection.
      *
-     * @param applications The application collection to cast into its
-     * parent type.
-     * @return The collection of applications in its super type. This is backed by a
-     * hashset.
+     * @param applications The application collection to cast into its parent
+     * type.
+     * @return The collection of applications in its super type. This is backed
+     * by a hashset.
      */
     public static Collection<WorkloadSource> castToWorkloadSource(Collection<ApplicationOnHost> applications) {
         Collection<WorkloadSource> answer = new HashSet<>();
@@ -269,31 +306,32 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
     /**
      * This casts a application list into a WorkloadSource list.
      *
-     * @param applications The application list to cast into its parent
-     * type.
-     * @return The list of applications in its super type. This is backed by an array
-     * list.
+     * @param applications The application list to cast into its parent type.
+     * @return The list of applications in its super type. This is backed by an
+     * array list.
      */
     public static List<WorkloadSource> castToWorkloadSource(List<ApplicationOnHost> applications) {
         List<WorkloadSource> answer = new ArrayList<>();
         answer.addAll(applications);
         return answer;
-    }       
+    }
 
     /**
-     * This takes a list of applications and returns only the list on a named host.
+     * This takes a list of applications and returns only the list on a named
+     * host.
+     *
      * @param applications The list of all applications
      * @param host The host to find its list of applications for
      * @return The list of applications on the named host
      */
     public static List<ApplicationOnHost> filter(List<ApplicationOnHost> applications, Host host) {
-                List<ApplicationOnHost> answer = new ArrayList<>();
+        List<ApplicationOnHost> answer = new ArrayList<>();
         for (ApplicationOnHost application : applications) {
             if (application.allocatedTo.equals(host)) {
                 answer.add(application);
             }
         }
         return answer;
-    }    
-    
+    }
+
 }

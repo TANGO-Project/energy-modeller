@@ -219,13 +219,13 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         /*
          * This queries what jobs are currently running, it outputs
          * "JOBID, NAME, TIME, NODELIST (REASON)"
-         * "JOBID, JOB_NAME, USER, STATUS, TIME, NODELIST (REASON)"
+         * "JOBID, JOB_NAME, USER, STATUS, TIME, MAX_TIME, NODELIST (REASON)"
          * One line per job and space separated.
          * 
          * squeue -t RUNNING -l | awk 'NR> 1 {split($0,values,"[ \t\n]+"); 
          * printf values[1] " " ; printf values[2] " "; printf values[4] " "; 
          * printf values[5] " "; printf values[6] " "; printf values[7] " " ; 
-         * print values[10]}'
+         * printf values[8] " " print values[10]}'
          *
          * The output looks like:
          * 
@@ -235,11 +235,11 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         String maincmd = "squeue " + jobState + "-l | awk 'NR> 2 {split($0,values,\"[ \\t\\n]+\"); "
                 + "printf values[1] \" \" ; "
                 + "printf values[2] \" \"; "
-                + "printf values[4] \" \";"
-                + "printf values[5] \" \";"
-                + "printf values[6"
-                + "] \" \";"
-                + "printf values[7] \" \" ; "
+                + "printf values[4] \" \"; "
+                + "printf values[5] \" \"; "
+                + "printf values[6] \" \"; "
+                + "printf values[7] \" \"; "
+                + "printf values[8] \" \"; "
                 + "print values[10]}'";
         ArrayList<String> output = execCmd(maincmd);
         for (String line : output) { //Each line represents a different application
@@ -259,20 +259,23 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                     }
                     String name = items[1];
                     String status = items[3];
-                    String duration = items[4]; //to parse into duration
-                    String[] durationSplit = duration.split(":"); //0:03 i.e. mins:seconds
-                    long min = Long.parseLong(durationSplit[0]);
-                    long seconds = Long.parseLong(durationSplit[1]);
-                    seconds = seconds + TimeUnit.MINUTES.toSeconds(min);
+                    long runningTime = parseDurationString(items[4]); //to parse into duration
+                    long maxRuntime = parseDurationString(items[5]); //to parse into duration
                     long currentTime = System.currentTimeMillis();
-                    long startTime = currentTime - TimeUnit.SECONDS.toMillis(seconds);
+                    long startTime = currentTime - TimeUnit.SECONDS.toMillis(runningTime);
                     GregorianCalendar start = new GregorianCalendar();
+                    GregorianCalendar deadline = null;
                     start.setTimeInMillis(startTime);
+                    if (maxRuntime != 0) {
+                        deadline = new GregorianCalendar();
+                        deadline.setTimeInMillis(TimeUnit.SECONDS.toMillis(startTime + maxRuntime));
+                    }
                     ArrayList<String> hostStrings = getHostList(items[6]);
                     for (String hostStr : hostStrings) {
                         Host host = getHostByName(hostStr);
                         ApplicationOnHost app = new ApplicationOnHost(appId, name, host);
                         app.setCreated(start);
+                        app.setDeadline(deadline);
                         if (state != null) {
                             app.setStatus(state);
                         } else {
@@ -289,6 +292,23 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         }
         return answer;
     }
+    
+    /**
+     * This takes a string in the format 0:03 i.e. mins:seconds and converts it 
+     * into seconds
+     * @param duration The string to parse
+     * @return The time in seconds the duration string translates to.
+     */
+    public static long parseDurationString(String duration) {
+        if (duration == null || duration.isEmpty()) {
+            return 0;
+        }
+        String[] durationSplit = duration.split(":"); //0:03 i.e. mins:seconds
+        long min = Long.parseLong(durationSplit[0]);
+        long seconds = Long.parseLong(durationSplit[1]);
+        seconds = seconds + TimeUnit.MINUTES.toSeconds(min);
+        return seconds;
+    }    
 
     /**
      * This executes a command and returns the output as a line of strings.
