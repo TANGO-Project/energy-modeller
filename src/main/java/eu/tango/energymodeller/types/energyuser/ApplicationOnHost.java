@@ -59,6 +59,7 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         this.id = id;
         this.name = name;
         this.allocatedTo = allocatedTo;
+        created = new GregorianCalendar(); //assumes created date of now()
     }
 
     /**
@@ -167,6 +168,58 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
      */
     public boolean hasDeadline() {
         return deadline != null;
+    }
+
+    /**
+     * If a deadline is set the progress to completion can be determined.
+     *
+     * @return The percentage of progress through the application alloted time.
+     * -1 if this no deadline has been set.
+     */
+    public double getProgress() {
+        if (!hasDeadline()) {
+            return -1;
+        }
+        long start = TimeUnit.MILLISECONDS.toSeconds(created.getTimeInMillis());
+        long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+        long end = TimeUnit.MILLISECONDS.toSeconds(deadline.getTimeInMillis());
+        long maxDuration = end - start;
+        if (maxDuration <= 0) {
+            return -1;
+        }
+        long progress = now - start;
+        if (progress <= 0) {
+            return -1;
+        }
+        return (progress / maxDuration) * 100;
+    }
+    
+    /**
+     * This provides details of how long the application has been running in seconds.
+     * @return The current length of time the application has been running.
+     */
+    public long getDuration() {
+        if (!hasDeadline()) {
+            return -1;
+        }
+        long start = TimeUnit.MILLISECONDS.toSeconds(created.getTimeInMillis());
+        long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+        return now - start;
+    }
+    
+
+    /**
+     * This provides details of an applications maximum duration
+     * @return The maximum duration of the application in seconds if a deadline is set.
+     * returns -1 if no deadline is set.
+     */
+    public long getMaxDuration() {
+        if (!hasDeadline()) {
+            return -1;
+        }
+        long start = TimeUnit.MILLISECONDS.toSeconds(created.getTimeInMillis());
+        long end = TimeUnit.MILLISECONDS.toSeconds(deadline.getTimeInMillis());
+        return end - start;
     }
 
     /**
@@ -333,5 +386,25 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         }
         return answer;
     }
+    
+    /**
+     * This takes a list of applications and returns only the list on applications
+     * listed that have the same name and instance id. This therefore means if
+     * an application runs across several hosts the list can be filtered to find
+     * all the application on host instances, for a given application.
+     * @param applications The list of all applications
+     * @param name The name of the application
+     * @param id The unique id of the application
+     * @return The list of applications on host instances for a named application
+     */
+    public static List<ApplicationOnHost> filter(List<ApplicationOnHost> applications, String name, int id) {
+        List<ApplicationOnHost> answer = new ArrayList<>();
+        for (ApplicationOnHost application : applications) {
+            if (application.getName().equals(name) && application.getId() == id) {
+                answer.add(application);
+            }
+        }
+        return answer;
+    }    
 
 }
