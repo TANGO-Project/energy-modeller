@@ -733,7 +733,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                         measurement.addMetric(new MetricValue(valueSplit[0].trim(), valueSplit[0].trim(), "", clock));
                         break;
                     default: //Cases such as CfgTRES=cpu=32,mem=64408M
-                        int params = value.split("=").length;
+                        int params = value.split("=").length / 2;
                         valueSplit = value.split("[=,]");
                         /*
                          * CfgTRES=cpu=32,mem=64408M becomes
