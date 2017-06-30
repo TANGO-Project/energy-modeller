@@ -71,8 +71,8 @@ public class ApplicationEnergyUsageLogger extends GenericLogger<ApplicationEnerg
      */
     public void writebody(HostMeasurement hostMeasurement, HostEnergyUserLoadFraction applicationLoadFraction, ResultsStore store) {
         store.setDelimeter(" ");
-        ArrayList<EnergyUsageSource> vmsArr = new ArrayList<>();
-        vmsArr.addAll(applicationLoadFraction.getEnergyUsageSources());
+        ArrayList<EnergyUsageSource> appsArr = new ArrayList<>();
+        appsArr.addAll(applicationLoadFraction.getEnergyUsageSources());
         if (rule.getClass().equals(LoadFractionShareRule.class)) {
             ArrayList<HostEnergyUserLoadFraction> loadFractionData = new ArrayList<>();
             loadFractionData.add(applicationLoadFraction);
@@ -81,7 +81,7 @@ public class ApplicationEnergyUsageLogger extends GenericLogger<ApplicationEnerg
         } else {
             Logger.getLogger(ApplicationEnergyUsageLogger.class.getName()).log(Level.FINE, "Using Share Rule Class: {0}", rule.getClass());
         }
-        EnergyDivision division = rule.getEnergyUsage(hostMeasurement.getHost(), vmsArr);
+        EnergyDivision division = rule.getEnergyUsage(hostMeasurement.getHost(), appsArr);
         division.setConsiderIdleEnergy(considerIdleEnergy);
 
         for (ApplicationOnHost app : applicationLoadFraction.getEnergyUsageSourcesAsApps()) {
@@ -91,10 +91,9 @@ public class ApplicationEnergyUsageLogger extends GenericLogger<ApplicationEnerg
             double powerVal = division.getEnergyUsage(formatDouble(hostMeasurement.getPower(true), 1), app);
             powerVal = powerVal + applicationLoadFraction.getHostPowerOffset();
             if (!Double.isNaN(powerVal) && powerVal > 0) {
-                store.add(app.getName());
+                store.add("APP:" + app.getAllocatedTo().getHostName() + ":" + app.getName() + ":" + app.getId());
                 store.append("power");
-                store.append(powerVal);
-                store.add(app.getName());             
+                store.append(powerVal);           
             }
         }
     }
