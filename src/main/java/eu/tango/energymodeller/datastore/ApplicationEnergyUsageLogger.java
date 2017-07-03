@@ -91,7 +91,7 @@ public class ApplicationEnergyUsageLogger extends GenericLogger<ApplicationEnerg
             double powerVal = division.getEnergyUsage(formatDouble(hostMeasurement.getPower(true), 1), app);
             powerVal = powerVal + applicationLoadFraction.getHostPowerOffset();
             if (!Double.isNaN(powerVal) && powerVal > 0) {
-                store.add("APP:" + app.getAllocatedTo().getHostName() + ":" + app.getName() + ":" + app.getId());
+                store.add("APP:" + app.getName() + ":" + app.getId() + ":" + app.getAllocatedTo().getHostName());
                 store.append("power");
                 store.append(powerVal);           
             }

@@ -16,6 +16,7 @@
 package eu.tango.energymodeller.datastore;
 
 import eu.tango.energymodeller.types.TimePeriod;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.energyuser.VmDiskImage;
@@ -592,6 +593,27 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
             Logger.getLogger(DefaultDatabaseConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+     public void writeApplicationHistoricData(Host host, long time, HostEnergyUserLoadFraction load) {
+        connection = getConnection(connection);
+        if (connection == null || host == null) {
+            return;
+        }
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                "INSERT INTO app_measurement (host_id, app_id, clock, cpu_load, power_overhead) VALUES (?, ?, ? , ?, ?);")) {
+            preparedStatement.setInt(1, host.getId());
+            double averageOverhead = load.getHostPowerOffset() / load.getEnergyUsageSources().size();
+            for (ApplicationOnHost app : load.getEnergyUsageSourcesAsApps()) {
+                preparedStatement.setInt(2, app.getId());
+                preparedStatement.setLong(3, time);
+                preparedStatement.setDouble(4, load.getFraction(app));
+                preparedStatement.setDouble(5, averageOverhead);              
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DefaultDatabaseConnector.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }   
 
     /**
      * This is part of a caching mechanism for Vms when getting historic load
