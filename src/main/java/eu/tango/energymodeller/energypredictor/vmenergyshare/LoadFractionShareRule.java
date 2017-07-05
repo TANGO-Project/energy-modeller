@@ -12,13 +12,14 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * This is being developed for the TANGO Project: http://tango-project.eu
- * 
+ *
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare;
 
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
@@ -30,27 +31,33 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * This looks at the fraction of load placed on each VM and determines the 
- * share of energy that is should have based upon this.
+ * This looks at the fraction of load placed on each VM and determines the share
+ * of energy that is should have based upon this.
+ *
  * @author Richard Kavanagh
  */
 public class LoadFractionShareRule implements EnergyShareRule {
 
     private HashMap<EnergyUsageSource, Double> fractions = new HashMap<>();
-    
+
     @Override
     public EnergyDivision getEnergyUsage(Host host, Collection<EnergyUsageSource> energyUsers) {
         EnergyDivision answer = new EnergyDivision(host);
         for (EnergyUsageSource energyUser : energyUsers) {
-            VmDeployed deployed = (VmDeployed) energyUser;
+            EnergyUsageSource deployed = (EnergyUsageSource) energyUser;
             answer.addWeight(energyUser, fractions.get(deployed));
-            Logger.getLogger(LoadFractionShareRule.class.getName()).log(Level.FINE, "VM: {0} Ratio: {1}", new Object[]{deployed.getName(), fractions.get(deployed)});
+            if (energyUser instanceof VmDeployed) {
+                Logger.getLogger(LoadFractionShareRule.class.getName()).log(Level.FINE, "VM: {0} Ratio: {1}", new Object[]{((VmDeployed) deployed).getName(), fractions.get(deployed)});
+            } else if (energyUser instanceof ApplicationOnHost) {
+                    Logger.getLogger(LoadFractionShareRule.class.getName()).log(Level.FINE, "App: {0} Ratio: {1}", new Object[]{((ApplicationOnHost) deployed).getName(), fractions.get(deployed)});
+            }
         }
         return answer;
     }
 
     /**
      * This sets the load fractions to use in this energy share rule.
+     *
      * @param vmMeasurements The Vm measurements that are used to set this load
      * fraction data.
      */
@@ -61,6 +68,7 @@ public class LoadFractionShareRule implements EnergyShareRule {
     /**
      * This returns the data that indicates which VMs should take which fraction
      * of the overall energy.
+     *
      * @return the fractioning of the host energy data.
      */
     public HashMap<EnergyUsageSource, Double> getFractions() {
@@ -70,6 +78,7 @@ public class LoadFractionShareRule implements EnergyShareRule {
     /**
      * This allows the data that indicates which VMs should take which fraction
      * of the overall energy to be directly set.
+     *
      * @param fractions the fractioning of the host energy data to set.
      */
     public void setFractions(HashMap<EnergyUsageSource, Double> fractions) {
