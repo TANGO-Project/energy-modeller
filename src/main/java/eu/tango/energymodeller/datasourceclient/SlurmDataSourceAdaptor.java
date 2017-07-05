@@ -225,15 +225,15 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
          * squeue -t RUNNING -l | awk 'NR> 1 {split($0,values,"[ \t\n]+"); 
          * printf values[1] " " ; printf values[2] " "; printf values[4] " "; 
          * printf values[5] " "; printf values[6] " "; printf values[7] " " ; 
-         * printf values[8] " " print values[10]}'
+         * printf values[8] " "; print values[10]}'
          *
          * The output looks like:
          * 
          * 3009 RK-BENCH Kavanagr RUNNING 8:06 ns52
          *        
          */
-        String maincmd = "squeue " + jobState + "-l | awk 'NR> 2 {split($0,values,\"[ \\t\\n]+\"); "
-                + "printf values[1] \" \" ; "
+        String maincmd = "squeue " + jobState + " -l | awk 'NR> 2 {split($0,values,\"[ \\t\\n]+\"); "
+                + "printf values[1] \" \"; "
                 + "printf values[2] \" \"; "
                 + "printf values[4] \" \"; "
                 + "printf values[5] \" \"; "
@@ -647,6 +647,9 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         measurement.addMetric(new MetricValue(KpiList.HAS_GPU, KpiList.HAS_GPU, hasGraphicsCard + "", clock));
         measurement.addMetric(new MetricValue(KpiList.HAS_MIC, KpiList.HAS_MIC, hasMic + "", clock));
         measurement.addMetric(new MetricValue(KpiList.HAS_ACCELERATOR, KpiList.HAS_ACCELERATOR, hasAccelerator + "", clock));
+        if (hasAccelerator == false) {
+            return measurement;
+        }
         String[] gresStringSplit = gresString.split(",");
         for (String dataItem : gresStringSplit) {
             boolean gpu = dataItem.contains("gpu");
