@@ -58,8 +58,8 @@ public class DataGatherer implements Runnable {
     private static final String CONFIG_FILE = "energy-modeller-data-gatherer.properties";
     private boolean logVmsToDisk = false;
     private boolean logAppsToDisk = false;
-    private String loggerOutputFile = "VmEnergyUsageData.txt";
-    private String appLoggerOutputFile = "AppEnergyUsageData.txt";
+    private String loggerOutputFile = "./logs/energy-modeller-output.log";
+    private String appLoggerOutputFile = "./logs/energy-modeller-app-output.log";
     private boolean performDataGathering = false;
     private boolean loggerConsiderIdleEnergy = true;
     private VmEnergyUsageLogger vmUsageLogger = null;

@@ -209,8 +209,10 @@ public class EnergyModeller {
                 String datasourceStr = config.getString("energy.modeller.datasource", "SlurmDataSourceAdaptor");
                 setDataSource(datasourceStr);
                 config.setProperty("energy.modeller.datasource", datasourceStr);
+                if (!new File(CONFIG_FILE).exists()) {
+                    config.save();
+                }
             }
-
         } catch (ConfigurationException ex) {
             Logger.getLogger(DataGatherer.class.getName()).log(Level.INFO, "Error loading the configuration of the IaaS energy modeller", ex);
         }
