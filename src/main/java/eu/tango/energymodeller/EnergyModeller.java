@@ -12,16 +12,16 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * This is being developed for the TANGO Project: http://tango-project.eu
- * 
+ *
  */
 package eu.tango.energymodeller;
 
 import eu.ascetic.utils.ovf.api.OvfDefinition;
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
+import eu.tango.energymodeller.datasourceclient.SlurmDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.WattsUpMeterDataSourceAdaptor;
-import eu.tango.energymodeller.datasourceclient.ZabbixDirectDbDataSourceAdaptor;
 import eu.tango.energymodeller.datastore.DataGatherer;
 import eu.tango.energymodeller.datastore.DatabaseConnector;
 import eu.tango.energymodeller.datastore.DefaultDatabaseConnector;
@@ -61,6 +61,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 
 /**
  * This is the main entry point for the energy modeller. It is going to have the
@@ -92,6 +94,7 @@ public class EnergyModeller {
     private Class<?> historicEnergyDivisionMethod = LoadBasedDivision.class;
     private Class<?> currentEnergyDivisionMethod = LoadFractionShareRule.class;
     private boolean considerIdleEnergyCurrentVm = true;
+    private static final String CONFIG_FILE = "energy-modeller.properties";
 
     /**
      * This runs the energy modeller in standalone mode.
@@ -149,7 +152,6 @@ public class EnergyModeller {
      * This creates a new energy modeller.
      */
     public EnergyModeller() {
-        datasource = new ZabbixDirectDbDataSourceAdaptor();
         database = new DefaultDatabaseConnector();
         startup(false);
     }
@@ -161,9 +163,21 @@ public class EnergyModeller {
      * write to disk and also write to the background database.
      */
     public EnergyModeller(boolean performDataGathering) {
-        datasource = new ZabbixDirectDbDataSourceAdaptor();
         database = new DefaultDatabaseConnector();
         startup(performDataGathering);
+    }
+
+    /**
+     * This creates a new energy modeller.
+     *
+     * @param datasource The data source to use for the energy modeller
+     * @param performDataGathering Indicates if this energy modeller should,
+     * write to disk and also write to the background database.
+     */
+    public EnergyModeller(HostDataSource datasource, boolean performDataGathering) {
+        this.datasource = datasource;
+        this.database = new DefaultDatabaseConnector();;
+        startup(false);
     }
 
     /**
@@ -182,7 +196,25 @@ public class EnergyModeller {
      * This is common code for the constructors
      */
     private void startup(boolean performDataGathering) {
-        dataGatherer = new DataGatherer(datasource, new DefaultDatabaseConnector());
+        try {
+            if (datasource == null) {
+                PropertiesConfiguration config;
+                if (new File(CONFIG_FILE).exists()) {
+                    config = new PropertiesConfiguration(CONFIG_FILE);
+                } else {
+                    config = new PropertiesConfiguration();
+                    config.setFile(new File(CONFIG_FILE));
+                }
+                config.setAutoSave(true); //This will save the configuration file back to disk. In case the defaults need setting.
+                String datasourceStr = config.getString("energy.modeller.datasource", "SlurmDataSourceAdaptor");
+                setDataSource(datasourceStr);
+                config.setProperty("energy.modeller.datasource", datasourceStr);
+            }
+
+        } catch (ConfigurationException ex) {
+            Logger.getLogger(DataGatherer.class.getName()).log(Level.INFO, "Error loading the configuration of the IaaS energy modeller", ex);
+        }
+        dataGatherer = new DataGatherer(datasource, database);
         dataGatherer.setPerformDataGathering(performDataGathering);
         try {
             dataGatherThread = new Thread(dataGatherer);
@@ -240,12 +272,12 @@ public class EnergyModeller {
             }
         } catch (ClassNotFoundException ex) {
             if (datasource == null) {
-                datasource = new ZabbixDirectDbDataSourceAdaptor();
+                datasource = new SlurmDataSourceAdaptor();
             }
             Logger.getLogger(EnergyModeller.class.getName()).log(Level.WARNING, "The data source specified was not found");
         } catch (InstantiationException | IllegalAccessException ex) {
             if (datasource == null) {
-                datasource = new ZabbixDirectDbDataSourceAdaptor();
+                datasource = new SlurmDataSourceAdaptor();
             }
             Logger.getLogger(EnergyModeller.class.getName()).log(Level.WARNING, "The data source did not work", ex);
         }
@@ -604,7 +636,7 @@ public class EnergyModeller {
     }
 
     /**
-     * This provides for a collection of applications the amount of energy 
+     * This provides for a collection of applications the amount of energy
      * currently in use.
      *
      * @param apps The set of applications that are running.
@@ -888,13 +920,14 @@ public class EnergyModeller {
     public ArrayList<VmDeployed> getVMsOnHost(Host host) {
         return dataGatherer.getVMsOnHost(host);
     }
-    
+
     /**
-     * This gets the list of applications on a named host that the energy modeller knows
-     * about.
+     * This gets the list of applications on a named host that the energy
+     * modeller knows about.
      *
      * @param host The host to get the applications for
-     * @return The list of applications that are currently running on the named host.
+     * @return The list of applications that are currently running on the named
+     * host.
      */
     public ArrayList<ApplicationOnHost> getApplicationsOnHost(Host host) {
         return dataGatherer.getApplications(host);
@@ -925,9 +958,9 @@ public class EnergyModeller {
     public VmDeployed getVM(int vmId) {
         return dataGatherer.getVm(vmId);
     }
-    
+
     /**
-     * This given a name of an application and its deployment id it provides the 
+     * This given a name of an application and its deployment id it provides the
      * object representation of it.
      *
      * @param name The name of the VM
@@ -937,7 +970,7 @@ public class EnergyModeller {
      */
     public ArrayList<ApplicationOnHost> getApplication(String name, int deploymentId) {
         return dataGatherer.getApplication(name, deploymentId);
-    }    
+    }
 
     /**
      * This sets information about the VM that describes the applications, that
