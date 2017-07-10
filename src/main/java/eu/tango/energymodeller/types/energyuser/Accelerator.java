@@ -18,6 +18,9 @@
  */
 package eu.tango.energymodeller.types.energyuser;
 
+import eu.tango.energymodeller.types.energyuser.usage.HostAcceleratorCalibrationData;
+import java.util.ArrayList;
+
 /**
  * This represents an accelerator on a physical host
  *
@@ -27,7 +30,8 @@ public class Accelerator {
 
     private String name = "";
     private AcceleratorType accelerator;
-    private int count = 0;    
+    private int count = 0;
+    private ArrayList<HostAcceleratorCalibrationData> acceleratorCalibrationData = new ArrayList<>();
     
     
     public enum AcceleratorType {
@@ -94,5 +98,32 @@ public class Accelerator {
     public void setCount(int count) {
         this.count = count;
     }
+    
+    /**
+     * Indicates if this accelerator has calibration data for it.
+     * @return 
+     */
+    public boolean isCalibrated() {
+        return !acceleratorCalibrationData.isEmpty();
+    }
+    
+    /**
+     * This returns a list of all the calibration data that is held on the host
+     * for its accelerators.
+     *
+     * @return the calibration data of the host.
+     */
+    public ArrayList<HostAcceleratorCalibrationData> getAcceleratorCalibrationData() {
+        return acceleratorCalibrationData;
+    }
+    
+    /**
+     * This allows the calibration data of a host to be set.
+     *
+     * @param calibrationData the calibrationData to set
+     */
+    public void setAcceleratorCalibrationData(ArrayList<HostAcceleratorCalibrationData> calibrationData) {
+        this.acceleratorCalibrationData = calibrationData;
+    }       
 
 }

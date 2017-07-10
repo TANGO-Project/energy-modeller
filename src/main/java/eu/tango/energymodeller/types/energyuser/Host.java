@@ -41,7 +41,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
     private boolean available = true;
     private int ramMb;
     private double diskGb;
-    private HashSet<Accelerator> accelerator = new HashSet<>();
+    private final HashSet<Accelerator> accelerators = new HashSet<>();
             
     private ArrayList<HostEnergyCalibrationData> calibrationData = new ArrayList<>();
     private ArrayList<HostProfileData> hostProfileData = new ArrayList<>();
@@ -273,7 +273,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      */
     public void setCalibrationData(ArrayList<HostEnergyCalibrationData> calibrationData) {
         this.calibrationData = calibrationData;
-    }
+    } 
 
     /**
      * This allows for an additional piece of calibration data to be set.
@@ -293,6 +293,20 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
     public boolean isCalibrated() {
         return !calibrationData.isEmpty();
     }
+    
+    /**
+     * This indicates if the energy modeller has calibration data for a given
+     * host's accelerators.
+     *
+     * @return true if calibration data exists for this host.
+     */
+    public boolean isAcceleratorsCalibrated() {
+        boolean answer = true;
+        for (Accelerator accelerator : accelerators) {
+            answer = answer && accelerator.isCalibrated();
+        }
+        return answer;
+    }    
 
     /**
      * This returns the lowest energy consumption found from the calibration
@@ -441,7 +455,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * @return if the host has any type of accelerator or not 
      */
     public boolean hasAccelerator () {
-        return !accelerator.isEmpty();
+        return !accelerators.isEmpty();
     }
     
     /**
@@ -449,7 +463,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * @return If the host has a GPU or not
      */
     public boolean hasGpu () {
-        for (Accelerator current : accelerator) {
+        for (Accelerator current : accelerators) {
             if (current.getAccelerator().equals(Accelerator.AcceleratorType.GPU))
                 return true;
         }
@@ -462,7 +476,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * @return if the host has a Intel Many Integrated Core (MIC) processor 
      */
     public boolean hasMic () {
-        for (Accelerator current : accelerator) {
+        for (Accelerator current : accelerators) {
             if (current.getAccelerator().equals(Accelerator.AcceleratorType.MIC))
                 return true;
         }
@@ -474,7 +488,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * @param accelerator Indicates which accelerator to add to the host.
      */
     public void addAccelerator(Accelerator accelerator) {
-        this.accelerator.add(accelerator);
+        this.accelerators.add(accelerator);
     }
     
     /**
@@ -482,7 +496,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * @param accelerator Indicates which accelerator to add to the host.
      */
     public void addAccelerator(Accelerator.AcceleratorType accelerator) {
-        this.accelerator.add(new Accelerator("",1, accelerator));
+        this.accelerators.add(new Accelerator("",1, accelerator));
     }    
     
     /**
@@ -490,7 +504,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * @param accelerator Indicates which accelerator to add to the host.
      */
     public void addAccelerator(HashSet<Accelerator> accelerator) {
-        this.accelerator.addAll(accelerator);
+        this.accelerators.addAll(accelerator);
     } 
     
     /**
@@ -498,7 +512,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * @param accelerator Indicates which accelerator to remove from the host.
      */
     public void removeAccelerator(Accelerator accelerator) {
-        this.accelerator.remove(accelerator);
+        this.accelerators.remove(accelerator);
     }
     
     /**
@@ -506,7 +520,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * @param accelerator Indicates which accelerator to remove from the host.
      */
     public void removeAccelerator(HashSet<Accelerator> accelerator) {
-        this.accelerator.removeAll(accelerator);
+        this.accelerators.removeAll(accelerator);
     }
     
     /**
@@ -514,7 +528,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * @return The list of accelerators this host has.
      */
     public HashSet<Accelerator> listAccelerators() {
-        return accelerator;
+        return accelerators;
     }
     
 
