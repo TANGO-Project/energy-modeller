@@ -28,6 +28,8 @@ import java.util.Collection;
  * This produces workload estimates for providing better energy estimations.
  *
  * @author Richard Kavanagh
+ * @param <T> Workload estimates takes a source of the workload and estimates 
+ * utilisation information
  */
 public interface WorkloadEstimator<T extends WorkloadSource> {
 
@@ -35,11 +37,11 @@ public interface WorkloadEstimator<T extends WorkloadSource> {
      * This estimates a physical hosts CPU utilisation. It is based upon which
      * VMs are expected to be deployed/are currently deployed.
      * @param host The physical host to get the workload estimation for.
-     * @param virtualMachines The virtual machines that induce the workload.
+     * @param workloadSource The virtual machines or applications that induce the workload.
      * @return The estimated CPU utilisation of the physical host.
      */
-    public double getCpuUtilisation(Host host, Collection<T> virtualMachines);
-
+    public double getCpuUtilisation(Host host, Collection<T> workloadSource);
+    
     /**
      * This sets the data source that is to be used for querying current data. 
      * @param datasource The data source to use for current information
