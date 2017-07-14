@@ -23,25 +23,25 @@ import eu.tango.energymodeller.types.energyuser.Host;
 import java.util.Collection;
 
 /**
- * This allocates energy used by a host machine into the VMs that run upon it.
- * This takes the count of VMs and evenly divides energy out amongst them.
+ * This allocates energy used by a host machine into the energy users (VMs and applications) that run upon it.
+ * This takes the count of VMs/Applications and evenly divides energy out amongst them.
  *
- * @author Richard
+ * @author Richard Kavanagh
  */
 public class DefaultEnergyShareRule implements EnergyShareRule {
 
     /**
-     * Translates a hosts energy usage into the VMs energy usage.
-     * This takes the count of VMs and evenly divides energy out amongst them.
+     * Translates a hosts energy usage into the VMs or applications energy usage.
+     * This takes the count of VMs or applications and evenly divides energy out amongst them.
      * @param host The host to analyse
-     * @param vms The VMs that are on/to be on the host
+     * @param energyUsers The VMs that are on/to be on the host
      * @return The fraction of energy used per host.
      */
     @Override
-    public EnergyDivision getEnergyUsage(Host host, Collection<EnergyUsageSource> vms) {
+    public EnergyDivision getEnergyUsage(Host host, Collection<EnergyUsageSource> energyUsers) {
         EnergyDivision answer = new EnergyDivision(host);
-        for (EnergyUsageSource vm : vms) {
-            answer.addWeight(vm, 1);
+        for (EnergyUsageSource energyUser : energyUsers) {
+            answer.addWeight(energyUser, 1);
         }
         return answer;
     }

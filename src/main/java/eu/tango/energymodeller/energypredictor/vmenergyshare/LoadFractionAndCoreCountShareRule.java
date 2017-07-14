@@ -18,7 +18,9 @@
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare;
 
+import eu.tango.energymodeller.datasourceclient.ApplicationMeasurement;
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
@@ -44,9 +46,12 @@ public class LoadFractionAndCoreCountShareRule implements EnergyShareRule {
     public EnergyDivision getEnergyUsage(Host host, Collection<EnergyUsageSource> energyUsers) {
         EnergyDivision answer = new EnergyDivision(host);
         for (EnergyUsageSource energyUser : energyUsers) {
-            VmDeployed deployed = (VmDeployed) energyUser;
-            answer.addWeight(energyUser, fractions.get(deployed));
-            Logger.getLogger(LoadFractionAndCoreCountShareRule.class.getName()).log(Level.FINE, "VM: {0} Ratio: {1}", new Object[]{deployed.getName(), fractions.get(deployed)});
+            answer.addWeight(energyUser, fractions.get(energyUser));
+            if (energyUser instanceof VmDeployed) {
+                Logger.getLogger(LoadFractionAndCoreCountShareRule.class.getName()).log(Level.FINE, "VM: {0} Ratio: {1}", new Object[]{((VmDeployed)energyUser).getName(), fractions.get(energyUser)});
+            } else if (energyUser instanceof ApplicationOnHost) {
+                Logger.getLogger(LoadFractionAndCoreCountShareRule.class.getName()).log(Level.FINE, "APP: {0} Ratio: {1}", new Object[]{((ApplicationOnHost)energyUser).getName(), fractions.get(energyUser)});
+            }
         }
         return answer;
     }
@@ -61,7 +66,16 @@ public class LoadFractionAndCoreCountShareRule implements EnergyShareRule {
     }   
 
     /**
-     * This returns the data that indicates which VMs should take which fraction
+     * This sets the load fractions to use in this energy share rule.
+     * @param appMeasurements The application measurements that are used to set this load
+     * fraction data.
+     */
+    public void setApplicationMeasurements(List<ApplicationMeasurement> appMeasurements) {
+        fractions = HostEnergyUserLoadFraction.getApplicationFraction(appMeasurements);
+    }       
+    
+    /**
+     * This returns the data that indicates which VMs/apps should take which fraction
      * of the overall energy.
      * @return the fractioning of the host energy data.
      */
@@ -70,7 +84,7 @@ public class LoadFractionAndCoreCountShareRule implements EnergyShareRule {
     }
 
     /**
-     * This allows the data that indicates which VMs should take which fraction
+     * This allows the data that indicates which VMs/apps should take which fraction
      * of the overall energy to be directly set.
      * @param fractions the fractioning of the host energy data to set.
      */

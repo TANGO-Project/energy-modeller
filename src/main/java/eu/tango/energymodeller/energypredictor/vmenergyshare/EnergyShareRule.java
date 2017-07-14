@@ -24,7 +24,7 @@ import java.util.Collection;
 
 /**
  * This allocates energy used by a host machine into the VMs or apps that run upon it.
- * @author Richard
+ * @author Richard Kavanagh
  */
 public interface EnergyShareRule {
 
