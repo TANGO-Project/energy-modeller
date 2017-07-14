@@ -95,10 +95,10 @@ public class CpuOnlyEnergyPredictor extends AbstractEnergyPredictor {
     }    
 
     @Override
-    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> virtualMachines, TimePeriod duration) {
+    public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> workload, TimePeriod duration) {
         EnergyUsagePrediction energyUsage;
         if (getDefaultAssumedCpuUsage() == -1) {
-            energyUsage = predictTotalEnergy(host, getCpuUtilisation(host, virtualMachines), duration);
+            energyUsage = predictTotalEnergy(host, getCpuUtilisation(host, workload), duration);
         } else {
             energyUsage = predictTotalEnergy(host, getDefaultAssumedCpuUsage(), duration);
         }
@@ -156,12 +156,12 @@ public class CpuOnlyEnergyPredictor extends AbstractEnergyPredictor {
         double generalEnergy = generalHostsAnswer.getTotalEnergyUsed() / (double) applications.size();
         EnergyUsagePrediction answer = new EnergyUsagePrediction(app);
         answer.setDuration(hostAnswer.getDuration());
-        //Find the fraction to be associated with the VM
-        double vmsEnergyFraction = division.getEnergyUsage(hostAnswer.getTotalEnergyUsed(), app);
+        //Find the fraction to be associated with the application
+        double appEnergyFraction = division.getEnergyUsage(hostAnswer.getTotalEnergyUsed(), app);
         division.setConsiderIdleEnergy(isConsiderIdleEnergy());
-        answer.setTotalEnergyUsed(vmsEnergyFraction + generalEnergy);
-        double vmsPowerFraction = division.getEnergyUsage(hostAnswer.getAvgPowerUsed(), app);
-        answer.setAvgPowerUsed(vmsPowerFraction + generalPower);
+        answer.setTotalEnergyUsed(appEnergyFraction + generalEnergy);
+        double appPowerFraction = division.getEnergyUsage(hostAnswer.getAvgPowerUsed(), app);
+        answer.setAvgPowerUsed(appPowerFraction + generalPower);
         return answer;
     }
 
