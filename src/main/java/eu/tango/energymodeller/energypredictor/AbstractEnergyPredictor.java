@@ -75,14 +75,14 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
      * It will create a energy-modeller-predictor properties file if it doesn't
      * exist.
      *
-     * The main property: energy.modeller.cpu.energy.predictor.default_load
+     * The main property: energy.modeller.energy.predictor.cpu.default_load
      * should be in the range 0..1 or -1. This indicates the predictor's default
      * assumption on how much load is been induced. -1 measures the CPU's
      * current load and uses that to forecast into the future.
      *
      * In the case of using -1 as a parameter to additional parameters are used:
-     * energy.modeller.cpu.energy.predictor.utilisation.observe_time.sec
-     * energy.modeller.cpu.energy.predictor.utilisation.observe_time.min
+     * energy.modeller.energy.predictor.cpu.utilisation.observe_time.sec
+     * energy.modeller.energy.predictor.cpu.utilisation.observe_time.min
      *
      * These indicate the window of how long the CPU should be monitored for, to
      * determine the current load.
@@ -98,8 +98,8 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
             }
             config.setAutoSave(true); //This will save the configuration file back to disk. In case the defaults need setting.
             readSettings(config);
-            String workloadPredictorStr = config.getString("energy.modeller.cpu.energy.predictor.workload", "CpuRecentHistoryWorkloadPredictor");
-            config.setProperty("energy.modeller.cpu.energy.predictor.workload", workloadPredictorStr);
+            String workloadPredictorStr = config.getString("energy.modeller.energy.predictor.cpu.workload", "CpuRecentHistoryWorkloadPredictor");
+            config.setProperty("energy.modeller.energy.predictor.cpu.workload", workloadPredictorStr);
             setWorkloadPredictor(workloadPredictorStr);
         } catch (ConfigurationException ex) {
             Logger.getLogger(CpuOnlyEnergyPredictor.class.getName()).log(Level.SEVERE,
@@ -113,14 +113,14 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
      * It will create a energy-modeller-predictor properties file if it doesn't
      * exist.
      *
-     * The main property: energy.modeller.cpu.energy.predictor.default_load
+     * The main property: energy.modeller.energy.predictor.cpu.default_load
      * should be in the range 0..1 or -1. This indicates the predictor's default
      * assumption on how much load is been induced. -1 measures the CPU's
      * current load and uses that to forecast into the future.
      *
      * In the case of using -1 as a parameter to additional parameters are used:
-     * energy.modeller.cpu.energy.predictor.utilisation.observe_time.sec
-     * energy.modeller.cpu.energy.predictor.utilisation.observe_time.min
+     * energy.modeller.energy.predictor.cpu.utilisation.observe_time.sec
+     * energy.modeller.energy.predictor.cpu.utilisation.observe_time.min
      *
      * These indicate the window of how long the CPU should be monitored for, to
      * determine the current load.
@@ -139,21 +139,21 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
      * @param config The settings to read.
      */
     private void readSettings(PropertiesConfiguration config) {
-        String workloadPredictorStr = config.getString("energy.modeller.cpu.energy.predictor.workload.predictor", "CpuRecentHistoryWorkloadPredictor");
-        config.setProperty("energy.modeller.cpu.energy.predictor.workload.predictor", workloadPredictorStr);
+        String workloadPredictorStr = config.getString("energy.modeller.energy.predictor.workload.predictor", "CpuRecentHistoryWorkloadPredictor");
+        config.setProperty("energy.modeller.energy.predictor.workload.predictor", workloadPredictorStr);
         setWorkloadPredictor(workloadPredictorStr);
-        defaultAssumedCpuUsage = config.getDouble("energy.modeller.cpu.energy.predictor.default_load", defaultAssumedCpuUsage);
-        config.setProperty("energy.modeller.cpu.energy.predictor.default_load", defaultAssumedCpuUsage);
-        String shareRule = config.getString("energy.modeller.cpu.energy.predictor.vm_share_rule", "DefaultEnergyShareRule");
-        config.setProperty("energy.modeller.cpu.energy.predictor.vm_share_rule", shareRule);
+        defaultAssumedCpuUsage = config.getDouble("energy.modeller.energy.predictor.default_load", defaultAssumedCpuUsage);
+        config.setProperty("energy.modeller.energy.predictor.default_load", defaultAssumedCpuUsage);
+        String shareRule = config.getString("energy.modeller.energy.predictor.share_rule", "DefaultEnergyShareRule");
+        config.setProperty("energy.modeller.energy.predictor.share_rule", shareRule);
         setEnergyShareRule(shareRule);
-        considerIdleEnergy = config.getBoolean("energy.modeller.cpu.energy.predictor.consider_idle_energy", considerIdleEnergy);
-        config.setProperty("energy.modeller.cpu.energy.predictor.consider_idle_energy", considerIdleEnergy);
+        considerIdleEnergy = config.getBoolean("energy.modeller.energy.predictor.consider_idle_energy", considerIdleEnergy);
+        config.setProperty("energy.modeller.energy.predictor.consider_idle_energy", considerIdleEnergy);
         defaultPowerOverheadPerHost = config.getDouble("energy.modeller.energy.predictor.overheadPerHostInWatts", defaultPowerOverheadPerHost);
         config.setProperty("energy.modeller.energy.predictor.overheadPerHostInWatts", defaultPowerOverheadPerHost);
         if (defaultAssumedCpuUsage == -1) {
-            String dataSrcStr = config.getString("energy.modeller.cpu.energy.predictor.datasource", "ZabbixDirectDbDataSourceAdaptor");
-            config.setProperty("energy.modeller.cpu.energy.predictor.datasource", dataSrcStr);
+            String dataSrcStr = config.getString("energy.modeller.energy.predictor.datasource", "ZabbixDirectDbDataSourceAdaptor");
+            config.setProperty("energy.modeller.energy.predictor.datasource", dataSrcStr);
             setDataSource(dataSrcStr);
         }
     }
