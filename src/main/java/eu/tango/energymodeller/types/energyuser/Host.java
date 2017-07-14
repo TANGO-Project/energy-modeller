@@ -464,7 +464,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      */
     public boolean hasGpu () {
         for (Accelerator current : accelerators) {
-            if (current.getAccelerator().equals(Accelerator.AcceleratorType.GPU))
+            if (current.getType().equals(Accelerator.AcceleratorType.GPU))
                 return true;
         }
         return false;
@@ -477,7 +477,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      */
     public boolean hasMic () {
         for (Accelerator current : accelerators) {
-            if (current.getAccelerator().equals(Accelerator.AcceleratorType.MIC))
+            if (current.getType().equals(Accelerator.AcceleratorType.MIC))
                 return true;
         }
         return false;

@@ -20,6 +20,8 @@ package eu.tango.energymodeller.types.energyuser;
 
 import eu.tango.energymodeller.types.energyuser.usage.HostAcceleratorCalibrationData;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This represents an accelerator on a physical host
@@ -71,7 +73,7 @@ public class Accelerator {
      * This indicates the type of accelerator
      * @return the accelerator
      */
-    public AcceleratorType getAccelerator() {
+    public AcceleratorType getType() {
         return accelerator;
     }
 
@@ -79,8 +81,21 @@ public class Accelerator {
      * This sets the type of accelerator
      * @param accelerator the accelerator to set
      */
-    public void setAccelerator(AcceleratorType accelerator) {
+    public void setType(AcceleratorType accelerator) {
         this.accelerator = accelerator;
+    }
+    
+    /**
+     * This lists the metric names that are stored as part of the accelerators
+     * calibration data. i.e. the ones that define the workload and power consumption
+     * @return the parameters that define the workload
+     */
+    public Set<String> getMetricsInCalibrationData() {
+        Set<String> answer = new HashSet<>();
+        for (HostAcceleratorCalibrationData dataItem : acceleratorCalibrationData) {
+            answer.addAll(dataItem.getParameters());
+        }
+        return answer;
     }
 
     /**
