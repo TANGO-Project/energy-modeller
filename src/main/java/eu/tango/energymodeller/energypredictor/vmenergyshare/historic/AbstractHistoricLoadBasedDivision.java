@@ -18,9 +18,8 @@
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare.historic;
 
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
-import eu.tango.energymodeller.types.energyuser.VM;
-import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import eu.tango.energymodeller.types.usage.HostEnergyRecord;
 import java.util.Calendar;
@@ -42,7 +41,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadBasedDivision {
 
     protected Host host;
-    protected final HashSet<VM> vms = new HashSet<>();
+    protected final HashSet<EnergyUsageSource> energyusers = new HashSet<>();
     protected List<HostEnergyRecord> energyUsage;
     protected List<HostEnergyUserLoadFraction> loadFraction;
 
@@ -88,18 +87,18 @@ public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadB
      * @param vm The VM to add to the energy division
      */
     @Override
-    public void addVM(VM vm) {
-        vms.add(vm);
+    public void addEnergyUser(EnergyUsageSource vm) {
+        energyusers.add(vm);
     }
 
     /**
      * This adds a collection of VM to the energy division record.
      *
-     * @param vm The VM to add to the energy division
+     * @param energyUser The VM to add to the energy division
      */
     @Override
-    public void addVM(Collection<VM> vm) {
-        vms.addAll(vm);
+    public void addEnergyUser(Collection<EnergyUsageSource> energyUser) {
+        energyusers.addAll(energyUser);
     }
 
     /**
@@ -108,26 +107,26 @@ public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadB
      * @param vm The VM to remove from the energy division
      */
     @Override
-    public void removeVM(VM vm) {
-        vms.remove(vm);
+    public void removeEnergyUser(EnergyUsageSource vm) {
+        energyusers.remove(vm);
     }
 
     /**
      * This gets the duration that a VM was running for during
      * the lifetime of the energy record describes.
      *
-     * @param vm The VM to get the duration it was seen for
+     * @param energyUser The VM to get the duration it was seen for
      * @return The duration in seconds a VM exists in the energy records.
      */
     @Override
-    public long getDuration(VmDeployed vm) {
+    public long getDuration(EnergyUsageSource energyUser) {
         HostEnergyUserLoadFraction first = null;
         HostEnergyUserLoadFraction last = loadFraction.get(0);
         for (HostEnergyUserLoadFraction current : loadFraction) {
-            if (current.getEnergyUsageSources().contains(vm) && first == null) {
+            if (current.getEnergyUsageSources().contains(energyUser) && first == null) {
                 first = current;
             }
-            if (current.getEnergyUsageSources().contains(vm)) {
+            if (current.getEnergyUsageSources().contains(energyUser)) {
                 last = current;
             }            
         }
@@ -187,11 +186,11 @@ public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadB
     /**
      * This returns the energy usage for a named VM
      *
-     * @param vm The VM to get energy usage for.
+     * @param energyUser The VM to get energy usage for.
      * @return The energy used by this VM.
      */
     @Override
-    public abstract double getEnergyUsage(VM vm);
+    public abstract double getEnergyUsage(EnergyUsageSource energyUser);
 
     /**
      * This lists VMs on the host machine.
@@ -199,8 +198,8 @@ public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadB
      * @return This VMs on the host machine.
      */
     @Override
-    public Collection<VM> getVMList() {
-        return vms;
+    public Collection<EnergyUsageSource> getEnergyUserList() {
+        return energyusers;
     }
 
     /**
@@ -209,8 +208,8 @@ public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadB
      * @return This count of how many VMs are on the host machine.
      */
     @Override
-    public int getVMCount() {
-        return vms.size();
+    public int getEnergyUserCount() {
+        return energyusers.size();
     }
 
     /**
@@ -246,7 +245,7 @@ public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadB
     }
 
     /**
-     * This compares the vm resource utilisation dataset and the host energy
+     * This compares the vm/application resource utilisation dataset and the host energy
      * data and ensures that they have a 1:1 mapping
      */
     public void cleanData() {
@@ -264,15 +263,15 @@ public abstract class AbstractHistoricLoadBasedDivision implements HistoricLoadB
      * This compares the vm resource utilisation dataset and the host energy
      * data and ensures that they have a 1:1 mapping
      *
-     * @param vmData The Vms usage dataset
+     * @param energyUserLoad The energy user's usage dataset
      * @param hostData The host's energy usage dataset
      * @return The mappings between each dataset elements
      */
-    public LinkedHashMap<HostEnergyRecord, HostEnergyUserLoadFraction> cleanData(Collection<HostEnergyUserLoadFraction> vmData, List<HostEnergyRecord> hostData) {
+    public LinkedHashMap<HostEnergyRecord, HostEnergyUserLoadFraction> cleanData(Collection<HostEnergyUserLoadFraction> energyUserLoad, List<HostEnergyRecord> hostData) {
         LinkedHashMap<HostEnergyRecord, HostEnergyUserLoadFraction> answer = new LinkedHashMap<>();
         //Make a copy and compare times remove them each time.
         LinkedList<HostEnergyUserLoadFraction> vmDataCopy = new LinkedList<>();
-        vmDataCopy.addAll(vmData);
+        vmDataCopy.addAll(energyUserLoad);
         LinkedList<HostEnergyRecord> hostDataCopy = new LinkedList<>();
         hostDataCopy.addAll(hostData);
         HostEnergyUserLoadFraction vmHead = vmDataCopy.pop();

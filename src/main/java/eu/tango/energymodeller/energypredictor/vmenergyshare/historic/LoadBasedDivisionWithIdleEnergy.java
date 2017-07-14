@@ -18,8 +18,9 @@
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare.historic;
 
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
-import eu.tango.energymodeller.types.energyuser.VM;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import eu.tango.energymodeller.types.usage.HostEnergyRecord;
@@ -55,18 +56,17 @@ public class LoadBasedDivisionWithIdleEnergy extends AbstractHistoricLoadBasedDi
     /**
      * This returns the energy usage for a named VM
      *
-     * @param vm The VM to get energy usage for.
+     * @param energyUser The VM to get energy usage for.
      * @return The energy used by this VM.
      */
     @Override
-    public double getEnergyUsage(VM vm) {
-        VmDeployed deployed = (VmDeployed) vm;
+    public double getEnergyUsage(EnergyUsageSource energyUser) {
         cleanData();
         int recordCount = (energyUsage.size() <= loadFraction.size() ? energyUsage.size() : loadFraction.size());
 
         /**
-         * Calculate the idle power used for the vm been idle. This is
-         * fractioned out evenly among VMs
+         * Calculate the idle power used for the vm/appplication being idle. This is
+         * fractioned out evenly among VMs/applications
          */
         double idlePower = getHost().getIdlePowerConsumption();
 
@@ -74,29 +74,36 @@ public class LoadBasedDivisionWithIdleEnergy extends AbstractHistoricLoadBasedDi
          * Calculate the energy used by a VM taking into account the work it has
          * performed.
          */
-        double vmEnergy = 0;
+        double eUsrEnergy = 0;
         //Access two records at once hence ensure size() -2
         for (int i = 0; i <= recordCount - 2; i++) {
             HostEnergyRecord energy1 = energyUsage.get(i);
             HostEnergyRecord energy2 = energyUsage.get(i + 1);
             HostEnergyUserLoadFraction load1 = loadFraction.get(i);
             HostEnergyUserLoadFraction load2 = loadFraction.get(i + 1);
-            if (load1.getEnergyUsageSources().contains(deployed) && load2.getEnergyUsageSources().contains(deployed)) {
+            if (load1.getEnergyUsageSources().contains(energyUser) && load2.getEnergyUsageSources().contains(energyUser)) {
                 long timePeriod = energy2.getTime() - energy1.getTime();
-                double vmCount = load1.getEnergyUsageSources().size() + load2.getEnergyUsageSources().size() / 2;
-                double vmIdlePower = idlePower / vmCount;
+                double userCount = load1.getEnergyUsageSources().size() + load2.getEnergyUsageSources().size() / 2;
+                double eUserIdlePower = idlePower / userCount;
                 double idleEnergy = idlePower * (((double) timePeriod) / 3600);
-                double idleVMEnergy = vmIdlePower * (((double) timePeriod) / 3600);
+                double idleUserEnergy = eUserIdlePower * (((double) timePeriod) / 3600);
                 double deltaEnergy = Math.abs((((double) timePeriod) / 3600d)
                         * (energy1.getPower() + load1.getHostPowerOffset()
                         + energy2.getPower() + load2.getHostPowerOffset()) * 0.5);
                 double activeEnergyUsed = deltaEnergy - idleEnergy;
-                double avgLoadFraction = (load1.getFraction(deployed) + load2.getFraction(deployed)) / 2;
+                double avgLoadFraction;
+                if (energyUser instanceof VmDeployed) {
+                    VmDeployed deployed = (VmDeployed) energyUser;
+                    avgLoadFraction = (load1.getFraction(deployed) + load2.getFraction(deployed)) / 2;
+                } else {
+                    ApplicationOnHost deployed = (ApplicationOnHost) energyUser;
+                    avgLoadFraction = (load1.getFraction(deployed) + load2.getFraction(deployed)) / 2;
+                }
                 //Add previous energy value to idle energy + fraction of active energy associated with VM.
-                vmEnergy = vmEnergy + idleVMEnergy + (activeEnergyUsed * avgLoadFraction);
+                eUsrEnergy = eUsrEnergy + idleUserEnergy + (activeEnergyUsed * avgLoadFraction);
             }
         }
-        return vmEnergy;
+        return eUsrEnergy;
     }
 
 }

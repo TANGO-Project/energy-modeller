@@ -372,7 +372,7 @@ public class EnergyModeller {
         }
         //Fraction off energy used based upon this share rule.
         for (VmDeployed deployed : HostEnergyUserLoadFraction.getEnergyUsersAsVMs(loadFractionData)) {
-            shareRule.addVM(((VM) deployed));
+            shareRule.addEnergyUser(deployed);
         }
         shareRule.setEnergyUsage(hostsData);
         shareRule.setLoadFraction(loadFractionData);

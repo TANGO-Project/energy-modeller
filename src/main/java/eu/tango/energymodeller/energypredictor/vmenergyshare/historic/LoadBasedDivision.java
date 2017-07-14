@@ -18,6 +18,7 @@
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare.historic;
 
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
@@ -54,12 +55,12 @@ public class LoadBasedDivision extends AbstractHistoricLoadBasedDivision {
     /**
      * This returns the energy usage for a named VM
      *
-     * @param vm The VM to get energy usage for.
+     * @param energyUser The VM to get energy usage for.
      * @return The energy used by this VM.
      */
     @Override
-    public double getEnergyUsage(VM vm) {
-        VmDeployed deployed = (VmDeployed) vm;
+    public double getEnergyUsage(EnergyUsageSource energyUser) {
+        VmDeployed deployed = (VmDeployed) energyUser;
         cleanData();
         int recordCount = (energyUsage.size() <= loadFraction.size() ? energyUsage.size() : loadFraction.size());
 

@@ -18,9 +18,8 @@
  */
 package eu.tango.energymodeller.energypredictor.vmenergyshare.historic;
 
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
-import eu.tango.energymodeller.types.energyuser.VM;
-import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import eu.tango.energymodeller.types.usage.HostEnergyRecord;
 import java.util.Calendar;
@@ -36,45 +35,45 @@ public interface HistoricLoadBasedDivision {
     /**
      * This returns the host who's energy is to be fractioned out.
      *
-     * @return the host The host in which the VMs reside/are planned to reside.
+     * @return the host The host in which the VMs or applications resided.
      */
     public Host getHost();
     /**
      * This sets the host who's energy is to be fractioned out.
      *
-     * @param host The host who's energy is to be divided among the VMs
+     * @param host The host who's energy is to be divided among the VMs or applications
      */
     public void setHost(Host host);
     
 /**
-     * This adds a VM to the energy division record.
+     * This adds a VM or application to the energy division record.
      *
-     * @param vm The VM to add to the energy division
+     * @param energyUser The VM or application to add to the energy division
      */
-    public void addVM(VM vm);
+    public void addEnergyUser(EnergyUsageSource energyUser);
 
     /**
-     * This adds a collection of VM to the energy division record.
+     * This adds a collection of VMs or applications to the energy division record.
      *
-     * @param vm The VM to add to the energy division
+     * @param energyUsers The VMs or applications to add to the energy division
      */
-    public void addVM(Collection<VM> vm);
+    public void addEnergyUser(Collection<EnergyUsageSource> energyUsers);
 
     /**
-     * This removes a VM from the energy division record.
+     * This removes a VM or application from the energy division record.
      *
-     * @param vm The VM to remove from the energy division
+     * @param energyUser The VM or application to remove from the energy division
      */
-    public void removeVM(VM vm);
+    public void removeEnergyUser(EnergyUsageSource energyUser);
 
     /**
-     * This gets the duration that a VM was running for during
+     * This gets the duration that a VM or application was running for during
      * the lifetime of the energy record describes.
      *
-     * @param vm The VM to get the duration it was seen for
+     * @param energyUser The VM or application to get the duration it was seen for
      * @return The duration in seconds the energy records describe.
      */  
-    public long getDuration(VmDeployed vm); 
+    public long getDuration(EnergyUsageSource energyUser); 
     
     /**
      * This gets the duration that the energy records describe.
@@ -100,24 +99,24 @@ public interface HistoricLoadBasedDivision {
     public Calendar getEnd();
 
     /**
-     * This returns the energy usage for a named VM
+     * This returns the energy usage for a named VM or application
      *
-     * @param vm The VM to get energy usage for.
-     * @return The energy used by this VM.
+     * @param energyUser The VM or application to get energy usage for.
+     * @return The energy used by the named VM or application.
      */
-    public double getEnergyUsage(VM vm);
+    public double getEnergyUsage(EnergyUsageSource energyUser);
 
     /**
-     * This lists VMs on the host machine.
-     * @return  This VMs on the host machine.
+     * This lists VMs or applications on the host machine.
+     * @return  The VMs or applications on the host machine.
      */
-    public Collection<VM> getVMList();
+    public Collection<EnergyUsageSource> getEnergyUserList();
 
     /**
-     * The amount of VMs on the host machine.
-     * @return This count of how many VMs are on the host machine.
+     * The amount of VMs or applications on the host machine.
+     * @return This count of how many VMs or applications are on the host machine.
      */
-    public int getVMCount();
+    public int getEnergyUserCount();
 
     /**
      * This sets energy usage record for the load based division mechanism. It
