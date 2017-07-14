@@ -130,8 +130,6 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
      */
     public AbstractEnergyPredictor(PropertiesConfiguration config) {
         readSettings(config);
-        workloadEstimator = new CpuRecentHistoryWorkloadPredictor(config);
-        workloadEstimator.setDataSource(source);
     }
 
     /**
@@ -141,6 +139,9 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
      * @param config The settings to read.
      */
     private void readSettings(PropertiesConfiguration config) {
+        String workloadPredictorStr = config.getString("energy.modeller.cpu.energy.predictor.workload.predictor", "CpuRecentHistoryWorkloadPredictor");
+        config.setProperty("energy.modeller.cpu.energy.predictor.workload.predictor", workloadPredictorStr);
+        setWorkloadPredictor(workloadPredictorStr);
         defaultAssumedCpuUsage = config.getDouble("energy.modeller.cpu.energy.predictor.default_load", defaultAssumedCpuUsage);
         config.setProperty("energy.modeller.cpu.energy.predictor.default_load", defaultAssumedCpuUsage);
         String shareRule = config.getString("energy.modeller.cpu.energy.predictor.vm_share_rule", "DefaultEnergyShareRule");
