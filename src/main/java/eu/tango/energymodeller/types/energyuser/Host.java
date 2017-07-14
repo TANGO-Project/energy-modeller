@@ -527,7 +527,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * This provides the list of accelerators for this physical host.
      * @return The list of accelerators this host has.
      */
-    public HashSet<Accelerator> listAccelerators() {
+    public HashSet<Accelerator> getAccelerators() {
         return accelerators;
     }
     
