@@ -65,8 +65,9 @@ public class CpuRecentHistoryWorkloadPredictor extends AbstractWorkloadEstimator
     }
 
     /**
-     * This sets up a CPU Recent History Workload Predictor. The main need is to
-     * establish the time window by which the workload predictor must work.
+     * This sets up a CPU Recent History Workload Predictor. The main need for 
+     * configuration is to establish the time window by which the workload 
+     * predictor must work.
      *
      * @param config The config to use in order to create the abstract energy
      * predictor.

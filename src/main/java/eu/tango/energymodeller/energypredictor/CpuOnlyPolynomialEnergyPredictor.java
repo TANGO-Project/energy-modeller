@@ -257,8 +257,7 @@ public class CpuOnlyPolynomialEnergyPredictor extends AbstractEnergyPredictor {
      */
     private double getSumOfSquareError(PolynomialFunction function, List<WeightedObservedPoint> observed) {
         double answer = 0;
-        for (int i = 0; i < observed.size(); i++) {
-            WeightedObservedPoint current = observed.get(i);
+        for (WeightedObservedPoint current : observed) {
             double error = current.getY() - function.value(current.getX());
             answer = answer + (error * error);
         }
