@@ -71,10 +71,10 @@ public class AveragePowerEnergyPredictor extends AbstractEnergyPredictor {
                 config.setFile(new File(CONFIG_FILE));
             }
             config.setAutoSave(true); //This will save the configuration file back to disk. In case the defaults need setting.
-            powerObservationTimeMin = config.getInt("energy.modeller.cpu.energy.predictor.utilisation.observe_time.min", powerObservationTimeMin);
-            config.setProperty("energy.modeller.cpu.energy.predictor.utilisation.observe_time.min", powerObservationTimeMin);
-            powerObservationTimeSec = config.getInt("energy.modeller.cpu.energy.predictor.utilisation.observe_time.sec", powerObservationTimeSec);
-            config.setProperty("energy.modeller.cpu.energy.predictor.utilisation.observe_time.sec", powerObservationTimeSec);
+            powerObservationTimeMin = config.getInt("energy.modeller.energy.predictor.cpu.utilisation.observe_time.min", powerObservationTimeMin);
+            config.setProperty("energy.modeller.energy.predictor.cpu.utilisation.observe_time.min", powerObservationTimeMin);
+            powerObservationTimeSec = config.getInt("energy.modeller.energy.predictor.cpu.utilisation.observe_time.sec", powerObservationTimeSec);
+            config.setProperty("energy.modeller.energy.predictor.cpu.utilisation.observe_time.sec", powerObservationTimeSec);
             observationTime = powerObservationTimeSec + (int) TimeUnit.MINUTES.toSeconds(powerObservationTimeMin);
         } catch (ConfigurationException ex) {
             Logger.getLogger(AveragePowerEnergyPredictor.class.getName()).log(Level.SEVERE, "The average power energy predictor failed to initialise", ex);
@@ -91,10 +91,10 @@ public class AveragePowerEnergyPredictor extends AbstractEnergyPredictor {
      */
     public AveragePowerEnergyPredictor(PropertiesConfiguration config) {
         super(config);
-        powerObservationTimeMin = config.getInt("energy.modeller.cpu.energy.predictor.utilisation.observe_time.min", powerObservationTimeMin);
-        config.setProperty("energy.modeller.cpu.energy.predictor.utilisation.observe_time.min", powerObservationTimeMin);
-        powerObservationTimeSec = config.getInt("energy.modeller.cpu.energy.predictor.utilisation.observe_time.sec", powerObservationTimeSec);
-        config.setProperty("energy.modeller.cpu.energy.predictor.utilisation.observe_time.sec", powerObservationTimeSec);
+        powerObservationTimeMin = config.getInt("energy.modeller.energy.predictor.cpu.utilisation.observe_time.min", powerObservationTimeMin);
+        config.setProperty("energy.modeller.energy.predictor.cpu.utilisation.observe_time.min", powerObservationTimeMin);
+        powerObservationTimeSec = config.getInt("energy.modeller.energy.predictor.cpu.utilisation.observe_time.sec", powerObservationTimeSec);
+        config.setProperty("energy.modeller.energy.predictor.cpu.utilisation.observe_time.sec", powerObservationTimeSec);
         observationTime = powerObservationTimeSec + (int) TimeUnit.MINUTES.toSeconds(powerObservationTimeMin);       
     }    
 

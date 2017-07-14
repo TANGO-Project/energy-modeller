@@ -82,10 +82,10 @@ public class CpuRecentHistoryWorkloadPredictor extends AbstractWorkloadEstimator
      * @param config The settings to read.
      */
     private void readSettings(PropertiesConfiguration config) {
-        cpuUtilObservationTimeMin = config.getInt("energy.modeller.cpu.energy.predictor.utilisation.observe_time.min", cpuUtilObservationTimeMin);
-        config.setProperty("energy.modeller.cpu.energy.predictor.utilisation.observe_time.min", cpuUtilObservationTimeMin);
-        cpuUtilObservationTimeSec = config.getInt("energy.modeller.cpu.energy.predictor.utilisation.observe_time.sec", cpuUtilObservationTimeSec);
-        config.setProperty("energy.modeller.cpu.energy.predictor.utilisation.observe_time.sec", cpuUtilObservationTimeSec);
+        cpuUtilObservationTimeMin = config.getInt("energy.modeller.energy.predictor.cpu.utilisation.observe_time.min", cpuUtilObservationTimeMin);
+        config.setProperty("energy.modeller.energy.predictor.cpu.utilisation.observe_time.min", cpuUtilObservationTimeMin);
+        cpuUtilObservationTimeSec = config.getInt("energy.modeller.energy.predictor.cpu.utilisation.observe_time.sec", cpuUtilObservationTimeSec);
+        config.setProperty("energy.modeller.energy.predictor.cpu.utilisation.observe_time.sec", cpuUtilObservationTimeSec);
         cpuUtilObservationTimeSecTotal = cpuUtilObservationTimeSec + (int) TimeUnit.MINUTES.toSeconds(cpuUtilObservationTimeMin);        
     }
 
