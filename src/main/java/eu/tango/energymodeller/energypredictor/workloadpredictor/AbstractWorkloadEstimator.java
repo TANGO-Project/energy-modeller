@@ -27,14 +27,12 @@ import eu.tango.energymodeller.types.energyuser.WorkloadSource;
  * energy estimations.
  *
  * @author Richard Kavanagh
+ * @param <AT> This specifies the type of workload source that the predictor is for
  */
 public abstract class AbstractWorkloadEstimator<AT extends WorkloadSource> implements WorkloadEstimator<AT> {
 
     protected DatabaseConnector database = null;
     protected HostDataSource datasource = null;
-
-//    @Override
-//    public abstract double getCpuUtilisation(Host host, Collection<T> virtualMachines);
 
     @Override
     public void setDataSource(HostDataSource datasource) {
