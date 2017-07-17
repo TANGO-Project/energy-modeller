@@ -37,7 +37,7 @@ import org.clapper.util.misc.VersionMismatchException;
 /**
  * The aim of this is to generate a running average counter for various workload
  * metrics. This enables faster querying than a database oriented approach by
- * maintaining statics such as averages in memory.
+ * maintaining statistics such as averages in memory.
  *
  * @author Richard Kavanagh
  */

@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 /**
  * This holds basic functions that are useful for any MySQL database access.
  *
- * @author Richard
+ * @author Richard Kavanagh
  */
 public abstract class MySqlDatabaseConnector {
 
