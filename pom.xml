@@ -162,8 +162,13 @@
         <dependency>
             <groupId>com.github.RichardKav</groupId>
             <artifactId>io-utils</artifactId>
-            <version>-V1.0-g3a37cb4-1</version>
+            <version>62129906c8</version>
         </dependency>
+        <dependency>
+            <groupId>org.encog</groupId>
+            <artifactId>encog-core</artifactId>
+            <version>3.3.0</version>
+        </dependency>          
         <dependency>
             <groupId>com.github.TANGO-Project</groupId>
             <artifactId>ovf-xmlbeans-api</artifactId>
