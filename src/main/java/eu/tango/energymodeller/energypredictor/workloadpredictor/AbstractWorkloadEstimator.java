@@ -64,8 +64,8 @@ public abstract class AbstractWorkloadEstimator<AT extends WorkloadSource> imple
      * predictor's configured observation window.
      */
     @Override
-    public HashMap<Accelerator,HashSet<MetricValue>> getAcceleratorUtilisation(Host host, Collection<WorkloadSource> workloadsource) {
-        HashMap<Accelerator,HashSet<MetricValue>> answer = new HashMap<>();
+    public HashMap<Accelerator,HashMap<String, Double>> getAcceleratorUtilisation(Host host, Collection<WorkloadSource> workloadsource) {
+        HashMap<Accelerator,HashMap<String, Double>> answer = new HashMap<>();
         if (!host.hasAccelerator()) {
             return answer;
         }
@@ -85,12 +85,12 @@ public abstract class AbstractWorkloadEstimator<AT extends WorkloadSource> imple
      * @param acceleratorMetrics The names of the metrics for the accelerator
      * @return The list of metrics associated with the utilisation of the accelerator
      */
-    private HashSet<MetricValue> filterHostsAcceleratorMeasurements(HostMeasurement measurement, Set<String> acceleratorMetrics) {
-        HashSet<MetricValue> metrics = new HashSet<>();
+    private HashMap<String, Double> filterHostsAcceleratorMeasurements(HostMeasurement measurement, Set<String> acceleratorMetrics) {
+        HashMap<String, Double> metrics = new HashMap<>();
         for (String param : acceleratorMetrics) {
             MetricValue metric = measurement.getMetric(param);
             if (metric != null) {
-                metrics.add(metric);
+                metrics.put(metric.getKey(),metric.getValue());
             }
         }
         return metrics;

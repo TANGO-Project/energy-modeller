@@ -30,6 +30,7 @@ import eu.tango.energymodeller.energypredictor.workloadpredictor.AbstractVMHisto
 import eu.tango.energymodeller.energypredictor.workloadpredictor.CpuRecentHistoryWorkloadPredictor;
 import eu.tango.energymodeller.energypredictor.workloadpredictor.WorkloadEstimator;
 import eu.tango.energymodeller.types.TimePeriod;
+import eu.tango.energymodeller.types.energyuser.Accelerator;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.Host;
@@ -40,6 +41,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -477,6 +479,19 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
         }
         return answer;
     }
+    
+    /**
+     * This provides an average of the recent CPU utilisation for a given host,
+     * based upon the CPU utilisation time window set for the energy predictor.
+     *
+     * @param host The host for which the average CPU utilisation over the last
+     * n seconds will be calculated for.
+     * @return The average recent CPU utilisation based upon the energy
+     * predictor's configured observation window.
+     */
+    protected HashMap<Accelerator,HashMap<String, Double>> getAcceleratorUtilisation(Host host, Collection<WorkloadSource> energyUser) {
+        return workloadEstimator.getAcceleratorUtilisation(host, energyUser);
+    }    
 
     /**
      * This provides an average of the recent CPU utilisation for a given host,

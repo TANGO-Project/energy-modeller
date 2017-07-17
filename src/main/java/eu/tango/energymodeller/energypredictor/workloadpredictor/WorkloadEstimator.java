@@ -19,14 +19,12 @@
 package eu.tango.energymodeller.energypredictor.workloadpredictor;
 
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
-import eu.tango.energymodeller.datasourceclient.MetricValue;
 import eu.tango.energymodeller.datastore.DatabaseConnector;
 import eu.tango.energymodeller.types.energyuser.Accelerator;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 
 /**
  * This produces workload estimates for providing better energy estimations.
@@ -53,7 +51,7 @@ public interface WorkloadEstimator<T extends WorkloadSource> {
      * @param workloadSource The virtual machines or applications that induce the workload.
      * @return The estimated CPU utilisation of the physical host.
      */    
-    public HashMap<Accelerator,HashSet<MetricValue>> getAcceleratorUtilisation(Host host, Collection<WorkloadSource> workloadSource);
+    public HashMap<Accelerator,HashMap<String, Double>> getAcceleratorUtilisation(Host host, Collection<WorkloadSource> workloadSource);
     
     /**
      * This sets the data source that is to be used for querying current data. 
