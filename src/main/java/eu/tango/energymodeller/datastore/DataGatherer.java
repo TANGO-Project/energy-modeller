@@ -469,6 +469,10 @@ public class DataGatherer implements Runnable {
             host.setCalibrationData(database.getHostCalibrationData(host).getCalibrationData());
             host = database.getHostProfileData(host);
         }
+        //TODO add host accelerator detection here
+        if (host.hasAccelerator()) {
+            //TODO add accelerator testing and gathering of information here
+        }
         return host;
     }
 

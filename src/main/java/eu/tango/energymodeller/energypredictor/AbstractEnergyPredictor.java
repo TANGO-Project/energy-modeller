@@ -59,6 +59,7 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
     private static final String DEFAULT_DATA_SOURCE_PACKAGE = "eu.tango.energymodeller.datasourceclient";
     private static final String DEFAULT_WORKLOAD_PREDICTOR_PACKAGE = "eu.tango.energymodeller.energypredictor.workloadpredictor";
     private double defaultAssumedCpuUsage = 0.6; //assumed 60 percent usage, by default
+    private double defaultAssumedAcceleratorUsage = 0.0; //assumed 0 percent usage, by default
     private double defaultPowerOverheadPerHost = 0; //Overhead from DFS etc
     private HostDataSource source = null;
     protected DatabaseConnector database = null;
@@ -144,6 +145,8 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
         setWorkloadPredictor(workloadPredictorStr);
         defaultAssumedCpuUsage = config.getDouble("energy.modeller.energy.predictor.default_load", defaultAssumedCpuUsage);
         config.setProperty("energy.modeller.energy.predictor.default_load", defaultAssumedCpuUsage);
+        defaultAssumedAcceleratorUsage = config.getDouble("energy.modeller.energy.predictor.default_load_acc", defaultAssumedAcceleratorUsage);
+        config.setProperty("energy.modeller.energy.predictor.default_load_acc", defaultAssumedAcceleratorUsage);        
         String shareRule = config.getString("energy.modeller.energy.predictor.share_rule", "DefaultEnergyShareRule");
         config.setProperty("energy.modeller.energy.predictor.share_rule", shareRule);
         setEnergyShareRule(shareRule);
@@ -364,6 +367,28 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
     public void setDefaultAssumedCpuUsage(double usageCPU) {
         this.defaultAssumedCpuUsage = usageCPU;
     }
+    
+    /**
+     * This returns the default amount of accelerator utilisation that is assumed, if an
+     * estimation mechanism is not utilised.
+     *
+     * @return the default amount of accelerator utilisation to be used during energy
+     * estimation.
+     */
+    public double getDefaultAssumedAcceleratorUsage() {
+        return defaultAssumedAcceleratorUsage;
+    }
+
+    /**
+     * This sets the default amount of accelerator utilisation that is assumed, if an
+     * estimation mechanism is not utilised.
+     *
+     * @param usageAccelerator the default amount of accelerator utilisation to be used during
+     * energy estimation.
+     */
+    public void setDefaultAssumedAcceleratorUsage(double usageAccelerator) {
+        this.defaultAssumedAcceleratorUsage = usageAccelerator;
+    }    
 
     /**
      * This provides a prediction of how much energy is to be used by a VM, over
