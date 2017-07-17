@@ -12,6 +12,9 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ * 
+ * This is being developed for the TANGO Project: http://tango-project.eu
+ * 
  */
 package eu.tango.energymodeller.datastore;
 
@@ -315,7 +318,7 @@ public class DataGatherer implements Runnable {
                      * written to backing store as clean as possible.
                      */
                     if (performDataGathering) {
-                        gatherMeasurements(host, measurement, getGeneralPurposeHostsPowerConsumption(generalNodeMeasurements), vmList, vmUsageLogger);
+                        gatherMeasurements(host, measurement, getGeneralPurposeHostsPowerConsumption(generalNodeMeasurements), vmList);
                     }
                 }
                 try {
@@ -348,9 +351,8 @@ public class DataGatherer implements Runnable {
      * @param host The host to gather data for
      * @param measurement The measurement data to write to disk.
      * @param vmList The list of VMs that are currently running
-     * @param vmUsageLogger The logger that is used to write VM data to disk.
      */
-    private void gatherMeasurements(Host host, HostMeasurement measurement, double hostOffset, List<VmDeployed> vmList, VmEnergyUsageLogger vmUsageLogger) {
+    private void gatherMeasurements(Host host, HostMeasurement measurement, double hostOffset, List<VmDeployed> vmList) {
         if (lastTimeStampSeen.get(host) == null || measurement.getClock() > lastTimeStampSeen.get(host)) {
             lastTimeStampSeen.put(host, measurement.getClock());
             Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Writing out host information");
@@ -404,8 +406,13 @@ public class DataGatherer implements Runnable {
      * @param rule the rule to set
      */
     public void setRule(EnergyShareRule rule) {
-        vmUsageLogger.setRule(rule);
-    }
+        if (vmUsageLogger != null) {
+            vmUsageLogger.setRule(rule);
+        }
+        if (appUsageLogger != null) {
+            appUsageLogger.setRule(rule);
+        }
+    }     
 
     /**
      * The hash map gives a faster way to find a specific host. This converts
