@@ -46,7 +46,14 @@ public interface WorkloadEstimator<T extends WorkloadSource> {
      */
     public double getCpuUtilisation(Host host, Collection<T> workloadSource);
     
-    public HashMap<Accelerator,HashSet<MetricValue>> getAcceleratorUtilisation(Host host, Collection<WorkloadSource> workloadsource);
+    /**
+     * This estimates a physical hosts accelerator utilisation. It is based upon which
+     * VMs or apps are expected to be deployed/are currently deployed.
+     * @param host The physical host to get the workload estimation for.
+     * @param workloadSource The virtual machines or applications that induce the workload.
+     * @return The estimated CPU utilisation of the physical host.
+     */    
+    public HashMap<Accelerator,HashSet<MetricValue>> getAcceleratorUtilisation(Host host, Collection<WorkloadSource> workloadSource);
     
     /**
      * This sets the data source that is to be used for querying current data. 
