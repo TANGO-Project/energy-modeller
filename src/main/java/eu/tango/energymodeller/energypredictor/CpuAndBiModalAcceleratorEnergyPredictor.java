@@ -41,7 +41,7 @@ import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 
 /**
- * This implements the CPU polynomial energy predictor with accelerator support 
+ * This implements the CPU polynomial energy predictor with accelerator support
  * for the Tango project. It assumes the accelerator has only 2 states, such as
  * P0 and P8, where the accelerator such as a GPU is either busy or it is idle.
  * The power consumed is therefore based upon this assumption.
@@ -188,10 +188,9 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         EnergyUsagePrediction answer = new EnergyUsagePrediction(host);
         PolynomialFunction cpuModel = retrieveCpuModel(host).getFunction();
         double powerUsed = cpuModel.value(usageCPU);
-        for(Accelerator accelerator: host.getAccelerators()) {
+        for (Accelerator accelerator : host.getAccelerators()) {
             GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-            //TODO fix it so it uses actual gpu usage data not the usage assumption.
-            powerUsed = powerUsed + acceleratorModel.value(getDefaultAssumedAcceleratorUsage());
+            powerUsed = powerUsed + acceleratorModel.value(getAcceleratorClockRate(host, accelerator));
         }
         answer.setAvgPowerUsed(powerUsed);
         answer.setTotalEnergyUsed(powerUsed * ((double) TimeUnit.SECONDS.toHours(timePeriod.getDuration())));
@@ -208,20 +207,41 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      */
     @Override
     public double predictPowerUsed(Host host) {
-        double power = 0.0;
+        double power;
         PolynomialFunction model = retrieveCpuModel(host).getFunction();
         if (getDefaultAssumedCpuUsage() == -1) {
             power = model.value(getCpuUtilisation(host));
+            for (Accelerator accelerator : host.getAccelerators()) {
+                GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
+                power = power + acceleratorModel.value(getAcceleratorClockRate(host, accelerator));
+            }
         } else {
             power = model.value(getDefaultAssumedCpuUsage());
+            for (Accelerator accelerator : host.getAccelerators()) {
+                GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
+                power = power + acceleratorModel.value(getDefaultAssumedAcceleratorUsage());
+            }
         }
-        for(Accelerator accelerator: host.getAccelerators()) {
-            GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-            //TODO fix it so it uses actual gpu usage data not the usage assumption.
-            power = power + acceleratorModel.value(getDefaultAssumedAcceleratorUsage());
-        }        
         return power;
     }
+    
+    /**
+     * This provides an average of the recent CPU utilisation for a given host,
+     * based upon the CPU utilisation time window set for the energy predictor.
+     *
+     * @param host The host for which the average CPU utilisation over the last
+     * n seconds will be calculated for.
+     * @param accelerator The accelerator to get the information for
+     * @return The average recent CPU utilisation based upon the energy
+     * predictor's configured observation window.
+     */
+    protected double getAcceleratorClockRate(Host host,Accelerator accelerator) {
+        double answer = 0.0;
+        HashMap<String,Double> values = getAcceleratorUtilisation(host, null).get(accelerator);
+        if (values.containsKey("clocks.current.sm [MHz]"))
+        answer = values.get("clocks.current.sm [MHz]");
+        return answer;
+    }    
 
     /**
      * This estimates the power used by a host, given its CPU load.
@@ -265,24 +285,25 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         modelCache.put(host, answer);
         return answer;
     }
-    
+
     /**
-     * The assumption of this predictor function is that the calibration data 
+     * The assumption of this predictor function is that the calibration data
      * fits into two states: working or idle (based upon a single parameter).
      */
     private class GroupingFunction {
-    
+
         private double lowestGroup;
         private double highestGroup;
         //First field is the group id, second is the power consumption
         private final HashMap<Double, Double> totalPower = new HashMap<>();
         private final HashMap<Double, Double> countPower = new HashMap<>();
-        
+
         /**
-         * This applies a fit to the data, it groups by the first field and 
+         * This applies a fit to the data, it groups by the first field and
          * averages the second (power). It therefore assumes if the first fields
-         * value is seen again the best answer the function should return is the 
+         * value is seen again the best answer the function should return is the
          * average.
+         *
          * @param points The list of data points
          */
         public void fit(WeightedObservedPoints points) {
@@ -305,11 +326,12 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                 countPower.put(point.getX(), count);
             }
         }
-        
+
         /**
          * This returns the value associated with a given input to the function.
          * There should only be two outputs of this function. One for the busy
          * case and one for the idle case.
+         *
          * @param input The input for workload into the model
          * @return The output power consumption for the model.
          */
@@ -317,17 +339,18 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
             if (totalPower.isEmpty()) {
                 return 0.0;
             }
-            if(totalPower.containsKey(input)) {
+            if (totalPower.containsKey(input)) {
                 return totalPower.get(input) / countPower.get(input);
             }
             double proximityToLower = input - lowestGroup;
             double proximityToHigher = highestGroup - input;
             if (proximityToLower < proximityToHigher) {
                 return totalPower.get(lowestGroup) / countPower.get(lowestGroup);
-            } else 
-            return totalPower.get(highestGroup) / countPower.get(highestGroup);
+            } else {
+                return totalPower.get(highestGroup) / countPower.get(highestGroup);
+            }
         }
-        
+
     }
 
     /**
@@ -378,8 +401,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
             answer = answer + (error * error);
         }
         return answer;
-    }    
-    
+    }
+
     /**
      * This performs a calculation to determine how close the fit is for a given
      * model.

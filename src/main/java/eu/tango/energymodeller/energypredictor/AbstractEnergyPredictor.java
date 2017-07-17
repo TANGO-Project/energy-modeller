@@ -486,6 +486,7 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
      *
      * @param host The host for which the average CPU utilisation over the last
      * n seconds will be calculated for.
+     * @param energyUser The source of workload
      * @return The average recent CPU utilisation based upon the energy
      * predictor's configured observation window.
      */
@@ -512,7 +513,7 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
      *
      * @param host The host for which the average CPU utilisation over the last
      * n seconds will be calculated for.
-     * @param energyUser
+     * @param energyUser The source of workload
      * @return The average recent CPU utilisation based upon the energy
      * predictor's configured observation window.
      */
