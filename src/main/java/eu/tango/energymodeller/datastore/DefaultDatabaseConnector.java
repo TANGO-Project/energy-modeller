@@ -364,7 +364,7 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
                 + "SELECT ? as vm_id, vm_app_tag.vm_app_tag_id "
                 + "FROM vm_app_tag WHERE vm_app_tag.tag_name = ? ON DUPLICATE KEY UPDATE vm_app_tag_arr.vm_id=vm_app_tag_arr.vm_id")) {
             for (String appTag : vm.getApplicationTags()) {
-                preparedStatement.setInt(1, vm.getId());                
+                preparedStatement.setInt(1, vm.getId());
                 preparedStatement.setString(2, appTag);
                 preparedStatement.executeUpdate();
             }
@@ -388,7 +388,7 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
                 + "SELECT ? as vm_id, vm_disk.vm_disk_id "
                 + "FROM vm_disk WHERE vm_disk.disk_name = ? ON DUPLICATE KEY UPDATE vm_disk_arr.vm_id=vm_disk_arr.vm_id")) {
             for (VmDiskImage diskImage : vm.getDiskImages()) {
-                preparedStatement.setInt(1, vm.getId());                
+                preparedStatement.setInt(1, vm.getId());
                 preparedStatement.setString(2, diskImage.toString());
                 preparedStatement.executeUpdate();
             }
@@ -586,15 +586,15 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
                 preparedStatement.setInt(2, vm.getId());
                 preparedStatement.setLong(3, time);
                 preparedStatement.setDouble(4, load.getFraction(vm));
-                preparedStatement.setDouble(5, averageOverhead);              
+                preparedStatement.setDouble(5, averageOverhead);
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException ex) {
             Logger.getLogger(DefaultDatabaseConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-     public void writeApplicationHistoricData(Host host, long time, HostEnergyUserLoadFraction load) {
+
+    public void writeApplicationHistoricData(Host host, long time, HostEnergyUserLoadFraction load) {
         connection = getConnection(connection);
         if (connection == null || host == null) {
             return;
@@ -607,13 +607,13 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
                 preparedStatement.setInt(2, app.getId());
                 preparedStatement.setLong(3, time);
                 preparedStatement.setDouble(4, load.getFraction(app));
-                preparedStatement.setDouble(5, averageOverhead);              
+                preparedStatement.setDouble(5, averageOverhead);
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException ex) {
             Logger.getLogger(DefaultDatabaseConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }   
+    }
 
     /**
      * This is part of a caching mechanism for Vms when getting historic load
@@ -716,9 +716,10 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
         try (PreparedStatement preparedStatement = connection.prepareStatement(
                 query)) {
             preparedStatement.setString(1, queryItem);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            resultSet.next();
-            return new VmLoadHistoryRecord(resultSet.getDouble(1), resultSet.getDouble(2)); //return the single value from the query
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                resultSet.next();
+                return new VmLoadHistoryRecord(resultSet.getDouble(1), resultSet.getDouble(2)); //return the single value from the query
+            }
         } catch (SQLException ex) {
             Logger.getLogger(DefaultDatabaseConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -735,7 +736,7 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
     @Override
     public VmLoadHistoryRecord getAverageCPUUtilisationTag(String tagName) {
         return getAverageCPUUtilisation("SELECT avg(cpu_load), "
-                + "STDDEV_POP(cpu_load) as standardDev, "                
+                + "STDDEV_POP(cpu_load) as standardDev, "
                 + "FROM vm_measurement as mesu, "
                 + "vm_app_tag_arr AS arr, "
                 + "vm_app_tag AS tag "
@@ -756,7 +757,7 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
     @Override
     public VmLoadHistoryRecord getAverageCPUUtilisationDisk(String diskRefStr) {
         return getAverageCPUUtilisation("SELECT avg(cpu_load) "
-                + "STDDEV_POP(cpu_load) as standardDev, "                
+                + "STDDEV_POP(cpu_load) as standardDev, "
                 + "FROM vm_measurement as mesu, "
                 + "vm_disk_arr AS arr, "
                 + "vm_disk AS disk "
@@ -827,7 +828,7 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
     @Override
     public List<VmLoadHistoryWeekRecord> getAverageCPUUtilisationWeekTraceForDisk(String diskRef) {
         return getAverageCPUUtilisationWeekTrace("SELECT avg(cpu_load), "
-                + "STDDEV_POP(cpu_load) as standardDev, "                
+                + "STDDEV_POP(cpu_load) as standardDev, "
                 + "Weekday(FROM_UNIXTIME(clock)) as Day_of_Week, "
                 + "Hour(FROM_UNIXTIME(clock)) as Hour_in_Day "
                 + "FROM vm_measurement as mesu, "
@@ -863,9 +864,10 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
             statement.executeUpdate("set @vm_id =0");
             preparedStatement.setInt(2, vm.getId());
             preparedStatement.setInt(1, windowSize);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            resultSet.next();
-            return resultSet.getDouble(1); //return the single value from the query
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getDouble(1); //return the single value from the query
+            }
         } catch (SQLException ex) {
             Logger.getLogger(DefaultDatabaseConnector.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -890,7 +892,7 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
             return answer;
         }
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        query)) {
+                query)) {
             preparedStatement.setString(1, queryItem);
             preparedStatement.setInt(2, windowSize);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -919,7 +921,7 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
      */
     @Override
     public List<VmLoadHistoryBootRecord> getAverageCPUUtilisationBootTraceForTag(String tagName, int windowSize) {
-        
+
         return getAverageCPUUtilisationBootTrace(
             "SELECT (vm_data.clock - start_time) as start_clock, avg(vm_data.cpu_load) as cpu_load, STDDEV_POP(cpu_load) as standard_deviation " + 
             "FROM vm_measurement as vm_data, " + 
