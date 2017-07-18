@@ -22,3 +22,10 @@ install:
 script:
   - sudo update-java-alternatives --set "java-8-oracle"
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle"
+  
+ # SonnarQube Configuration
+addons:
+sonarqube: true 
+ 
+ # other script steps might be done before running the actual SonarQube analysis
+- sonar-scanner -X -Dsonar.login="4bfd776407ac9a01b64454c66f5dcb811a7acc49"
