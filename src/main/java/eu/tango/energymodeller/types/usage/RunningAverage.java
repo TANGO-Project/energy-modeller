@@ -20,6 +20,9 @@ import java.util.Objects;
 
 /**
  * This class stores the running average information and enables its processing.
+ * 
+ * @author Richard Kavanagh
+ * 
  */
 public class RunningAverage implements Serializable {
 
@@ -80,7 +83,7 @@ public class RunningAverage implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj.getClass().equals(this.getClass())) {
+        if (this.getClass().equals(obj.getClass())) {
             return ((RunningAverage) obj).property.equals(this.property);
         }
         return false;
