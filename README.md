@@ -49,7 +49,6 @@ TODO
 
 The energy modeller works 
 
-* **ALDE** -  The ALDE will provide interfaces for the Self-Adaptation Manager to change the configuration of an application to optimize its execution in a TANGO compatible testbed.
 * **Device Supervisor** - The Energy modeller can directly interface with the device supervisor as a means of using it as a datasource for monitoring the environment.
 * **Monitoring Infrastructure** - The Energy modeller can interface with the monitoring infrastructure as a means of using it as a datasource for monitoring the environment.
 * **Self-Adaptation Manager** - The energy modeller provides guidance to the self-adaptation manager on how much power is being consumed by an application. It also allows for it to determine the effect on power consumption of proposed changes to the applications configuration.
