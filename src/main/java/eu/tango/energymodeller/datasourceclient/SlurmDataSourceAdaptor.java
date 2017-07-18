@@ -112,11 +112,12 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         for (String part : partialAnswer) {
             if (part.contains("[")) { //test if host is in range i.e. node[51-54]
                 String hostPrefix = part.substring(0, part.indexOf("["));
-                Scanner parser = new Scanner(part).useDelimiter("[^0-9]+");
-                int start = parser.nextInt();
-                int end = parser.nextInt();
-                for (int i = start; i <= end; i++) {
-                    answer.add(hostPrefix + i);
+                try (Scanner parser = new Scanner(part).useDelimiter("[^0-9]+")) {
+                    int start = parser.nextInt();
+                    int end = parser.nextInt();
+                    for (int i = start; i <= end; i++) {
+                        answer.add(hostPrefix + i);
+                    }
                 }
             } else {
                 answer.add(part); //Host name is singular, e.g. ns54
@@ -292,10 +293,11 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         }
         return answer;
     }
-    
+
     /**
-     * This takes a string in the format 0:03 i.e. mins:seconds and converts it 
+     * This takes a string in the format 0:03 i.e. mins:seconds and converts it
      * into seconds
+     *
      * @param duration The string to parse
      * @return The time in seconds the duration string translates to.
      */
@@ -308,7 +310,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         long seconds = Long.parseLong(durationSplit[1]);
         seconds = seconds + TimeUnit.MINUTES.toSeconds(min);
         return seconds;
-    }    
+    }
 
     /**
      * This executes a command and returns the output as a line of strings.
@@ -494,7 +496,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                 appData.getApplication().setStatus(app.getStatus());
                 break;
             }
-        }        
+        }
         appData.addMetric(new MetricValue(APPS_STATUS, APPS_STATUS, appData.getApplication().getStatus().name(), measure.getClock()));
         appData.addMetric(new MetricValue(APPS_ALLOCATED_TO_HOST_COUNT, APPS_ALLOCATED_TO_HOST_COUNT, appsOnThisHost.size() + "", measure.getClock()));
         appData.addMetric(new MetricValue(APPS_RUNNING_ON_HOST_COUNT, APPS_RUNNING_ON_HOST_COUNT, appsRunningOnThisHost.size() + "", measure.getClock()));
