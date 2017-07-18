@@ -27,4 +27,4 @@ script:
   - sudo update-java-alternatives --set "java-8-oracle"
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle"
   
-  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true -Dmaven.wagon.http.ssl.ignore.validity.dates=true -B -V sonar:sonar
