@@ -323,11 +323,12 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
         ArrayList<String> output = new ArrayList<>();
         Process proc = Runtime.getRuntime().exec(cmd);
         java.io.InputStream is = proc.getInputStream();
-        java.util.Scanner s = new java.util.Scanner(is);
-        String outputLine;
-        while (s.hasNextLine()) {
-            outputLine = s.nextLine();
-            output.add(outputLine);
+        try (java.util.Scanner scanner = new java.util.Scanner(is)) {
+            String outputLine;
+            while (scanner.hasNextLine()) {
+                outputLine = scanner.nextLine();
+                output.add(outputLine);
+            }
         }
         return output;
     }
@@ -701,8 +702,10 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             String gpuUsed = "";
             for (String item : dataItemSplit) {
                 if (!item.isEmpty() && Character.isDigit(item.charAt(0))) {
-                    int used = new Scanner(item).useDelimiter("[^\\d]+").nextInt();
-                    gpuUsed = used + "";
+                    try (Scanner scanner = new Scanner(item).useDelimiter("[^\\d]+")) {
+                        int used = scanner.nextInt();
+                        gpuUsed = used + "";
+                    }
                     break;
                 }
             }
