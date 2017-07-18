@@ -143,7 +143,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
     /**
      * The user's password to contact the database.
      */
-    private static String databasePassword = "";
+    private static String databasePassword;
     /**
      * The filter string, if a host/VM begins with this then it is a host, if
      * isHost equals true.
@@ -184,7 +184,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
                 databaseDriver = "com.mysql.jdbc.Driver";
             }
             config.setProperty("energy.modeller.zabbix.db.driver", databaseDriver);
-            databasePassword = config.getString("energy.modeller.zabbix.db.password", databasePassword);
+            databasePassword = config.getString("energy.modeller.zabbix.db.password", "");
             config.setProperty("energy.modeller.zabbix.db.password", databasePassword);
             databaseUser = config.getString("energy.modeller.zabbix.db.user", databaseUser);
             config.setProperty("energy.modeller.zabbix.db.user", databaseUser);

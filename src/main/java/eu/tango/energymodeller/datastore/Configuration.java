@@ -44,7 +44,7 @@ public class Configuration {
     /**
      * The user's password to contact the database.
      */
-    public static String databasePassword = "";
+    public static String databasePassword;
     private static final String CONFIG_FILE = "energy-modeller-db.properties";
 
     static {
@@ -67,7 +67,7 @@ public class Configuration {
                 databaseDriver = "com.mysql.jdbc.Driver";
             }     
             config.setProperty("energy.modeller.db.driver", databaseDriver);
-            databasePassword = config.getString("energy.modeller.db.password", databasePassword);
+            databasePassword = config.getString("energy.modeller.db.password", "");
             config.setProperty("energy.modeller.db.password", databasePassword);
             databaseUser = config.getString("energy.modeller.db.user", databaseUser);
             config.setProperty("energy.modeller.db.user", databaseUser);
