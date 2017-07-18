@@ -199,6 +199,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
         for (HostProfileData profileData : hostProfileData) {
             if (profileData.getType().equals(type)) {
                 value = value + profileData.getValue();
+                count = count + 1;
             }
         }
         return value / count;
