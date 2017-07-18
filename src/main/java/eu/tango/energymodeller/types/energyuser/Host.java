@@ -202,6 +202,9 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
                 count = count + 1;
             }
         }
+        if (count == 0) {
+            return 0.0;
+        }
         return value / count;
     }
 

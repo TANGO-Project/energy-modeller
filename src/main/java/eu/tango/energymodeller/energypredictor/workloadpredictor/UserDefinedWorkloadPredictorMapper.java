@@ -105,6 +105,9 @@ public class UserDefinedWorkloadPredictorMapper extends AbstractVMHistoryWorkloa
                 sumCpuUtilisation = sumCpuUtilisation + getAverageCpuUtilisation(vm).getUtilisation();
                 vmCount = vmCount + 1;
             }
+            if (vmCount == 0) {
+                return 0.0;
+            }            
             return sumCpuUtilisation / vmCount;
         } else if (hasDiskReferences(virtualMachines, validDiskRefs)) {
             for (VM vm : virtualMachines) {
