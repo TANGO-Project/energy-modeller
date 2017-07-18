@@ -304,6 +304,8 @@ public class CpuAndAcceleratorEnergyPredictor extends AbstractEnergyPredictor {
         }
         return answer;
     }
+    
+    //TODO fix the issue with calculating sum of square error for the model
 
     /**
      * This performs a calculation to determine how close the fit is for a given
