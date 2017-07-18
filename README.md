@@ -30,9 +30,8 @@ The Energy Modeller's primary two prerequisites are:
 
 [![Build Status](https://travis-ci.org/TANGO-Project/energy-modeller.svg?branch=master)](https://travis-ci.org/TANGO-Project/energy-modeller)
 
-#### SonarQube reports:
-
-SonarQube ( http://www.sonarqube.org/ ) reports for this project are available at: TODO
+#### Sonar Cloud reports:
+The Sonar Cloud reports for this project are available at: https://sonarcloud.io/dashboard?id=eu.tango%3Aenergy-modeller
 
 ### Installation for running the service
 
