@@ -13,7 +13,10 @@ jdk:
   
 # SonnarQube Configuration
 addons:
-  sonarcloud: true
+  sonarcloud:
+    organization: "richardkav-github"
+    token:
+      secure: 4bfd776407ac9a01b64454c66f5dcb811a7acc49
   apt:
     packages:
       - oracle-java8-installer
@@ -24,4 +27,4 @@ script:
   - sudo update-java-alternatives --set "java-8-oracle"
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle"
   
-- sonar-scanner -X -Dsonar.login="4bfd776407ac9a01b64454c66f5dcb811a7acc49"
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar
