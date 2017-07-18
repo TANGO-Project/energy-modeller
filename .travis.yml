@@ -6,6 +6,7 @@
 #
 # This code is licensed under an Apache 2.0 license. Please, refer to the LICENSE.TXT file for more information
 
+dist: precise
 language: java
 jdk:
   - oraclejdk8
