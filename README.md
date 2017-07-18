@@ -47,7 +47,7 @@ TODO
 
 ## Relation to other TANGO components
 
-The energy modeller works 
+The energy modeller works with the following components:
 
 * **Device Supervisor** - The Energy modeller can directly interface with the device supervisor as a means of using it as a datasource for monitoring the environment.
 * **Monitoring Infrastructure** - The Energy modeller can interface with the monitoring infrastructure as a means of using it as a datasource for monitoring the environment.
