@@ -238,8 +238,9 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
     protected double getAcceleratorClockRate(Host host,Accelerator accelerator) {
         double answer = 0.0;
         HashMap<String,Double> values = getAcceleratorUtilisation(host, null).get(accelerator);
-        if (values.containsKey("clocks.current.sm [MHz]"))
-        answer = values.get("clocks.current.sm [MHz]");
+        if (values.containsKey("clocks.current.sm [MHz]")) {
+            answer = values.get("clocks.current.sm [MHz]");
+        }
         return answer;
     }    
 
