@@ -408,6 +408,9 @@ public class WattsUpMeterDataSourceAdaptor implements HostDataSource {
                 count = count + 1;
             }
         }
+        if (count == 0) {
+            return 0.0;
+        }        
         return sumOfUtil / count;
     }
 

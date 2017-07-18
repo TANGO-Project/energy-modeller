@@ -12,9 +12,9 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * This is being developed for the TANGO Project: http://tango-project.eu
- * 
+ *
  */
 package eu.tango.energymodeller.energypredictor.workloadpredictor;
 
@@ -43,6 +43,9 @@ public class BasicAverageCpuWorkloadPredictor extends AbstractVMHistoryWorkloadE
                     vmCount = vmCount + 1;
                 }
             }
+            if (vmCount == 0) {
+                return 0.0;
+            }
             return sumCpuUtilisation / vmCount;
         } else {
             return 0;
@@ -65,7 +68,7 @@ public class BasicAverageCpuWorkloadPredictor extends AbstractVMHistoryWorkloadE
         }
         if (WorkloadStatisticsCache.getInstance().isInUse()) {
             return new VmLoadHistoryRecord(WorkloadStatisticsCache.getInstance().getUtilisationforTags(vm), -1);
-        }        
+        }
         for (String tag : vm.getApplicationTags()) {
             VmLoadHistoryRecord answer = database.getAverageCPUUtilisationTag(tag);
             utilisation = utilisation + answer.getUtilisation();

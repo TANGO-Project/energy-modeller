@@ -48,6 +48,9 @@ public class BootAverageCpuWorkloadPredictor extends AbstractVMHistoryWorkloadEs
                     vmCount = vmCount + 1;
                 }
             }
+            if (vmCount == 0) {
+                return 0.0;
+            }            
             return sumCpuUtilisation / vmCount;
         } else {
             return 0;

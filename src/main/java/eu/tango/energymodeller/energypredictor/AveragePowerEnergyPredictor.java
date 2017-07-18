@@ -12,9 +12,9 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * This is being developed for the TANGO Project: http://tango-project.eu
- * 
+ *
  */
 package eu.tango.energymodeller.energypredictor;
 
@@ -39,7 +39,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 /**
- * This predictor uses a simple reading of the current power value and forecasts 
+ * This predictor uses a simple reading of the current power value and forecasts
  * that no change will occur. The energy cost for a host or VM is then calculated
  * from this reading.
  *
@@ -80,7 +80,7 @@ public class AveragePowerEnergyPredictor extends AbstractEnergyPredictor {
             Logger.getLogger(AveragePowerEnergyPredictor.class.getName()).log(Level.SEVERE, "The average power energy predictor failed to initialise", ex);
         }
     }
-    
+
     /**
      * This creates a new average power energy predictor. The predictor when
      * running takes the last power reading and makes the assumption no change
@@ -95,14 +95,14 @@ public class AveragePowerEnergyPredictor extends AbstractEnergyPredictor {
         config.setProperty("energy.modeller.energy.predictor.cpu.utilisation.observe_time.min", powerObservationTimeMin);
         powerObservationTimeSec = config.getInt("energy.modeller.energy.predictor.cpu.utilisation.observe_time.sec", powerObservationTimeSec);
         config.setProperty("energy.modeller.energy.predictor.cpu.utilisation.observe_time.sec", powerObservationTimeSec);
-        observationTime = powerObservationTimeSec + (int) TimeUnit.MINUTES.toSeconds(powerObservationTimeMin);       
-    }    
+        observationTime = powerObservationTimeSec + (int) TimeUnit.MINUTES.toSeconds(powerObservationTimeMin);
+    }
 
     @Override
     public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> virtualMachines, TimePeriod duration) {
         return predictTotalEnergy(host, duration);
     }
-    
+
     /**
      * This provides a prediction of how much energy is to be used by a VM
      *
@@ -114,9 +114,9 @@ public class AveragePowerEnergyPredictor extends AbstractEnergyPredictor {
      * @return The prediction of the energy to be used.
      */
     @Override
-   public EnergyUsagePrediction getVMPredictedEnergy(VM vm, Collection<VM> virtualMachines, Host host, TimePeriod timePeriod) {
-       return getPredictedEnergy(vm, VM.castToEnergyUser(virtualMachines), host, timePeriod);
-   }    
+    public EnergyUsagePrediction getVMPredictedEnergy(VM vm, Collection<VM> virtualMachines, Host host, TimePeriod timePeriod) {
+        return getPredictedEnergy(vm, VM.castToEnergyUser(virtualMachines), host, timePeriod);
+    }
 
     /**
      * This provides a prediction of how much energy is to be used by a VM
@@ -128,7 +128,7 @@ public class AveragePowerEnergyPredictor extends AbstractEnergyPredictor {
      * @param timePeriod The time period the query should run for.
      * @return The prediction of the energy to be used.
      */
-   private EnergyUsagePrediction getPredictedEnergy(EnergyUsageSource vm, Collection<EnergyUsageSource> otherUsers, Host host, TimePeriod timePeriod) {
+    private EnergyUsagePrediction getPredictedEnergy(EnergyUsageSource vm, Collection<EnergyUsageSource> otherUsers, Host host, TimePeriod timePeriod) {
         EnergyDivision division = getEnergyUsage(host, otherUsers);
         EnergyUsagePrediction hostAnswer = predictTotalEnergy(host, timePeriod);
         EnergyUsagePrediction generalHostsAnswer = getGeneralHostPredictedEnergy(timePeriod);
@@ -173,16 +173,19 @@ public class AveragePowerEnergyPredictor extends AbstractEnergyPredictor {
          * Not considering individual time periods, that each measurement lasted
          * for. i.e. assume a regular arrival rate.
          */
-        
+
         GregorianCalendar cal = new GregorianCalendar();
         cal.setTimeInMillis(cal.getTimeInMillis() - TimeUnit.SECONDS.toMillis(duration));
         TimePeriod timePeriod = new TimePeriod(cal, duration);
         List<HostEnergyRecord> data = database.getHostHistoryData(host, timePeriod);
-            for (int i = 0; i <= data.size() - 2; i++) {
-                HostEnergyRecord power = data.get(i);
-                answer = answer + power.getPower();
-                count = count + 1;
-            }
+        for (int i = 0; i <= data.size() - 2; i++) {
+            HostEnergyRecord power = data.get(i);
+            answer = answer + power.getPower();
+            count = count + 1;
+        }
+        if (count == 0) {
+            return 0.0;
+        }        
         return answer / count;
     }
 
