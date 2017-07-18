@@ -102,6 +102,7 @@ public class EnergyModeller {
      * @param args no args are expected.
      */
     public static void main(String[] args) {
+        boolean running = true;
         try {
             if (new File("energy-modeller-logging.properties").exists()) {
                 LogManager.getLogManager().readConfiguration(new FileInputStream(new File("energy-modeller-logging.properties")));
@@ -120,11 +121,14 @@ public class EnergyModeller {
         EnergyModeller modeller = new EnergyModeller(true);
         Logger.getLogger(EnergyModeller.class.getName()).log(Level.SEVERE,
                 "The logger for the energy modeller has now started");
-        while (true) {
+        while (running) {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(EnergyModeller.class.getName()).log(Level.SEVERE, "The energy modeller was interupted.", ex);
+            } catch (Exception ex) {
+                Logger.getLogger(EnergyModeller.class.getName()).log(Level.SEVERE, "An unhandled exception occured", ex);
+                running = false;
             }
         }
     }
