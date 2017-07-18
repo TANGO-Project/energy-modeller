@@ -44,7 +44,7 @@ public class Configuration {
     /**
      * The user's password to contact the database.
      */
-    public static String databasePassword = "em";
+    public static String databasePassword = "";
     private static final String CONFIG_FILE = "energy-modeller-db.properties";
 
     static {

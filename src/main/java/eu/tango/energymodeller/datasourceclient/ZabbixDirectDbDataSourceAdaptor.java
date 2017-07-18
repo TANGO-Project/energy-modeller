@@ -143,7 +143,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
     /**
      * The user's password to contact the database.
      */
-    private static String databasePassword = "Ezei3ib6";
+    private static String databasePassword = "";
     /**
      * The filter string, if a host/VM begins with this then it is a host, if
      * isHost equals true.
