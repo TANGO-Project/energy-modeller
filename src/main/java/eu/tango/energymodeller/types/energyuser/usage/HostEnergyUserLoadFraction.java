@@ -89,7 +89,7 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
         }
         return vms;
     }
-    
+
     /**
      * This returns the set of energy usage sources that this fraction of host
      * load describes.
@@ -104,7 +104,7 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
             }
         }
         return apps;
-    }    
+    }
 
     /**
      * The time that this record represents, in UTC time.
@@ -135,7 +135,7 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
      */
     public void setFraction(Collection<UsageRecord> load) {
         fraction = getFraction(load);
-}
+    }
 
     /**
      * This takes a collection of vm load measurement data (load data) and
@@ -147,7 +147,7 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
     public void setFraction(List<VmMeasurement> load) {
         fraction = getFraction(load);
     }
-    
+
     /**
      * This takes a collection of application load measurement data (load data) and
      * determines the fraction of the overall load which a application is responsible
@@ -157,8 +157,8 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
      */
     public void setApplicationFraction(List<ApplicationMeasurement> load) {
         fraction = getApplicationFraction(load);
-    }    
-    
+    }
+
     /**
      * This takes a set of vm usage records and calculates the fraction of
      * system load each vm is responsible for.
@@ -168,8 +168,8 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
      */
     public static HashMap<EnergyUsageSource, Double> getFraction(List<VmMeasurement> load) {
         return getFraction(load, false);
-    } 
-          
+    }
+
     /**
      * This takes a set of usage records and calculates the fraction of
      * system load each energy user is responsible for.
@@ -184,7 +184,11 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
             totalLoad = totalLoad + usageRecord.getLoad();
         }
         for (UsageRecord usageRecord : load) {
-            answer.put(usageRecord.getEnergyUser(), (usageRecord.getLoad() / totalLoad));
+            if (totalLoad == 0) {
+                answer.put(usageRecord.getEnergyUser(), 0.0);
+            } else {
+                answer.put(usageRecord.getEnergyUser(), (usageRecord.getLoad() / totalLoad));
+            }
         }
         return answer;
     }
@@ -239,7 +243,7 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
         }
         return answer;
     }
-    
+
     /**
      * This takes a set of application usage records and calculates the fraction of
      * system load each application is responsible for.
@@ -259,7 +263,7 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
         } catch (NullPointerException ex) {
             Logger.getLogger(HostEnergyUserLoadFraction.class.getName()).log(Level.WARNING, "Using fallback due to no CPU load information.");
             /**
-             * This occurs if the monitoring infrastructure provides no CPU 
+             * This occurs if the monitoring infrastructure provides no CPU
              * utilisation information for a application.
              */
             for (ApplicationMeasurement loadMeasure : load) {
@@ -272,7 +276,7 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
          * induced whatsoever. Avoids divide by zero errors.
          */
         if (totalLoad == 0) {
-            Logger.getLogger(HostEnergyUserLoadFraction.class.getName()).log(Level.WARNING, 
+            Logger.getLogger(HostEnergyUserLoadFraction.class.getName()).log(Level.WARNING,
                     "Using fallback due to no CPU total load being equal to zero.");
             double count = load.size();
             for (ApplicationMeasurement loadMeasure : load) {
@@ -300,7 +304,7 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
         }
         return answer;
     }
-    
+
     /**
      * This utility function goes through a list of HostEnergyUserLoadFraction
      * and lists the Applications that were involved.
@@ -314,8 +318,8 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
             answer.addAll(hostAppLoadFraction.getEnergyUsageSourcesAsApps());
         }
         return answer;
-    }        
-    
+    }
+
     /**
      * This utility function goes through a list of HostEnergyUserLoadFraction
      * and lists the VMs that were involved.
@@ -357,7 +361,7 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
             return answer;
         }
     }
-    
+
     /**
      * This provides the data that shows the fraction of load a specific VM is
      * responsible for.
@@ -373,7 +377,7 @@ public class HostEnergyUserLoadFraction implements Comparable<HostEnergyUserLoad
         } else {
             return answer;
         }
-    }    
+    }
 
     /**
      * This comparison orders load fraction records by time.
