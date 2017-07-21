@@ -400,9 +400,9 @@ public abstract class Measurement {
      */
     public double getCpuIdle() {
         if (metrics.containsKey(CPU_SPOT_USAGE_KPI_NAME)) {
-            return 1 - this.getMetric(CPU_SPOT_USAGE_KPI_NAME).getClock();
+            return 1.0 - this.getMetric(CPU_SPOT_USAGE_KPI_NAME).getValue();
         }
-        return this.getMetric(CPU_IDLE_KPI_NAME).getValue() / 100;
+        return this.getMetric(CPU_IDLE_KPI_NAME).getValue() / 100.0;
     }
 
     /**
