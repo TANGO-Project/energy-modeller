@@ -101,9 +101,6 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
             }
             config.setAutoSave(true); //This will save the configuration file back to disk. In case the defaults need setting.
             readSettings(config);
-            String workloadPredictorStr = config.getString("energy.modeller.energy.predictor.cpu.workload", "CpuRecentHistoryWorkloadPredictor");
-            config.setProperty("energy.modeller.energy.predictor.cpu.workload", workloadPredictorStr);
-            setWorkloadPredictor(workloadPredictorStr);
         } catch (ConfigurationException ex) {
             Logger.getLogger(CpuOnlyEnergyPredictor.class.getName()).log(Level.SEVERE,
                     "Taking the default load from the settings file did not work", ex);

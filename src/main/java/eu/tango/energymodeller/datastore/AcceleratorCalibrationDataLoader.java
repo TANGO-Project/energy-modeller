@@ -31,9 +31,9 @@ import java.util.ArrayList;
  */
 public class AcceleratorCalibrationDataLoader extends ResultsStore {
 
-    private HashMap<Integer, Double> minValues = new HashMap<>();
-    private HashMap<Integer, Double> maxValues = new HashMap<>();
-    private HashMap<Integer, Double> rangeValues = new HashMap<>();
+    private final HashMap<Integer, Double> minValues = new HashMap<>();
+    private final HashMap<Integer, Double> maxValues = new HashMap<>();
+    private final HashMap<Integer, Double> rangeValues = new HashMap<>();
     private boolean hasNormalised = false;
 
     public AcceleratorCalibrationDataLoader(File file) {
@@ -170,7 +170,6 @@ public class AcceleratorCalibrationDataLoader extends ResultsStore {
         double min;
         double range;
         if (hasNormalised) {
-            min = minValues.get(column);
             range = rangeValues.get(column);
         } else {
             min = getMin(column);
