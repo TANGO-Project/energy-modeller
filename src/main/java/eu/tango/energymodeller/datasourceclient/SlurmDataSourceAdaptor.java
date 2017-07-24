@@ -658,11 +658,20 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             boolean gpu = dataItem.contains("gpu");
             boolean mic = dataItem.contains("mic");
             String[] dataItemSplit = dataItem.split(":");
-            String acceleratorName = dataItemSplit[1];
+            String acceleratorName;
             int acceleratorCount = 1;
-            if (dataItemSplit.length > 2) {
+            if (gresStringSplit.length == 3) {
+                acceleratorName = dataItemSplit[1]; //strings such as gpu:teslak20:2
                 try {
                     acceleratorCount = Integer.parseInt(dataItemSplit[2].trim());
+                } catch (NumberFormatException ex) {
+                    Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE,
+                            "Unexpected number format", ex);
+                }
+            } else {
+                acceleratorName = dataItemSplit[0]; //strings such as mic:2
+                try {
+                    acceleratorCount = Integer.parseInt(dataItemSplit[1].trim());
                 } catch (NumberFormatException ex) {
                     Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE,
                             "Unexpected number format", ex);
@@ -677,7 +686,6 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                 measurement.addMetric(new MetricValue(KpiList.MIC_NAME, KpiList.MIC_NAME, acceleratorName, clock));
                 measurement.addMetric(new MetricValue(KpiList.MIC_COUNT, KpiList.MIC_COUNT, acceleratorCount + "", clock));
             }
-
         }
         return measurement;
     }
