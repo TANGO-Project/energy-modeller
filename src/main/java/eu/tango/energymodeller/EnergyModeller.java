@@ -86,7 +86,7 @@ public class EnergyModeller {
     private static final String DEFAULT_DATA_SOURCE_PACKAGE = "eu.tango.energymodeller.datasourceclient";
     private static final String DEFAULT_HISTORIC_ENERGY_DIVISION_RULE_PACKAGE = "eu.tango.energymodeller.energypredictor.vmenergyshare.historic";
     private static final String DEFAULT_ENERGY_DIVISION_RULE_PACKAGE = "eu.tango.energymodeller.energypredictor.vmenergyshare";
-    private EnergyPredictorInterface predictor = new CpuOnlyEnergyPredictor();
+    private EnergyPredictorInterface predictor;
     private HostDataSource datasource;
     private final DatabaseConnector database;
     private DataGatherer dataGatherer;
@@ -213,6 +213,9 @@ public class EnergyModeller {
                 String datasourceStr = config.getString("energy.modeller.datasource", "SlurmDataSourceAdaptor");
                 setDataSource(datasourceStr);
                 config.setProperty("energy.modeller.datasource", datasourceStr);
+                String predictorStr = config.getString("energy.modeller.predictor", "CpuAndAcceleratorEnergyPredictor");
+                setEnergyPredictor(predictorStr);                
+                config.setProperty("energy.modeller.predictor", predictorStr);
                 if (!new File(CONFIG_FILE).exists()) {
                     config.save();
                 }
