@@ -449,7 +449,7 @@ public class DataGatherer implements Runnable {
          * host should have its accelerator data present
          */
         for (Accelerator accelerator : host.getAccelerators()) {
-            ResultsStore store = new ResultsStore();
+            ResultsStore store = new ResultsStore(new File("./" + accelerator.getName() + ".csv"));
             ArrayList<HostAcceleratorCalibrationData> calibrationData = new ArrayList<>();
             /**
              * The last column is expected to represent power consumption (the
@@ -457,7 +457,7 @@ public class DataGatherer implements Runnable {
              * to build up the model. An individual energy modeller should
              * understand the parameters.
              */
-            if (new File(accelerator.getName() + ".csv").exists()) {
+            if (new File("./" + accelerator.getName() + ".csv").exists()) {
                 store.load();
                 ArrayList<String> header = store.getRow(0);
                 for (int i = 1; i < store.size(); i++) {
