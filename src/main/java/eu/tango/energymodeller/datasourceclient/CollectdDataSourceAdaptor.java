@@ -172,9 +172,9 @@ public class CollectdDataSourceAdaptor implements HostDataSource, Dispatcher {
         Host host;
         //Populate the host list
         if (!knownHosts.containsKey(values.getHost())) {
-            Host newHost = new Host(0, values.getHost());
-            host = newHost;
-            knownHosts.put(values.getHost(), newHost);
+            String hostId = values.getHost().replaceAll("[^0-9]", "");
+            host = new Host(Integer.parseInt(hostId), values.getHost());
+            knownHosts.put(values.getHost(), host);
         } else {
             host = knownHosts.get(values.getHost());
         }
