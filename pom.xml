@@ -195,6 +195,11 @@
             <artifactId>jcollectd</artifactId>
             <version>-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.influxdb</groupId>
+            <artifactId>influxdb-java</artifactId>
+            <version>2.7</version>
+        </dependency>        
     </dependencies>
     <description>The energy modeller for the Tango reference architecture.</description>
 </project>
