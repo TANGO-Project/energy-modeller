@@ -59,11 +59,11 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         dbName = settings.getString("energy.modeller.influx.db.name", "collectd");
         user = settings.getString("energy.modeller.influx.db.user", "");
         password = settings.getString("energy.modeller.influx.db.password", "");
-        hostname = settings.getString("energy.modeller.influx.db.hostname", "http://ns54.bullx:8086");
-        influxDB = InfluxDBFactory.connect(hostname, user, password);
         if (settings.isChanged()) {
             settings.save(CONFIG_FILE);
         }
+        hostname = settings.getString("energy.modeller.influx.db.hostname", "http://ns54.bullx:8086");
+        influxDB = InfluxDBFactory.connect(hostname, user, password);
     }
 
     public CollectDInfluxDbDataSourceAdaptor(String hostname, String user, String password, String dbName) {
@@ -113,13 +113,16 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
      */
     private void populateHostList() {
         QueryResult results = runQuery("SHOW TAG VALUES WITH KEY=host;");
-        List<HostList> hosts = resultMapper.toPOJO(results, HostList.class);
-        for (HostList item : hosts) {
-            if (!knownHosts.containsKey(item.value)) {
-                String hostId = hostname.replaceAll("[^0-9]", "");
-                Host host = new Host(Integer.parseInt(hostId), item.value);
-                knownHosts.put(hostId, host);
+        for (QueryResult.Result result : results.getResults()) {
+            for (QueryResult.Series series : result.getSeries()) {
+                for (List<Object> value : series.getValues()) {
+                    if (!knownHosts.containsKey((String) value.get(1))) {
+                        String hostId = ((String)value.get(1)).replaceAll("[^0-9]", "");
+                        Host host = new Host(Integer.parseInt(hostId), (String) value.get(1));
+                        knownHosts.put((String) value.get(1), host);
             }
+        }
+    }
         }
     }
 
@@ -173,19 +176,26 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                 listMeasurements = listMeasurements + ", " + measurement;
             }
         }
-        QueryResult results = runQuery("SELECT last(value),type_instance FROM " + listMeasurements + " WHERE host = " + host.getHostName() + ";");
+        QueryResult results = runQuery("SELECT last(value),type_instance FROM " + listMeasurements + " WHERE host = '" + host.getHostName() + "'  GROUP BY type_instance;");
         answer = convertToHostMeasurement(host, results);
         return answer;
     }
     
     private HostMeasurement convertToHostMeasurement(Host host, QueryResult results) {
+        if (results == null) {
+            return null;
+        }
          HostMeasurement answer = new HostMeasurement(host);
          for(QueryResult.Result result: results.getResults()) {
              for (QueryResult.Series series : result.getSeries()) {
                  for(List<Object> value : series.getValues()) {
-                     System.out.println(value);
+                    Instant time = Instant.parse((String) value.get(0));
+                    MetricValue metric = new MetricValue(series.getName() + ":"+ value.get(2),series.getName() + ":"+ value.get(2),value.get(1).toString(), time.getEpochSecond());
+                    answer.addMetric(metric);
+                    if (time.getEpochSecond() > answer.getClock()) {
+                        answer.setClock(time.getEpochSecond());
+                    }
                  }
-                 //MetricValue metric = new MetricValue(series.getName(),series.getName(),0, 0);
              }
          }
          return answer;
@@ -202,9 +212,12 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
     private ArrayList<String> getMeasurements() {
         ArrayList<String> answer = new ArrayList<>();
         QueryResult results = runQuery("show measurements");
-        List<MeasurementName> measurements = resultMapper.toPOJO(results, MeasurementName.class);
-        for (MeasurementName measurement : measurements) {
-            answer.add(measurement.name);
+        for (QueryResult.Result result : results.getResults()) {
+            for (QueryResult.Series series : result.getSeries()) {
+                for (List<Object> value : series.getValues()) {
+                    answer.add((String) value.get(0));
+                }
+            }
         }
         return answer;
     }
