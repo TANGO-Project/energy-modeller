@@ -255,59 +255,21 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
     @Override
     public CurrentUsageRecord getCurrentEnergyUsage(Host host) {
         QueryResult results = runQuery("SELECT last(value) FROM power_value WHERE host = '" + host.getHostName() + "';");
-        List<CurrentPower> power = resultMapper.toPOJO(results, CurrentPower.class);
-        for (CurrentPower item : power) {
-            return new CurrentUsageRecord(host, item.value);
-        }
-        return new CurrentUsageRecord(host, 0);
-    }
-
-    @org.influxdb.annotation.Measurement(name = "power_value")
-    public class CurrentPower {
-
-        @Column(name = "time")
-        private Instant time;
-        @Column(name = "last(value)")
-        private double value;
+        double currentPower = getSingleValueOut(results);
+        return new CurrentUsageRecord(host, currentPower);
     }
 
     @Override
     public double getLowestHostPowerUsage(Host host) {
         QueryResult results = runQuery("SELECT min(value) FROM power_value WHERE host = '" + host.getHostName() + "'");
-        List<LowestPower> power = resultMapper.toPOJO(results, LowestPower.class);
-        for (LowestPower item : power) {
-            return item.value;
-        }
-        return 0.0;
-    }
-
-    @org.influxdb.annotation.Measurement(name = "power_value")
-    public class LowestPower {
-
-        @Column(name = "time")
-        private Instant time;
-        @Column(name = "min(value)")
-        private double value;
+        return getSingleValueOut(results);
     }
 
     @Override
     public double getHighestHostPowerUsage(Host host) {
         QueryResult results = runQuery("SELECT max(value) FROM power_value WHERE host = '" + host.getHostName() + "';");
-        List<HighestPower> power = resultMapper.toPOJO(results, HighestPower.class);
-        for (HighestPower item : power) {
-            return item.value;
+        return getSingleValueOut(results);
         }
-        return 0.0;
-    }
-
-    @org.influxdb.annotation.Measurement(name = "power_value")
-    public class HighestPower {
-
-        @Column(name = "time")
-        private Instant time;
-        @Column(name = "max(value)")
-        private double value;
-    }
 
     @Override
     public double getCpuUtilisation(Host host, int durationSeconds) {
@@ -315,21 +277,31 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         // "values":[["2015-06-06T14:55:27.195Z",90],["2015-06-06T14:56:24.556Z",90]]}]}]}
         // {"results":[{"series":[{"name":"databases","columns":["name"],"values":[["mydb"]]}]}]}
         long time = ((TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - durationSeconds) << 30);
-        QueryResult results = runQuery("SELECT mean(value) FROM cpu_value WHERE host = '" + host.getHostName() + "' AND type_instance = 'idle' time > " + time);
-        List<RecentCpu> cpuList = resultMapper.toPOJO(results, RecentCpu.class);
-        for (RecentCpu item : cpuList) {
-            return item.value;
+        QueryResult results = runQuery("SELECT mean(value) FROM cpu_value WHERE host = '" + host.getHostName() + "' AND type_instance = 'idle' AND time > " + time);
+        return getSingleValueOut(results);
         }
+
+    /**
+     * This parses the result of a query that provides a single result.
+     * @param results The result object to parse
+     * @return The single value returned from the query.
+     */
+    private double getSingleValueOut(QueryResult results) {
+        if (results.getResults() == null || results.getResults().isEmpty()) {
         return 0.0;
     }
-
-    @org.influxdb.annotation.Measurement(name = "power_value")
-    public class RecentCpu {
-
-        @Column(name = "time")
-        private Instant time;
-        @Column(name = "mean(value)")
-        private double value;
+        for (QueryResult.Result result : results.getResults()) {
+            if (result.getSeries() == null || result.getSeries().isEmpty()) {
+                return 0.0;
+            }
+            for (QueryResult.Series series : result.getSeries()) {
+                for (List<Object> value : series.getValues()) {
+                    System.out.println(value);
+                    return (Double) value.get(1);
+                }
+            }
+        }
+        return 0.0;
     }
 
     /**
