@@ -283,18 +283,16 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         if (results.getResults() == null || results.getResults().isEmpty()) {
             return 0.0;
         }
-        for (QueryResult.Result result : results.getResults()) {
-            if (result.getSeries() == null || result.getSeries().isEmpty()) {
-                return 0.0;
-            }
-            for (QueryResult.Series series : result.getSeries()) {
-                for (List<Object> value : series.getValues()) {
-                    System.out.println(value);
-                    return (Double) value.get(1);
-                }
-            }
+        QueryResult.Result result = results.getResults().get(0);
+        if (result.getSeries() == null || result.getSeries().isEmpty()) {
+            return 0.0;
         }
-        return 0.0;
+        QueryResult.Series series = result.getSeries().get(0);
+        if (series.getValues() == null || series.getValues().isEmpty()) {
+            return 0.0;
+        }        
+        List<Object> value = series.getValues().get(0);
+        return (Double) value.get(1);
     }
 
     /**
