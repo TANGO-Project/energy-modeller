@@ -31,11 +31,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
-import org.influxdb.annotation.Column;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
 import java.time.Instant;
-import org.influxdb.impl.InfluxDBResultMapper;
 
 /**
  * This data source adaptor connects directly into a collectd database.
@@ -65,6 +63,13 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         influxDB = InfluxDBFactory.connect(hostname, user, password);
     }
 
+    /**
+     * Creates a new CollectD (via InfluxDB) data source adaptor).
+     * @param hostname The hostname of the database to connect to
+     * @param user The username for the database
+     * @param password The password
+     * @param dbName The database to connect to
+     */
     public CollectDInfluxDbDataSourceAdaptor(String hostname, String user, String password, String dbName) {
         this.hostname = hostname;
         this.user = user;
@@ -212,13 +217,6 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         return answer;
     }
 
-    @org.influxdb.annotation.Measurement(name = "measurements")
-    public class MeasurementName {
-
-        @Column(name = "name")
-        private String name;
-    }
-
     @Override
     public List<HostMeasurement> getHostData(List<Host> hostList) {
         ArrayList<HostMeasurement> answer = new ArrayList<>();
@@ -264,9 +262,12 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
 
     @Override
     public double getCpuUtilisation(Host host, int durationSeconds) {
-        // {"results":[{"series":[{"name":"cpu","columns":["time","value"],
-        // "values":[["2015-06-06T14:55:27.195Z",90],["2015-06-06T14:56:24.556Z",90]]}]}]}
-        // {"results":[{"series":[{"name":"databases","columns":["name"],"values":[["mydb"]]}]}]}
+        /**
+         * An example output of the query result looks like:
+         * {"results":[{"series":[{"name":"cpu","columns":["time","value"],
+         * "values":[["2015-06-06T14:55:27.195Z",90],["2015-06-06T14:56:24.556Z",90]]}]}]}
+         * {"results":[{"series":[{"name":"databases","columns":["name"],"values":[["mydb"]]}]}]}
+         */
         long time = ((TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - durationSeconds) << 30);
         QueryResult results = runQuery("SELECT mean(value) FROM cpu_value WHERE host = '" + host.getHostName() + "' AND type_instance = 'idle' AND time > " + time);
         return getSingleValueOut(results);
