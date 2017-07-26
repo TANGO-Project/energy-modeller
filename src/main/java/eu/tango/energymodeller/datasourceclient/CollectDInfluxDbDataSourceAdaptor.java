@@ -171,7 +171,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                 listMeasurements = listMeasurements + ", " + measurement;
             }
         }
-        QueryResult results = runQuery("SELECT last(value),type_instance FROM " + listMeasurements + " WHERE host = '" + host.getHostName() + "'  GROUP BY type_instance;");
+        QueryResult results = runQuery("SELECT last(value),type_instance, instance FROM " + listMeasurements + " WHERE host = '" + host.getHostName() + "'  GROUP BY instance, type_instance;");
         answer = convertToHostMeasurement(host, results);
         return answer;
     }
@@ -185,7 +185,15 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
             for (QueryResult.Series series : result.getSeries()) {
                 for (List<Object> value : series.getValues()) {
                     Instant time = Instant.parse((String) value.get(0));
-                    MetricValue metric = new MetricValue(series.getName() + ":" + value.get(2), series.getName() + ":" + value.get(2), value.get(1).toString(), time.getEpochSecond());
+                    String metricName = series.getName() + ":" + value.get(2);
+                    if (value.size() == 4) {
+                        metricName = metricName + ":" + value.get(3);
+                    }
+                    if (metricName.equals("power_value:estimated:estimated")) {
+                        MetricValue estimatedPower = new MetricValue(KpiList.ESTIMATED_POWER_KPI_NAME, KpiList.ESTIMATED_POWER_KPI_NAME, value.get(1).toString(), time.getEpochSecond());
+                        answer.addMetric(estimatedPower);
+                    }
+                    MetricValue metric = new MetricValue(metricName, metricName, value.get(1).toString(), time.getEpochSecond());
                     answer.addMetric(metric);
                     if (time.getEpochSecond() > answer.getClock()) {
                         answer.setClock(time.getEpochSecond());
@@ -270,7 +278,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
          */
         long time = ((TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - durationSeconds) << 30);
         QueryResult results = runQuery("SELECT mean(value) FROM cpu_value WHERE host = '" + host.getHostName() + "' AND type_instance = 'idle' AND time > " + time);
-        return getSingleValueOut(results);
+        return getAverage(results);
     }
 
     /**
@@ -293,6 +301,32 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         }        
         List<Object> value = series.getValues().get(0);
         return (Double) value.get(1);
+    }
+
+    /**
+     * This parses the result of a query that provides the average (such as for CPU utilisation).
+     *
+     * @param results The result object to parse
+     * @return The average value returned from the query.
+     */
+    private double getAverage(QueryResult results) {
+        double total = 0.0;
+        double count = 0;
+        for (QueryResult.Result result : results.getResults()) {
+            if (result.getSeries() == null || result.getSeries().isEmpty()) {
+                return 0.0;
+            }
+            for (QueryResult.Series series : result.getSeries()) {
+                for (List<Object> value : series.getValues()) {
+                    count = count + 1;
+                    total = total + (Double) value.get(1);
+                }
+            }
+        }
+        if (count == 0) {
+            return 0;
+        }
+        return total / count;
     }
 
     /**
