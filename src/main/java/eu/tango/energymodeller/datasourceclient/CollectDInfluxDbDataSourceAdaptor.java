@@ -53,7 +53,6 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
     private final String dbName;
 
     private final InfluxDB influxDB;
-    private final InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
 
     public CollectDInfluxDbDataSourceAdaptor() {
         dbName = settings.getString("energy.modeller.influx.db.name", "collectd");
