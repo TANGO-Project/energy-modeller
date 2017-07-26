@@ -117,22 +117,13 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
             for (QueryResult.Series series : result.getSeries()) {
                 for (List<Object> value : series.getValues()) {
                     if (!knownHosts.containsKey((String) value.get(1))) {
-                        String hostId = ((String)value.get(1)).replaceAll("[^0-9]", "");
+                        String hostId = ((String) value.get(1)).replaceAll("[^0-9]", "");
                         Host host = new Host(Integer.parseInt(hostId), (String) value.get(1));
                         knownHosts.put((String) value.get(1), host);
+                    }
+                }
             }
         }
-    }
-        }
-    }
-
-    @org.influxdb.annotation.Measurement(name = "host_tags")
-    public class HostList {
-
-        @Column(name = "key")
-        private String key;
-        @Column(name = "value")
-        private String value;
     }
 
     @Override
@@ -180,25 +171,25 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         answer = convertToHostMeasurement(host, results);
         return answer;
     }
-    
+
     private HostMeasurement convertToHostMeasurement(Host host, QueryResult results) {
         if (results == null) {
             return null;
         }
-         HostMeasurement answer = new HostMeasurement(host);
-         for(QueryResult.Result result: results.getResults()) {
-             for (QueryResult.Series series : result.getSeries()) {
-                 for(List<Object> value : series.getValues()) {
+        HostMeasurement answer = new HostMeasurement(host);
+        for (QueryResult.Result result : results.getResults()) {
+            for (QueryResult.Series series : result.getSeries()) {
+                for (List<Object> value : series.getValues()) {
                     Instant time = Instant.parse((String) value.get(0));
-                    MetricValue metric = new MetricValue(series.getName() + ":"+ value.get(2),series.getName() + ":"+ value.get(2),value.get(1).toString(), time.getEpochSecond());
+                    MetricValue metric = new MetricValue(series.getName() + ":" + value.get(2), series.getName() + ":" + value.get(2), value.get(1).toString(), time.getEpochSecond());
                     answer.addMetric(metric);
                     if (time.getEpochSecond() > answer.getClock()) {
                         answer.setClock(time.getEpochSecond());
                     }
-                 }
-             }
-         }
-         return answer;
+                }
+            }
+        }
+        return answer;
     }
 
     @Override
@@ -221,12 +212,13 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         }
         return answer;
     }
-    
+
     @org.influxdb.annotation.Measurement(name = "measurements")
     public class MeasurementName {
+
         @Column(name = "name")
         private String name;
-    }    
+    }
 
     @Override
     public List<HostMeasurement> getHostData(List<Host> hostList) {
@@ -269,7 +261,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
     public double getHighestHostPowerUsage(Host host) {
         QueryResult results = runQuery("SELECT max(value) FROM power_value WHERE host = '" + host.getHostName() + "';");
         return getSingleValueOut(results);
-        }
+    }
 
     @Override
     public double getCpuUtilisation(Host host, int durationSeconds) {
@@ -279,17 +271,18 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         long time = ((TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - durationSeconds) << 30);
         QueryResult results = runQuery("SELECT mean(value) FROM cpu_value WHERE host = '" + host.getHostName() + "' AND type_instance = 'idle' AND time > " + time);
         return getSingleValueOut(results);
-        }
+    }
 
     /**
      * This parses the result of a query that provides a single result.
+     *
      * @param results The result object to parse
      * @return The single value returned from the query.
      */
     private double getSingleValueOut(QueryResult results) {
         if (results.getResults() == null || results.getResults().isEmpty()) {
-        return 0.0;
-    }
+            return 0.0;
+        }
         for (QueryResult.Result result : results.getResults()) {
             if (result.getSeries() == null || result.getSeries().isEmpty()) {
                 return 0.0;
