@@ -180,8 +180,8 @@ public class EnergyModeller {
      */
     public EnergyModeller(HostDataSource datasource, boolean performDataGathering) {
         this.datasource = datasource;
-        this.database = new DefaultDatabaseConnector();;
-        startup(false);
+        this.database = new DefaultDatabaseConnector();
+        startup(performDataGathering);
     }
 
     /**
@@ -624,19 +624,18 @@ public class EnergyModeller {
                     "The application {0} host was not correctly detected!", app.getName());
         }
         ArrayList<ApplicationOnHost> otherApps = dataGatherer.getApplications(host);
-        ArrayList<ApplicationOnHost> appsDeployedOnHost = new ArrayList<>();
-        ArrayList<EnergyUsageSource> AppsOnHost = new ArrayList<>();
-        AppsOnHost.addAll(otherApps);
-        AppsOnHost.add(app);
+        ArrayList<EnergyUsageSource> appsOnHost = new ArrayList<>();
+        appsOnHost.addAll(otherApps);
+        appsOnHost.add(app);
 //TODO Fails on load fraction share rule Fix here
-        //Find a means to query individual load for applications
+//        Find a means to query individual load for applications
 //        if (rule.getClass().equals(LoadFractionShareRule.class)) {
 //            appsDeployedOnHost.addAll(otherApps);
 //            appsDeployedOnHost.add(app);
-//            ((LoadFractionShareRule) rule).setVmMeasurements(datasource.getVmData(appsDeployedOnHost));
+//            ((LoadFractionShareRule) rule).setVmMeasurements(datasource.getAppData(appsDeployedOnHost));
 //        }
         CurrentUsageRecord hostAnswer = datasource.getCurrentEnergyUsage(host);
-        EnergyDivision divider = rule.getEnergyUsage(host, AppsOnHost);
+        EnergyDivision divider = rule.getEnergyUsage(host, appsOnHost);
         divider.setConsiderIdleEnergy(considerIdleEnergyCurrentVm);
         CurrentUsageRecord answer = new CurrentUsageRecord(app);
         answer.setTime(hostAnswer.getTime());
