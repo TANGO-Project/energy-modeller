@@ -37,15 +37,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListenerAdapter;
-
 /**
  * This requests information for SLURM via the command "scontrol show node="
  *
@@ -61,7 +60,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
     private final HashMap<String, HostMeasurement> current = new HashMap<>();
     private SlurmDataSourceAdaptor.SlurmTailer fileTailer;
     private final Settings settings = new Settings("energy-modeller-slurm-config.properties");
-    private final LinkedList<SlurmDataSourceAdaptor.CPUUtilisation> cpuMeasure = new LinkedList<>();
+    private final HashMap<String, CircularFifoQueue<SlurmDataSourceAdaptor.CPUUtilisation>> cpuMeasure = new HashMap<>();
     private final LRUCache<Integer, ApplicationOnHost> appCache = new LRUCache<>(10, 50);
 
     public SlurmDataSourceAdaptor() {
@@ -524,7 +523,22 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
 
     @Override
     public double getCpuUtilisation(Host host, int durationSeconds) {
-        //TODO note duration in seconds is ignored, fix this.
+        if (durationSeconds < 0) {
+            return current.get(host.getHostName()).getCpuUtilisation();            
+        }
+        if (cpuMeasure.containsKey(host.getHostName())) {
+            CircularFifoQueue recentItems = cpuMeasure.get(host.getHostName());
+            int itemsToGet = durationSeconds / poller.getPollRate();
+            if (itemsToGet > recentItems.size()) {
+                itemsToGet = recentItems.size();
+            }
+            double totalUtil = 0;
+            for(int i = 0;i < itemsToGet;i++) {
+                SlurmDataSourceAdaptor.CPUUtilisation item = (SlurmDataSourceAdaptor.CPUUtilisation) recentItems.get(i);
+                totalUtil = totalUtil + item.getCpuBusy();    
+            }
+            return totalUtil / ((double)itemsToGet);
+        }
         return current.get(host.getHostName()).getCpuUtilisation();
     }
 
@@ -791,7 +805,13 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             String wattskwh = getValue("ConsumedJoules", values);
             String hostname = getValue("NodeName", values);
             String hostId = hostname.replaceAll("[^0-9]", "");
-            cpuMeasure.add(new SlurmDataSourceAdaptor.CPUUtilisation(clock, hostname, (Double.valueOf(getValue("CPULoad", values))) * 100));
+            CircularFifoQueue lastCpuMeasurements = cpuMeasure.get(hostname);
+            if (lastCpuMeasurements == null) {
+                //Needs enough information to cover any recent queries of cpu utilisation, thus gather last 10mins of data
+                lastCpuMeasurements = new CircularFifoQueue((int) TimeUnit.MINUTES.toSeconds(10) / poller.getPollRate());
+                cpuMeasure.put(hostname, lastCpuMeasurements);
+            }
+            lastCpuMeasurements.add(new SlurmDataSourceAdaptor.CPUUtilisation(clock, hostname, (Double.valueOf(getValue("CPULoad", values))) * 100));
             Host host = getHostByName(hostname);
 
             //Check for need to disover host
