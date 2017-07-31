@@ -42,7 +42,6 @@ import java.time.Instant;
  */
 public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
 
-    private final HashMap<String, Host> knownHosts = new HashMap<>();
     private final Settings settings = new Settings(CONFIG_FILE);
     private static final String CONFIG_FILE = "energy-modeller-influx-db-config.properties";
     private final String hostname;
@@ -80,7 +79,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
 
     @Override
     public Host getHostByName(String hostname) {
-        populateHostList();
+        HashMap<String, Host> knownHosts = getHostListAsHashMap();
         if (knownHosts.containsKey(hostname)) {
             return knownHosts.get(hostname);
         } else {
@@ -90,7 +89,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
 
     @Override
     public GeneralPurposePowerConsumer getGeneralPowerConsumerByName(String hostname) {
-        Host host = knownHosts.get(hostname);
+        Host host = getHostListAsHashMap().get(hostname);
         if (host == null) {
             return null;
         }
@@ -99,7 +98,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
 
     @Override
     public VmDeployed getVmByName(String name) {
-        Host host = knownHosts.get(name);
+        Host host = getHostListAsHashMap().get(name);
         if (host == null) {
             return null;
         }
@@ -108,14 +107,12 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
 
     @Override
     public List<Host> getHostList() {
-        populateHostList();
+        HashMap<String, Host> knownHosts = getHostListAsHashMap();
         return new ArrayList<>(knownHosts.values());
     }
-
-    /**
-     * This ensures the hostlist is fully populated before querying.
-     */
-    private void populateHostList() {
+    
+    private HashMap<String, Host> getHostListAsHashMap() {
+        HashMap<String, Host> knownHosts = new HashMap<>();
         QueryResult results = runQuery("SHOW TAG VALUES WITH KEY=host;");
         for (QueryResult.Result result : results.getResults()) {
             for (QueryResult.Series series : result.getSeries()) {
@@ -128,12 +125,13 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                 }
             }
         }
-    }
+        return knownHosts;
+    }    
 
     @Override
     public List<EnergyUsageSource> getHostAndVmList() {
         List<EnergyUsageSource> answer = new ArrayList<>();
-        for (Host host : knownHosts.values()) {
+        for (Host host : getHostListAsHashMap().values()) {
             answer.add(host);
         }
         return answer;
