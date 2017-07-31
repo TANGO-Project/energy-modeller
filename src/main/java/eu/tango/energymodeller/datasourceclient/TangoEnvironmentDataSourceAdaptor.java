@@ -40,9 +40,8 @@ import java.util.List;
  */
 public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
 
-    private SlurmDataSourceAdaptor slurm = new SlurmDataSourceAdaptor();
-    private CollectDInfluxDbDataSourceAdaptor collectD = new CollectDInfluxDbDataSourceAdaptor();
-    private String clusterNamePostFix = "bullx";
+    private final SlurmDataSourceAdaptor slurm = new SlurmDataSourceAdaptor();
+    private final CollectDInfluxDbDataSourceAdaptor collectD = new CollectDInfluxDbDataSourceAdaptor();
     
     /**
      * This creates a new data source adaptor that queries both SLURM and CollectD.
@@ -116,7 +115,10 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
 
     @Override
     public HostMeasurement getHostData(Host host) {
-        return collectD.getHostData(host);
+        HostMeasurement answer = collectD.getHostData(host);
+        //Adds various information such as memory usage, including static upper bound values.
+        answer.addMetrics(slurm.getHostData(host));
+        return answer;
     }
 
     @Override
