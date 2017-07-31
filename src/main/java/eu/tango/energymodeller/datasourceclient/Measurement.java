@@ -278,6 +278,34 @@ public abstract class Measurement {
     }
 
     /**
+     * This adds several metrics and value to a measurement. 
+     * If item is newer than the value that already exists then it will be updated.
+     *
+     * @param items a metric to add to this measurement dataset
+     */
+    public void addMetrics(Collection<MetricValue> items) {
+        for (MetricValue item : items) {
+            addMetric(item);
+        }
+    }
+    
+    /**
+     * This adds several metrics and value to a measurement, essentially combining two 
+     * measurement objects. If an item in the measurement is newer than the value 
+     * that already exists then it will be updated.
+     *
+     * @param measurement a metric to add to this measurement dataset
+     */
+    public void addMetrics(Measurement measurement) {
+        for (MetricValue item : measurement.getItems()) {
+            addMetric(item);
+        }
+        if (this.clock < measurement.getClock()) {
+            setClock(measurement.getClock());
+        }
+    }      
+    
+    /**
      * This gets the item that represents a given metric
      *
      * @param key The key that is used to identify a given measurement
