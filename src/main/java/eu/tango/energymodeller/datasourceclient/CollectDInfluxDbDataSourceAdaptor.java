@@ -174,11 +174,18 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         return answer;
     }
 
+    /**
+     * This takes a query result from the data source and converts it into a host measurement.
+     * @param host The host to convert the data for
+     * @param results THe result set to convert the data for
+     * @return The host measurement
+     */
     private HostMeasurement convertToHostMeasurement(Host host, QueryResult results) {
         if (results == null) {
             return null;
         }
         HostMeasurement answer = new HostMeasurement(host);
+        double acceleratorPowerUsed = 0.0;
         for (QueryResult.Result result : results.getResults()) {
             for (QueryResult.Series series : result.getSeries()) {
                 for (List<Object> value : series.getValues()) {
@@ -191,6 +198,18 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                         MetricValue estimatedPower = new MetricValue(KpiList.ESTIMATED_POWER_KPI_NAME, KpiList.ESTIMATED_POWER_KPI_NAME, value.get(1).toString(), time.getEpochSecond());
                         answer.addMetric(estimatedPower);
                     }
+                    /**
+                     * This counts up all power consumed and reported by the monitoring infrastructure usually in the format:
+                     * monitoring_value:0:nvidia (i.e. card 1)
+                     * monitoring_value:1:nvidia (and card 2)
+                     */
+                    try {
+                        if (metricName.contains("monitoring_value:")) {
+                            acceleratorPowerUsed = acceleratorPowerUsed + Double.parseDouble(value.get(1).toString());
+                        }    
+                    } catch (NumberFormatException ex) {
+                        
+                    }
                     MetricValue metric = new MetricValue(metricName, metricName, value.get(1).toString(), time.getEpochSecond());
                     answer.addMetric(metric);
                     if (time.getEpochSecond() > answer.getClock()) {
@@ -198,6 +217,10 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                     }
                 }
             }
+        }
+        if (acceleratorPowerUsed > 0) {
+            MetricValue metric = new MetricValue(KpiList.ACCELERATOR_POWER_USED, KpiList.ACCELERATOR_POWER_USED, acceleratorPowerUsed + "", answer.getClock());
+            answer.addMetric(metric);    
         }
         return answer;
     }

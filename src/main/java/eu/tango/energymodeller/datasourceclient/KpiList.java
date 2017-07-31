@@ -69,6 +69,7 @@ public abstract class KpiList {
     public static final String APPS_RUNNING_ON_HOST_COUNT = "app_on_host_count";
     public static final String APPS_STATUS = "application_status";
     //accelerators
+    public static final String ACCELERATOR_POWER_USED = "accelerator_power";    
     public static final String HAS_ACCELERATOR = "has_accelerator";
     public static final String HAS_GPU = "has_gpu";
     public static final String GPU_NAME = "gpu_name";
