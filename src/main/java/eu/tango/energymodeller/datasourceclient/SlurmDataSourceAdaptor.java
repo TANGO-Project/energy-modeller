@@ -652,6 +652,10 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
      */
     private HostMeasurement readGresString(String[] values, HostMeasurement measurement, long clock) {
         String gresString = getValue("Gres", values);
+        if (gresString == null) {
+            // This indicates that there is no accelerator
+            gresString = "(null)";
+        }
         /*
          * Example gresString = "gpu:teslak20:2"
          * or "craynetwork:3,hbm:0"
