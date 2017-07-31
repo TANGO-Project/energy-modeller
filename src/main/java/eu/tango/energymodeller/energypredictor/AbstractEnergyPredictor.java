@@ -315,7 +315,7 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
             }
             this.energyShareRule = (EnergyShareRule) (Class.forName(energyShareRule).newInstance());
         } catch (IllegalAccessException | InstantiationException | ClassNotFoundException ex) {
-            if (energyShareRule == null) {
+            if (this.energyShareRule == null) {
                 this.energyShareRule = new DefaultEnergyShareRule();
 
             }
