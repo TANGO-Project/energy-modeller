@@ -31,7 +31,7 @@ import java.util.Set;
 public class Accelerator {
 
     private String name = "";
-    private AcceleratorType accelerator;
+    private AcceleratorType type;
     private int count = 0;
     private ArrayList<HostAcceleratorCalibrationData> acceleratorCalibrationData = new ArrayList<>();
     
@@ -45,10 +45,10 @@ public class Accelerator {
      * This creates a new accelerator
      * @param name The name of the accelerator
      * @param count The count of accelerators on the physical host
-     * @param accelerator The type of accelerator on the host
+     * @param type The type of accelerator on the host
      */
-    public Accelerator(String name, int count, AcceleratorType accelerator) {
-        this.accelerator = accelerator;
+    public Accelerator(String name, int count, AcceleratorType type) {
+        this.type = type;
         this.name = name;
         this.count = count;
     }
@@ -74,15 +74,15 @@ public class Accelerator {
      * @return the accelerator
      */
     public AcceleratorType getType() {
-        return accelerator;
+        return type;
     }
 
     /**
      * This sets the type of accelerator
-     * @param accelerator the accelerator to set
+     * @param type the accelerator to set
      */
-    public void setType(AcceleratorType accelerator) {
-        this.accelerator = accelerator;
+    public void setType(AcceleratorType type) {
+        this.type = type;
     }
     
     /**
