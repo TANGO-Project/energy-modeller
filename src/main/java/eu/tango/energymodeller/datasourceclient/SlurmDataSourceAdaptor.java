@@ -720,6 +720,9 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
      */
     private HostMeasurement readGresUsedString(String[] values, HostMeasurement measurement, long clock) {
         String gresString = getValue("GresUsed", values);
+        if (gresString == null) {
+            return measurement;
+        }        
         String[] gresStringSplit = gresString.split(",");
         for (String dataItem : gresStringSplit) {
             boolean gpu = dataItem.contains("gpu");
@@ -808,6 +811,9 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             String watts = getValue("CurrentWatts", values);
             String wattskwh = getValue("ConsumedJoules", values);
             String hostname = getValue("NodeName", values);
+            if (hostname == null) {
+                return;
+            }
             String hostId = hostname.replaceAll("[^0-9]", "");
             CircularFifoQueue lastCpuMeasurements = cpuMeasure.get(hostname);
             if (lastCpuMeasurements == null) {
