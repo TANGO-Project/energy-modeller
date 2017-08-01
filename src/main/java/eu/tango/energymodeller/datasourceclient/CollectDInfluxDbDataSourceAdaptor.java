@@ -25,6 +25,7 @@ import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.usage.CurrentUsageRecord;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -288,7 +289,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         QueryResult results = runQuery("SELECT max(value) FROM power_value WHERE host = '" + host.getHostName() + "';");
         return getSingleValueOut(results);
     }
-
+ 
     @Override
     public double getCpuUtilisation(Host host, int durationSeconds) {
         /**
@@ -297,10 +298,35 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
          * "values":[["2015-06-06T14:55:27.195Z",90],["2015-06-06T14:56:24.556Z",90]]}]}]}
          * {"results":[{"series":[{"name":"databases","columns":["name"],"values":[["mydb"]]}]}]}
          */
-        long time = ((TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - durationSeconds) << 30);
-        QueryResult results = runQuery("SELECT mean(value) FROM cpu_value WHERE host = '" + host.getHostName() + "' AND type_instance = 'idle' AND time > " + time);
-        return getAverage(results);
+        QueryResult results = runQuery("SELECT mean(value) FROM cpu_value WHERE host = '" + host.getHostName() + "' AND type_instance = 'idle' AND time > now() - " + durationSeconds + "s");
+        System.out.println(results);
+        if (isQueryResultEmpty(results)) {
+            return 0.0; //Not enough data to know therefore assume zero usage.
+        }
+        BigDecimal answer = BigDecimal.valueOf(1 - ((getAverage(results)) / 100));
+        answer.setScale(2, BigDecimal.ROUND_HALF_UP);
+        return answer.doubleValue();
     }
+    
+    /**
+     * This checks to see if the returned result is empty or not
+     * @param results The query result to test for emptiness
+     * @return If the query result is empty or not
+     */
+    private boolean isQueryResultEmpty(QueryResult results) {
+        if (results.getResults() == null || results.getResults().isEmpty()) {
+            return true;
+        }
+        QueryResult.Result result = results.getResults().get(0);
+        if (result.getSeries() == null || result.getSeries().isEmpty()) {
+            return true;
+        }
+        QueryResult.Series series = result.getSeries().get(0);
+        if (series.getValues() == null || series.getValues().isEmpty()) {
+            return true;
+        }
+        return false;
+    }    
 
     /**
      * This parses the result of a query that provides a single result.
