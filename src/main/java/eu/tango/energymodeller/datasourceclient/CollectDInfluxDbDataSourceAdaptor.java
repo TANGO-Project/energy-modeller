@@ -29,12 +29,13 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
 import java.time.Instant;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This data source adaptor connects directly into a collectd database.
@@ -209,7 +210,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                             acceleratorPowerUsed = acceleratorPowerUsed + Double.parseDouble(value.get(1).toString());
                         }    
                     } catch (NumberFormatException ex) {
-                        
+                        Logger.getLogger(CollectDInfluxDbDataSourceAdaptor.class.getName()).log(Level.WARNING, "Parsing input from collectd failed", ex);
                     }
                     MetricValue metric = new MetricValue(metricName, metricName, value.get(1).toString(), time.getEpochSecond());
                     answer.addMetric(metric);
@@ -220,7 +221,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
             }
         }
         if (acceleratorPowerUsed > 0) {
-            MetricValue metric = new MetricValue(KpiList.ACCELERATOR_POWER_USED, KpiList.ACCELERATOR_POWER_USED, acceleratorPowerUsed + "", answer.getClock());
+            MetricValue metric = new MetricValue(KpiList.ACCELERATOR_POWER_USED, KpiList.ACCELERATOR_POWER_USED, Double.toString(acceleratorPowerUsed), answer.getClock());
             answer.addMetric(metric);    
         }
         return answer;
@@ -263,12 +264,12 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
 
     @Override
     public List<VmMeasurement> getVmData() {
-        return null; //VMs are not currently handled by this data source adaptor.
+        return new ArrayList<>(); //VMs are not currently handled by this data source adaptor.
     }
 
     @Override
     public List<VmMeasurement> getVmData(List<VmDeployed> vmList) {
-        return null; //VMs are not currently handled by this data source adaptor.
+        return new ArrayList<>(); //VMs are not currently handled by this data source adaptor.
     }
 
     @Override
@@ -299,7 +300,6 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
          * {"results":[{"series":[{"name":"databases","columns":["name"],"values":[["mydb"]]}]}]}
          */
         QueryResult results = runQuery("SELECT mean(value) FROM cpu_value WHERE host = '" + host.getHostName() + "' AND type_instance = 'idle' AND time > now() - " + durationSeconds + "s");
-        System.out.println(results);
         if (isQueryResultEmpty(results)) {
             return 0.0; //Not enough data to know therefore assume zero usage.
         }
@@ -322,10 +322,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
             return true;
         }
         QueryResult.Series series = result.getSeries().get(0);
-        if (series.getValues() == null || series.getValues().isEmpty()) {
-            return true;
-        }
-        return false;
+        return (series.getValues() == null || series.getValues().isEmpty());
     }    
 
     /**
