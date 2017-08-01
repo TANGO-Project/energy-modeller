@@ -517,7 +517,7 @@ public class WattsUpMeterDataSourceAdaptor implements HostDataSource {
                             return;
                         }
                     } catch (InterruptedException ex) {
-                        ex.printStackTrace();
+                        Logger.getLogger(WattsUpMeterDataSourceAdaptor.class.getName()).log(Level.INFO, "The thread sleep was interupted", ex);
                     }
                 }
                 Mem mem = sigar.getMem();
@@ -571,7 +571,7 @@ public class WattsUpMeterDataSourceAdaptor implements HostDataSource {
                 }
             } catch (NumberFormatException ex) {
                 //Ignore these errors and carry on. It may just be the header line.
-                ex.printStackTrace();
+                Logger.getLogger(WattsUpMeterDataSourceAdaptor.class.getName()).log(Level.INFO, "The parsing of metric data failed", ex);
             } catch (SigarException ex) {
                 Logger.getLogger(WattsUpMeterDataSourceAdaptor.class.getName()).log(Level.SEVERE,
                         "An exception occured when obtaining data from Sigar", ex);

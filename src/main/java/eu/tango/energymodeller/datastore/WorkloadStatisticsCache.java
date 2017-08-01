@@ -127,7 +127,10 @@ public class WorkloadStatisticsCache {
         File file = new File(filename + ".db");
         File fileIndex = new File(filename + ".ix");
         if (file.exists() && !fileIndex.exists()) {
-            file.delete();
+            boolean deleted = file.delete();
+            if (deleted == false) {
+                Logger.getLogger(WorkloadStatisticsCache.class.getName()).log(Level.SEVERE, "The deletion of the file {0} did not work.", file.getName());
+            }
         }
     }
 
