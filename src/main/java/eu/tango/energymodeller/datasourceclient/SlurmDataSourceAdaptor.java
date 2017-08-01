@@ -678,7 +678,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             String[] dataItemSplit = dataItem.split(":");
             String acceleratorName;
             int acceleratorCount = 1;
-            if (gresStringSplit.length == 3) {
+            if (dataItemSplit.length == 3) {
                 acceleratorName = dataItemSplit[1]; //strings such as gpu:teslak20:2
                 try {
                     acceleratorCount = Integer.parseInt(dataItemSplit[2].trim());
