@@ -811,6 +811,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             String watts = getValue("CurrentWatts", values);
             String wattskwh = getValue("ConsumedJoules", values);
             String hostname = getValue("NodeName", values);
+            String state = getValue("State", values);
             if (hostname == null) {
                 return;
             }
@@ -821,11 +822,6 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                 lastCpuMeasurements = new CircularFifoQueue((int) TimeUnit.MINUTES.toSeconds(10) / poller.getPollRate());
                 cpuMeasure.put(hostname, lastCpuMeasurements);
             }
-            String cpuLoad = getValue("CPULoad", values);
-            //Note CPU Load = N/A when the node is down. Thus it shouldn't result in an error
-            if (!cpuLoad.equals("N/A") && cpuLoad.matches("-?\\d+(\\.\\d+)?")) {
-                lastCpuMeasurements.add(new SlurmDataSourceAdaptor.CPUUtilisation(clock, hostname, (Double.valueOf(cpuLoad)) * 100));
-            }
             Host host = getHostByName(hostname);
 
             //Check for need to disover host
@@ -833,7 +829,20 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                 host = new Host(Integer.parseInt(hostId), hostname);
                 hosts.put(hostname, host);
             }
-
+            host.setAvailable(!state.equals("DOWN*"));
+            /**
+             * The further metrics from this host are not relevant and may 
+             * cause parse errors
+            */
+            if (!host.isAvailable()) {
+                return;
+            }
+            
+            //Note CPU Load = N/A when the node is down, but perhas might occur in some other case. The previous guard should prevent this error.
+            String cpuLoad = getValue("CPULoad", values);
+            if (!cpuLoad.equals("N/A") && cpuLoad.matches("-?\\d+(\\.\\d+)?")) {
+                lastCpuMeasurements.add(new SlurmDataSourceAdaptor.CPUUtilisation(clock, hostname, (Double.valueOf(cpuLoad)) * 100));
+            }
             HostMeasurement measurement = new HostMeasurement(host, clock);
             measurement.addMetric(new MetricValue(KpiList.POWER_KPI_NAME, KpiList.POWER_KPI_NAME, watts, clock));
             measurement.addMetric(new MetricValue(KpiList.ENERGY_KPI_NAME, KpiList.ENERGY_KPI_NAME, wattskwh, clock));
