@@ -82,7 +82,8 @@ The data source parameter indicates how the energy modeller's will gain the envi
 *TangoEnvironmentDataSourceAdaptor:* This makes use of both the SlurmDataSourceAdaptor and the CollectDInfluxDbDataSourceAdaptor.  
 *ZabbixDirectDbDataSourceAdaptor:* This connector that directly accesses the Zabbix database for the information that it requires. This adaptor utilises the configuration file energy-modeller-db-zabbix.properties.  
 *ZabbixDataSourceAdaptor:* This is an alternative adaptor that utilises at the JSON API of Zabbix in order to get hold of the required host and VM data.  
-*WattsUpMeterDataSourceAdaptor:* for local usage of the energy modeller
+*WattsUpMeterDataSourceAdaptor:* for local usage of the energy modeller.
+
 It should be noted that the observation window should not be too small, especially during the usage of the Zabbix data source adaptors, which may provide fewer data points than the WattsUpMeterDataSourceAdaptor, the latter been able to report at an interval as low as every second. 
 
 The predictor that is in use can be specified above, the options are:
