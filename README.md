@@ -44,13 +44,11 @@ In this case, we are going to detail how to run the application in its standalon
 
 The energy modeller is also highly configurable and has several files that may be used to change its behaviour. The energy modeller has the following settings files in order to achieve these changes:
 
-| Settings File | Purpose |
---- | --- | ---
-| energy-modeller-db.properties | Holds database information for the energy modeller |
-| energy-modeller-predictor.properties | Holds settings relating to the prediction of energy usage. |
-| energy-modeller-db-zabbix.properties | Holds information on how to connect to the Zabbix database directly. |
-| ascetic-zabbix-api.properties | Settings for the Zabbix client, used to connect to a Zabbix based information source. |
-|filter.properties | This holds settings to distinguish between a host and a VM. |
+*energy-modeller-db.properties:* Holds database information for the energy modeller
+*energy-modeller-predictor.properties:* Holds settings relating to the prediction of energy usage.
+*energy-modeller-db-zabbix.properties:* Holds information on how to connect to the Zabbix database directly.
+*ascetic-zabbix-api.properties:* Settings for the Zabbix client, used to connect to a Zabbix based information source.
+*filter.properties:* This holds settings to distinguish between a host and a VM.
 
 These settings must be tailored to the specific infrastructure. The settings are described below and an example of the settings is provided for reference.
 
