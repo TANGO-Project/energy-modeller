@@ -44,6 +44,7 @@ In this case, we are going to detail how to run the application in its standalon
 
 The energy modeller is also highly configurable and has several files that may be used to change its behaviour. The energy modeller has the following settings files in order to achieve these changes:
 
+*energy-modeller.properites:* holds basic configuration specifying which data source and predictor to use.  
 *energy-modeller-db.properties:* Holds database information for the energy modeller.  
 *energy-modeller-predictor.properties:* Holds settings relating to the prediction of energy usage.  
 *energy-modeller-influx-db-config.properties:* Holds settings on how to connect to ConnectD's influxdb database directly, in the event the CollectDInfluxDbDatasoruceAdaptor or TangoEnvironmentDataSourceAdaptor are in use. This is the default.  
@@ -67,6 +68,32 @@ energy.modeller.db.user = user-em
 This includes specifying the database username and password for the energy modeller to connect to its background database. This includes information such as the connection URL, the driver to use and the username and password to use.
 The SQL script to setup the database structure is held in the file IaaS energy modeller db.sql. It is held under the directory {energy-modeller root directory}\src\main\resources.
 
+#### energy-modeller.properties
+
+```
+energy.modeller.datasource = SlurmDataSourceAdaptor
+energy.modeller.predictor = CpuAndAcceleratorEnergyPredictor
+```
+
+The data source parameter indicates how the energy modeller's will gain the environment data that it needs. It can be one of the following options:
+
+*CollectDInfluxDbDataSourceAdaptor:* This connector that directly accesses collectd's influxdb database for the information that it requires. This adaptor utilises the configuration file energy-modeller-influx-db-config.properties.  
+*SlurmDataSourceAdaptor:* This is an adaptor that connects the energy modeller into a SLURM job management based environment. Allowing access to information about the physical host.  
+*TangoEnvironmentDataSourceAdaptor:* This makes use of both the SlurmDataSourceAdaptor and the CollectDInfluxDbDataSourceAdaptor.  
+*ZabbixDirectDbDataSourceAdaptor:* This connector that directly accesses the Zabbix database for the information that it requires. This adaptor utilises the configuration file energy-modeller-db-zabbix.properties.  
+*ZabbixDataSourceAdaptor:* This is an alternative adaptor that utilises at the JSON API of Zabbix in order to get hold of the required host and VM data.  
+*WattsUpMeterDataSourceAdaptor:* for local usage of the energy modeller
+It should be noted that the observation window should not be too small, especially during the usage of the Zabbix data source adaptors, which may provide fewer data points than the WattsUpMeterDataSourceAdaptor, the latter been able to report at an interval as low as every second. 
+
+The predictor that is in use can be specified above, the options are:
+
+* CpuAndAcceleratorEnergyPredictor - this is the default option, it is designed for use with accelerators
+* CpuAndBiModalAcceleratorEnergyPredictor - this predictor assumes accelerators are either busy or idle and makes estimates based upon the calibration data that is available. 
+* CpuOnlyBestFitEenrgyPredictor - This selects between predictors that only consider CPU load as a factor
+* CpuOnlyEnergyPredictor - This uses a linear model
+* CpuOnlyPolynomialEnergyPredictor - This uses a polynomial function of order 2
+* CpuOnlySplinePolynomialEnergyPredictor - This uses spline points with a polynomial function
+
 #### energy-modeller-predictor.properties
 
 This file specifies settings for the energy predictor mechanism, an example of such a file is provided below:
@@ -78,29 +105,13 @@ energy.modeller.energy.predictor.default_load = -1.0
 energy.modeller.energy.predictor.cpu.utilisation.observe_time.min = 0
 energy.modeller.energy.predictor.cpu.utilisation.observe_time.sec = 15
 ```
-
-The data source parameter indicates how the energy modeller's predictor function will gain the environment data that it needs. It can be one of the following options:
-
-*CollectDInfluxDbDataSourceAdaptor:* This connector that directly accesses collectd's influxdb database for the information that it requires. This adaptor utilises the configuration file energy-modeller-influx-db-config.properties.  
-*SlurmDataSourceAdaptor:* This is an adaptor that connects the energy modeller into a SLURM job management based environment. Allowing access to information about the physical host.  
-*TangoEnvironmentDataSourceAdaptor:* This makes use of both the SlurmDataSourceAdaptor and the CollectDInfluxDbDataSourceAdaptor.  
-*ZabbixDirectDbDataSourceAdaptor:* This connector that directly accesses the Zabbix database for the information that it requires. This adaptor utilises the configuration file energy-modeller-db-zabbix.properties.  
-*ZabbixDataSourceAdaptor:* This is an alternative adaptor that utilises at the JSON API of Zabbix in order to get hold of the required host and VM data.  
-*WattsUpMeterDataSourceAdaptor:* for local usage of the energy modeller
-It should be noted that the observation window should not be too small, especially during the usage of the Zabbix data source adaptors, which may provide fewer data points than the WattsUpMeterDataSourceAdaptor, the latter been able to report at an interval as low as every second.  
+The data source parameter indicates how the energy modeller's predictor will gain the environment data that it needs. It can be one of the options, specified previously. 
 
 The energy predictor can utilise several different workload estimator functions. The default is to use the CpuRecentHistoryWorkloadPredictor. This has the following configuration settings.
 
 The default_load parameter indicates what load the predictor should use as an estimate. It should be specified in the range 0..1. An alternative is to provide it the value -1, in which it will default to using the observed current load.
 
 In the case where the observer current load is being used the observe_time.min and observe_time.sec parameters are used to indicate the size of the observation window for CPU utilisation. The two values are simply added together to make the total observation window time. The default observation window size is 15 minutes. 
-
-The main options for workload prediction which can be used when the energy modeller are:
-
-* CpuAndAcceleratorEnergyPredictor
-* CpuAndBiModalAcceleratorEnergyPredictor
-
-These both use calibration data for accelerators such as graphics cards to better understand the relationship betweeen workload and utilisation.
 
 The other options for workload prediction which can be used when the energy modeller is configured for virtual machines. These are:
 * BasicAverageCpuWorkloadPredictor
