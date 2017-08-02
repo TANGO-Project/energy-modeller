@@ -821,7 +821,11 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                 lastCpuMeasurements = new CircularFifoQueue((int) TimeUnit.MINUTES.toSeconds(10) / poller.getPollRate());
                 cpuMeasure.put(hostname, lastCpuMeasurements);
             }
-            lastCpuMeasurements.add(new SlurmDataSourceAdaptor.CPUUtilisation(clock, hostname, (Double.valueOf(getValue("CPULoad", values))) * 100));
+            String cpuLoad = getValue("CPULoad", values);
+            //Note CPU Load = N/A when the node is down. Thus it shouldn't result in an error
+            if (!cpuLoad.equals("N/A") && cpuLoad.matches("-?\\d+(\\.\\d+)?")) {
+                lastCpuMeasurements.add(new SlurmDataSourceAdaptor.CPUUtilisation(clock, hostname, (Double.valueOf(cpuLoad)) * 100));
+            }
             Host host = getHostByName(hostname);
 
             //Check for need to disover host
