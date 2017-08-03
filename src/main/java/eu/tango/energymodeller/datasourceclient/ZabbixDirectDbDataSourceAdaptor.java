@@ -85,7 +85,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
      * see:
      * https://www.zabbix.com/documentation/2.0/manual/config/items/itemtypes/internal
      */
-    private static String ALL_ZABBIX_HOSTS = "SELECT hosts.hostid, hosts.host, groups.name FROM "
+    private String allZabbixHosts = "SELECT hosts.hostid, hosts.host, groups.name FROM "
             + "groups, hosts_groups, hosts WHERE groups.groupid = hosts_groups.groupid "
             + "AND hosts.hostid = hosts_groups.hostid "
             + "AND hosts.status <> 3";
@@ -131,19 +131,19 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
     /**
      * The url to contact the database.
      */
-    private static String databaseURL = "jdbc:mysql://192.168.3.199:3306/zabbix";
+    private String databaseURL = "jdbc:mysql://192.168.3.199:3306/zabbix";
     /**
      * The driver to be used to contact the database.
      */
-    private static String databaseDriver = "com.mysql.jdbc.Driver";
+    private String databaseDriver = "com.mysql.jdbc.Driver";
     /**
      * The user details to contact the database.
      */
-    private static String databaseUser = "zabbix";
+    private String databaseUser = "zabbix";
     /**
      * The user's password to contact the database.
      */
-    private static String databasePassword;
+    private String databasePassword;
     /**
      * The filter string, if a host/VM begins with this then it is a host, if
      * isHost equals true.
@@ -151,7 +151,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
     private String vmGroup = "Virtual machines";
     private String hostGroup = "Hypervisors";
     private String generalPowerConsumer = "DFS";
-    private static boolean onlyAvailableHosts = false;
+    private boolean onlyAvailableHosts = false;
     private static final String CONFIG_FILE = "energy-modeller-db-zabbix.properties";
     private static final Logger DB_LOGGER = Logger.getLogger(ZabbixDirectDbDataSourceAdaptor.class.getName());
 
@@ -197,7 +197,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
             onlyAvailableHosts = config.getBoolean("energy.zabbix.only.available.hosts", onlyAvailableHosts);
             config.setProperty("energy.zabbix.only.available.hosts", onlyAvailableHosts);
             if (onlyAvailableHosts) {
-                ALL_ZABBIX_HOSTS = ALL_ZABBIX_HOSTS + " AND h.available = 1";
+                allZabbixHosts = allZabbixHosts + " AND h.available = 1";
             }
 
         } catch (ConfigurationException ex) {
@@ -235,7 +235,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
             return null;
         }
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                ALL_ZABBIX_HOSTS + FILTER_BY_GROUP + FILTER_BY_NAME)) {
+                allZabbixHosts + FILTER_BY_GROUP + FILTER_BY_NAME)) {
             preparedStatement.setString(1, hostGroup);
             preparedStatement.setString(2, hostname);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -259,7 +259,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
             return null;
         }
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                ALL_ZABBIX_HOSTS + FILTER_BY_GROUP + FILTER_BY_NAME)) {
+                allZabbixHosts + FILTER_BY_GROUP + FILTER_BY_NAME)) {
             preparedStatement.setString(1, generalPowerConsumer);
             preparedStatement.setString(2, hostname);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -283,7 +283,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
             return null;
         }
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                ALL_ZABBIX_HOSTS + FILTER_BY_GROUP + FILTER_BY_NAME)) {
+                allZabbixHosts + FILTER_BY_GROUP + FILTER_BY_NAME)) {
             preparedStatement.setString(1, vmGroup);
             preparedStatement.setString(2, name);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -417,7 +417,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
         if (connection == null) {
             return null;
         }
-        try (PreparedStatement preparedStatement = connection.prepareStatement(ALL_ZABBIX_HOSTS + FILTER_BY_GROUP);) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(allZabbixHosts + FILTER_BY_GROUP);) {
             preparedStatement.setString(1, groupName);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 ArrayList<ArrayList<Object>> results = resultSetToArray(resultSet);
@@ -442,7 +442,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
         if (connection == null) {
             return null;
         }
-        try (PreparedStatement preparedStatement = connection.prepareStatement(ALL_ZABBIX_HOSTS + FILTER_BY_GROUP)) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(allZabbixHosts + FILTER_BY_GROUP)) {
             preparedStatement.setString(1, generalPowerConsumer);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 ArrayList<ArrayList<Object>> results = resultSetToArray(resultSet);
@@ -467,7 +467,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
         if (connection == null) {
             return null;
         }
-        try (PreparedStatement preparedStatement = connection.prepareStatement(ALL_ZABBIX_HOSTS + " AND (groups.name = ? OR groups.name = ?)")) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(allZabbixHosts + " AND (groups.name = ? OR groups.name = ?)")) {
             preparedStatement.setString(1, hostGroup);
             preparedStatement.setString(2, vmGroup);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -523,7 +523,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
         if (connection == null) {
             return null;
         }
-        try (PreparedStatement preparedStatement = connection.prepareStatement(ALL_ZABBIX_HOSTS + FILTER_BY_GROUP)) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(allZabbixHosts + FILTER_BY_GROUP)) {
             preparedStatement.setString(1, groupName);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 ArrayList<ArrayList<Object>> results = resultSetToArray(resultSet);
@@ -727,7 +727,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
         List<Double> answer = new ArrayList<>();
         connection = getConnection(connection);
         if (connection == null) {
-            return null;
+            return answer;
         }
         try (PreparedStatement preparedStatement = connection.prepareStatement(HISTORY_QUERY)) {
             //hostid, item name, clock start, clock end
