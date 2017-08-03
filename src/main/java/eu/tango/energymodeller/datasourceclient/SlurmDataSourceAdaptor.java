@@ -572,7 +572,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                 return arg.split("=")[1].trim();
             }
         }
-        return null;
+        return "";
     }
 
     /**
@@ -652,7 +652,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
      */
     private HostMeasurement readGresString(String[] values, HostMeasurement measurement, long clock) {
         String gresString = getValue("Gres", values);
-        if (gresString == null) {
+        if (gresString.isEmpty()) {
             // This indicates that there is no accelerator
             gresString = "(null)";
         }
@@ -720,7 +720,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
      */
     private HostMeasurement readGresUsedString(String[] values, HostMeasurement measurement, long clock) {
         String gresString = getValue("GresUsed", values);
-        if (gresString == null) {
+        if (gresString.isEmpty()) {
             return measurement;
         }        
         String[] gresStringSplit = gresString.split(",");
@@ -812,7 +812,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             String wattskwh = getValue("ConsumedJoules", values);
             String hostname = getValue("NodeName", values);
             String state = getValue("State", values);
-            if (hostname == null) {
+            if (hostname.isEmpty()) {
                 return;
             }
             String hostId = hostname.replaceAll("[^0-9]", "");
@@ -829,7 +829,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                 host = new Host(Integer.parseInt(hostId), hostname);
                 hosts.put(hostname, host);
             }
-            host.setAvailable(!state.equals("DOWN*"));
+            host.setAvailable(!state.isEmpty() && !state.equals("DOWN*"));
             /**
              * The further metrics from this host are not relevant and may 
              * cause parse errors
@@ -849,7 +849,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
             readGresString(values, measurement, clock);
             readGresUsedString(values, measurement, clock);
             readGenericMetrics(values, measurement, clock);
-            double cpuUtil = (Double.valueOf(getValue("CPULoad", values))) / (Double.valueOf(getValue("CPUTot", values)));
+            double cpuUtil = Double.valueOf(cpuLoad) / Double.valueOf(getValue("CPUTot", values));
             valid = valid && validatedAddMetric(measurement, new MetricValue(KpiList.CPU_SPOT_USAGE_KPI_NAME, KpiList.CPU_SPOT_USAGE_KPI_NAME, cpuUtil * 100 + "", clock));
             valid = valid && validatedAddMetric(measurement, new MetricValue(KpiList.CPU_IDLE_KPI_NAME, KpiList.CPU_IDLE_KPI_NAME, ((1 - cpuUtil)) * 100 + "", clock));
             if (!valid) {
