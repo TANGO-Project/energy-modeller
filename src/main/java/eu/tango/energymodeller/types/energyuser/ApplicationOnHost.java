@@ -36,9 +36,8 @@ import java.util.concurrent.TimeUnit;
 public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSource, Comparable<ApplicationOnHost> {
 
     public enum JOB_STATUS {
-
         PENDING, RUNNING, SUSPENDED, COMPLETING, COMPLETED
-    };
+    }
 
     private int id;
     private String name;
@@ -191,7 +190,7 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         if (progress <= 0) {
             return -1;
         }
-        return (progress / maxDuration) * 100d;
+        return ((double)progress / (double) maxDuration) * 100d;
     }
     
     /**
