@@ -191,7 +191,7 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         if (progress <= 0) {
             return -1;
         }
-        return (progress / maxDuration) * 100;
+        return (progress / maxDuration) * 100d;
     }
     
     /**

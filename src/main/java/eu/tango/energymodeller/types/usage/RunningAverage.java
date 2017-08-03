@@ -83,6 +83,9 @@ public class RunningAverage implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
         if (this.getClass().equals(obj.getClass())) {
             return ((RunningAverage) obj).property.equals(this.property);
         }

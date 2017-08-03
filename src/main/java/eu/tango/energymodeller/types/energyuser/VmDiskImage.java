@@ -110,6 +110,9 @@ public class VmDiskImage {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
         if (VmDiskImage.class.equals(obj.getClass())) {
             VmDiskImage img = (VmDiskImage) obj;
             String imgPath = img.getDiskImage();
