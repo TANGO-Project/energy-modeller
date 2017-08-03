@@ -27,6 +27,7 @@ import eu.tango.energymodeller.types.usage.HostEnergyRecord;
 import eu.tango.energymodeller.types.usage.VmLoadHistoryBootRecord;
 import eu.tango.energymodeller.types.usage.VmLoadHistoryRecord;
 import eu.tango.energymodeller.types.usage.VmLoadHistoryWeekRecord;
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -41,6 +42,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 
 /**
  * This connects to the background database to return historical information and
@@ -50,6 +53,24 @@ import java.util.logging.Logger;
  */
 public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements DatabaseConnector {
 
+    /**
+     * The url to contact the database.
+     */
+    private String databaseURL = "jdbc:mysql://localhost:3306/energymodeller";
+    /**
+     * The driver to be used to contact the database.
+     */
+    private String databaseDriver = "com.mysql.jdbc.Driver";
+    /**
+     * The user details to contact the database.
+     */
+    private String databaseUser = "energymodeller";
+    /**
+     * The user's password to contact the database.
+     */
+    private String databasePassword;
+    private static final String CONFIG_FILE = "energy-modeller-db.properties";
+    
     private Connection connection;
 
     /**
@@ -58,9 +79,42 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
      */
     public DefaultDatabaseConnector() {
         try {
+            loadSettings();
             connection = getConnection();
         } catch (IOException | SQLException | ClassNotFoundException ex) {
             Logger.getLogger(DefaultDatabaseConnector.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    /**
+     * This reads the settings for the database connection from file.
+     */
+    protected final void loadSettings() {
+        try {
+            PropertiesConfiguration config;
+            if (new File(CONFIG_FILE).exists()) {
+                config = new PropertiesConfiguration(CONFIG_FILE);
+            } else {
+                config = new PropertiesConfiguration();
+                config.setFile(new File(CONFIG_FILE));
+            }
+            config.setAutoSave(true); //This will save the configuration file back to disk. In case the defaults need setting.
+            databaseURL = config.getString("energy.modeller.db.url", databaseURL);
+            config.setProperty("energy.modeller.db.url", databaseURL);
+            databaseDriver = config.getString("energy.modeller.db.driver", databaseDriver);
+            try {
+                Class.forName(databaseDriver);
+            } catch (ClassNotFoundException ex) {
+                //If the driver is not found on the class path revert to mysql connector.
+                databaseDriver = "com.mysql.jdbc.Driver";
+            }     
+            config.setProperty("energy.modeller.db.driver", databaseDriver);
+            databasePassword = config.getString("energy.modeller.db.password", "");
+            config.setProperty("energy.modeller.db.password", databasePassword);
+            databaseUser = config.getString("energy.modeller.db.user", databaseUser);
+            config.setProperty("energy.modeller.db.user", databaseUser);
+        } catch (ConfigurationException ex) {
+            Logger.getLogger(DefaultDatabaseConnector.class.getName()).log(Level.INFO, "Error loading database configuration information", ex);
         }
     }
 
@@ -75,15 +129,15 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
     @Override
     protected final Connection getConnection() throws IOException, SQLException, ClassNotFoundException {
         // Define JDBC driver
-        System.setProperty("jdbc.drivers", Configuration.databaseDriver);
+        System.setProperty("jdbc.drivers", databaseDriver);
         //Ensure that the driver has been loaded
-        Class.forName(Configuration.databaseDriver);
-        if (Configuration.databaseUser.isEmpty()) {
-            return DriverManager.getConnection(Configuration.databaseURL);
+        Class.forName(databaseDriver);
+        if (databaseUser.isEmpty()) {
+            return DriverManager.getConnection(databaseURL);
         }
-        return DriverManager.getConnection(Configuration.databaseURL,
-                Configuration.databaseUser,
-                Configuration.databasePassword);
+        return DriverManager.getConnection(databaseURL,
+                databaseUser,
+                databasePassword);
     }
 
     /**
