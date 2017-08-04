@@ -252,6 +252,12 @@ public interface DatabaseConnector {
     public List<VmLoadHistoryBootRecord> getAverageCPUUtilisationBootTraceForDisk(String diskName, int windowSize);
 
     /**
+     * This tests to see if the database connection is still live or not
+     * @return If the database connection is live or not
+     */
+    public boolean isConnectionValid(); 
+    
+    /**
      * This closes the database connection. It will be reopened if a query is
      * called.
      */

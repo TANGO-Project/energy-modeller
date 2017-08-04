@@ -1011,6 +1011,21 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
                 "WHERE vm_data.vm_id = valid_vm " +
                 "GROUP BY start_clock DIV ?", diskName, windowSize);
     }
+    
+    /**
+     * This tests to see if the database connection is still live or not
+     * @return If the database connection is live or not
+     */
+    public boolean isConnectionValid() {
+        try {
+            if (connection != null) {
+                return connection.isValid(20);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DefaultDatabaseConnector.class.getName()).log(Level.SEVERE, "The connection was invalid.", ex);
+        }
+        return false;
+    }
 
     /**
      * This closes the database connection. It will be reopened if a query is
