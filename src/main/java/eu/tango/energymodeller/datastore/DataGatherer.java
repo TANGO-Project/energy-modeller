@@ -192,6 +192,12 @@ public class DataGatherer implements Runnable {
     public void stop() {
         running = false;
         database.closeConnection();
+        if (vmUsageLogger != null) {
+            vmUsageLogger.stop();
+        }
+        if (appUsageLogger != null) {
+            appUsageLogger.stop();
+        }
     }
 
     /**
