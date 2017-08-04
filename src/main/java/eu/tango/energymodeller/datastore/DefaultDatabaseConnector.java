@@ -1016,6 +1016,7 @@ public class DefaultDatabaseConnector extends MySqlDatabaseConnector implements 
      * This tests to see if the database connection is still live or not
      * @return If the database connection is live or not
      */
+    @Override
     public boolean isConnectionValid() {
         try {
             if (connection != null) {
