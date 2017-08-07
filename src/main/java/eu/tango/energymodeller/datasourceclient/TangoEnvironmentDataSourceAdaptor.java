@@ -196,7 +196,7 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
                 slurmToCollectD.put(host, collectD.getHostByName(host.getHostName() + ".bullx"));
             }            
         }
-        return null;
+        return collectdToSlurm.get(host);
     }
     
 }
