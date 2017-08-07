@@ -189,11 +189,11 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         HostMeasurement answer = new HostMeasurement(host);
         double acceleratorPowerUsed = 0.0;
         for (QueryResult.Result result : results.getResults()) {
-            if (result == null) {
+            if (result == null || result.getSeries() == null) {
                 return null;
             }
             for (QueryResult.Series series : result.getSeries()) {
-                if (series == null) {
+                if (series == null || series.getValues() == null) {
                     return null;
                 }
                 for (List<Object> value : series.getValues()) {
