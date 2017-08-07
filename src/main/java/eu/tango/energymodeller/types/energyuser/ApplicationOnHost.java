@@ -22,8 +22,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -36,7 +38,34 @@ import java.util.concurrent.TimeUnit;
 public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSource, Comparable<ApplicationOnHost> {
 
     public enum JOB_STATUS {
-        PENDING, RUNNING, SUSPENDED, COMPLETING, COMPLETED
+
+        PENDING, RUNNING, SUSPENDED, COMPLETING, COMPLETED, CANCELLED
+    }
+
+    private static final Map<String, JOB_STATUS> JOB_STATUS_MAPPING
+            = new HashMap<>();
+
+    /*
+     * namely: PENDING (PD), RUNNING (R), SUSPENDED (S), STOPPED (ST),
+     * COMPLETING (CG), COMPLETED (CD), CONFIGURING (CF), CANCELLED (CA),
+     * FAILED (F), TIMEOUT (TO), PREEMPTED (PR), BOOT_FAIL (BF) , NODE_FAIL
+     * (NF), REVOKED (RV), and SPECIAL_EXIT (SE)
+     */
+    static {
+        JOB_STATUS_MAPPING.put("PENDING", JOB_STATUS.PENDING);
+        JOB_STATUS_MAPPING.put("PD", JOB_STATUS.PENDING);
+        JOB_STATUS_MAPPING.put("RUNNING", JOB_STATUS.RUNNING);
+        JOB_STATUS_MAPPING.put("R", JOB_STATUS.RUNNING);
+        JOB_STATUS_MAPPING.put("SUSPENDED", JOB_STATUS.SUSPENDED);
+        JOB_STATUS_MAPPING.put("S", JOB_STATUS.SUSPENDED);
+        JOB_STATUS_MAPPING.put("COMPLETING", JOB_STATUS.COMPLETING);
+        JOB_STATUS_MAPPING.put("CD", JOB_STATUS.COMPLETING);
+        JOB_STATUS_MAPPING.put("COMPLETED", JOB_STATUS.COMPLETED);
+        JOB_STATUS_MAPPING.put("CD", JOB_STATUS.COMPLETED);
+        JOB_STATUS_MAPPING.put("CANCELLED", JOB_STATUS.CANCELLED);
+        JOB_STATUS_MAPPING.put("CA", JOB_STATUS.CANCELLED);        
+        JOB_STATUS_MAPPING.put(null, null);
+        JOB_STATUS_MAPPING.put("", null);
     }
 
     private int id;
@@ -190,11 +219,13 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         if (progress <= 0) {
             return -1;
         }
-        return ((double)progress / (double) maxDuration) * 100d;
+        return ((double) progress / (double) maxDuration) * 100d;
     }
-    
+
     /**
-     * This provides details of how long the application has been running in seconds.
+     * This provides details of how long the application has been running in
+     * seconds.
+     *
      * @return The current length of time the application has been running.
      */
     public long getDuration() {
@@ -205,12 +236,12 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
         return now - start;
     }
-    
 
     /**
      * This provides details of an applications maximum duration
-     * @return The maximum duration of the application in seconds if a deadline is set.
-     * returns -1 if no deadline is set.
+     *
+     * @return The maximum duration of the application in seconds if a deadline
+     * is set. returns -1 if no deadline is set.
      */
     public long getMaxDuration() {
         if (!hasDeadline()) {
@@ -247,6 +278,34 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
     public void setStatus(JOB_STATUS status) {
         this.status = status;
     }
+
+    /**
+     * This sets the status of this job
+     *
+     * @param status The new status of this job
+     */
+    public void setStatus(String status) {
+        this.status = getAdaptationType(status);
+    }
+    
+    /**
+     * This provides the mapping between the string representation of a response
+     * type and the adaptation type.
+     *
+     * @param responseType The name of the rule.
+     * @return The Adaptation type required.
+     */
+    public static JOB_STATUS getAdaptationType(String responseType) {
+        JOB_STATUS answer = JOB_STATUS_MAPPING.get(responseType);
+        if (answer == null) {
+            for (Map.Entry<String,JOB_STATUS> item : JOB_STATUS_MAPPING.entrySet()) {
+                if (item.getKey().startsWith(responseType)) {
+                    return item.getValue();
+                }
+            }
+        }
+        return answer;
+    }    
 
     /**
      * This returns the idle power consumption of this application given it's
@@ -385,16 +444,19 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         }
         return answer;
     }
-    
+
     /**
-     * This takes a list of applications and returns only the list on applications
-     * listed that have the same name and instance id. This therefore means if
-     * an application runs across several hosts the list can be filtered to find
-     * all the application on host instances, for a given application.
+     * This takes a list of applications and returns only the list on
+     * applications listed that have the same name and instance id. This
+     * therefore means if an application runs across several hosts the list can
+     * be filtered to find all the application on host instances, for a given
+     * application.
+     *
      * @param applications The list of all applications
      * @param name The name of the application
      * @param id The unique id of the application
-     * @return The list of applications on host instances for a named application
+     * @return The list of applications on host instances for a named
+     * application
      */
     public static List<ApplicationOnHost> filter(List<ApplicationOnHost> applications, String name, int id) {
         List<ApplicationOnHost> answer = new ArrayList<>();
@@ -404,6 +466,6 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
             }
         }
         return answer;
-    }    
+    }
 
 }

@@ -253,7 +253,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                          * Get the cached copy, avoids duplicating objects
                          */
                         ApplicationOnHost cachedApp = appCache.get(appId);
-                        cachedApp.setStatus(ApplicationOnHost.JOB_STATUS.valueOf(items[3]));
+                        cachedApp.setStatus(items[3]);
                         answer.add(cachedApp);
                         continue;
                     }
@@ -279,7 +279,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource {
                         if (state != null) {
                             app.setStatus(state);
                         } else {
-                            app.setStatus(ApplicationOnHost.JOB_STATUS.valueOf(status));
+                            app.setStatus(status);
                         }
                         answer.add(app);
                         appCache.put(appId, app);
