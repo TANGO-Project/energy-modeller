@@ -24,6 +24,8 @@ import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.usage.CurrentUsageRecord;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -42,6 +44,9 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
 
     private final SlurmDataSourceAdaptor slurm = new SlurmDataSourceAdaptor();
     private final CollectDInfluxDbDataSourceAdaptor collectD = new CollectDInfluxDbDataSourceAdaptor();
+    
+    private final HashMap<Host, Host> collectdToSlurm = new HashMap<>();
+    private final HashMap<Host, Host> slurmToCollectD = new HashMap<>();
     
     /**
      * This creates a new data source adaptor that queries both SLURM and CollectD.
@@ -115,20 +120,28 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
 
     @Override
     public HostMeasurement getHostData(Host host) {
-        HostMeasurement answer = collectD.getHostData(host);
+        HostMeasurement answer = slurm.getHostData(host);
         //Adds various information such as memory usage, including static upper bound values.
-        answer.addMetrics(slurm.getHostData(host));
+        answer.addMetrics(collectD.getHostData(convertNames(host)));
         return answer;
     }
 
     @Override
     public List<HostMeasurement> getHostData() {
-        return collectD.getHostData();
+        List<HostMeasurement> answer = new ArrayList<>();
+        for (Host host : slurm.getHostList()) {
+            answer.add(getHostData(host));
+        }
+        return answer;
     }
 
     @Override
     public List<HostMeasurement> getHostData(List<Host> hostList) {
-        return collectD.getHostData(hostList);
+        List<HostMeasurement> answer = new ArrayList<>();
+        for (Host host : hostList) {
+            answer.add(getHostData(host));
+        }
+        return answer;
     }
 
     @Override
@@ -148,22 +161,42 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
 
     @Override
     public CurrentUsageRecord getCurrentEnergyUsage(Host host) {
-        return collectD.getCurrentEnergyUsage(host);
+        return collectD.getCurrentEnergyUsage(convertNames(host));
     }
 
     @Override
     public double getLowestHostPowerUsage(Host host) {
-        return collectD.getLowestHostPowerUsage(host);
+        return collectD.getLowestHostPowerUsage(convertNames(host));
     }
 
     @Override
     public double getHighestHostPowerUsage(Host host) {
-        return collectD.getHighestHostPowerUsage(host);
+        return collectD.getHighestHostPowerUsage(convertNames(host));
     }
 
     @Override
     public double getCpuUtilisation(Host host, int durationSeconds) {
-        return collectD.getCpuUtilisation(host, durationSeconds);
+        return collectD.getCpuUtilisation(convertNames(host), durationSeconds);
+    }
+    
+    public Host convertNames(Host host) {
+        //If it contains bullx then it is from collectd
+        if (host.getHostName().contains(".bullx")) {
+            if (collectdToSlurm.containsKey(host)) {
+                return collectdToSlurm.get(host);
+            } else {
+                collectdToSlurm.put(host, slurm.getHostByName(host.getHostName().substring(0, host.getHostName().length() - 6)));
+                slurmToCollectD.put(slurm.getHostByName(host.getHostName().substring(0, host.getHostName().length() - 6)), host);
+            }
+        } else { //Slurm host received to get the collectd host
+            if (slurmToCollectD.containsKey(host)) {
+                return slurmToCollectD.get(host);
+            } else {
+                collectdToSlurm.put(slurm.getHostByName(host.getHostName() + ".bullx"), host);
+                slurmToCollectD.put(host, slurm.getHostByName(host.getHostName() + ".bullx"));
+            }            
+        }
+        return null;
     }
     
 }
