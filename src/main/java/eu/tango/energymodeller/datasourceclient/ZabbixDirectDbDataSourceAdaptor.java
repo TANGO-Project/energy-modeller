@@ -174,7 +174,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
                 config.setFile(new File(CONFIG_FILE));
             }
             config.setAutoSave(true); //This will save the configuration file back to disk. In case the defaults need setting.
-            databaseURL = config.getString("energy.modeller.zabbix.db.url", "jdbc:mysql://192.168.3.199:3306/zabbix");
+            databaseURL = config.getString("energy.modeller.zabbix.db.url", "jdbc:mysql://<ADD_ZABBIX_DB_SERVER_ADDRESS_HERE>:3306/zabbix");
             config.setProperty("energy.modeller.zabbix.db.url", databaseURL);
             databaseDriver = config.getString("energy.modeller.zabbix.db.driver", databaseDriver);
             try {
