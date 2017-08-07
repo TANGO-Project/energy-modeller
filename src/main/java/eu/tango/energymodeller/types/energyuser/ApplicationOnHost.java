@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class represents an energy user of the Tango project and in particular
@@ -299,10 +301,13 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         JOB_STATUS answer = JOB_STATUS_MAPPING.get(responseType);
         if (answer == null) {
             for (Map.Entry<String,JOB_STATUS> item : JOB_STATUS_MAPPING.entrySet()) {
-                if (item.getKey().startsWith(responseType)) {
+                if (item.getKey() != null && item.getKey().startsWith(responseType)) {
                     return item.getValue();
                 }
             }
+        }
+        if (answer == null) {
+            Logger.getLogger(ApplicationOnHost.class.getName()).log(Level.SEVERE, "The response type was not found: {0}", responseType);
         }
         return answer;
     }    
