@@ -122,7 +122,10 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
     public HostMeasurement getHostData(Host host) {
         HostMeasurement answer = slurm.getHostData(host);
         //Adds various information such as memory usage, including static upper bound values.
-        answer.addMetrics(collectD.getHostData(convertNames(host)));
+        Host collectDhost = convertNames(host);
+        if (collectDhost != null) {
+            answer.addMetrics(collectD.getHostData(collectDhost));
+        }
         return answer;
     }
 
@@ -130,7 +133,10 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
     public List<HostMeasurement> getHostData() {
         List<HostMeasurement> answer = new ArrayList<>();
         for (Host host : slurm.getHostList()) {
-            answer.add(getHostData(host));
+            HostMeasurement measurement = getHostData(host);
+            if (measurement != null) {
+                answer.add(measurement);
+            }
         }
         return answer;
     }
