@@ -124,7 +124,11 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
         //Adds various information such as memory usage, including static upper bound values.
         Host collectDhost = convertNames(host);
         if (collectDhost != null) {
-            answer.addMetrics(collectD.getHostData(collectDhost));
+            if (answer == null) {
+                answer = collectD.getHostData(collectDhost);
+            } else {
+                answer.addMetrics(collectD.getHostData(collectDhost));
+            }
         }
         return answer;
     }
