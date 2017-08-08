@@ -443,7 +443,7 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
     public static List<ApplicationOnHost> filter(List<ApplicationOnHost> applications, Host host) {
         List<ApplicationOnHost> answer = new ArrayList<>();
         for (ApplicationOnHost application : applications) {
-            if (application.allocatedTo.equals(host)) {
+            if (application.allocatedTo != null && application.allocatedTo.equals(host)) {
                 answer.add(application);
             }
         }

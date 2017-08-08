@@ -12,9 +12,9 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * This is being developed for the TANGO Project: http://tango-project.eu
- * 
+ *
  */
 package eu.tango.energymodeller.datasourceclient;
 
@@ -32,7 +32,7 @@ import java.util.List;
  * This adaptor allows for the gathering of environment information from both
  * CollectD (via InfluxDB) and SLURM, this represents the most information that
  * may be obtained from the Tango testbed.
- * 
+ *
  * The reason for this class is the InfluxDB is very good at time series data, but
  * SLURM has information that is useful such as a list of current applications that
  * are running. It is therefore useful to get a hybrid data source that can get
@@ -44,17 +44,17 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
 
     private final SlurmDataSourceAdaptor slurm = new SlurmDataSourceAdaptor();
     private final CollectDInfluxDbDataSourceAdaptor collectD = new CollectDInfluxDbDataSourceAdaptor();
-    
+
     private final HashMap<Host, Host> collectdToSlurm = new HashMap<>();
     private final HashMap<Host, Host> slurmToCollectD = new HashMap<>();
-    
+
     /**
      * This creates a new data source adaptor that queries both SLURM and CollectD.
      */
     public TangoEnvironmentDataSourceAdaptor() {
         super();
     }
-    
+
     @Override
     public Host getHostByName(String hostname) {
         /**
@@ -79,7 +79,7 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
         /**
          * SLURM provides better information about the adaptors that are present
          * i.e. static information about the host
-         */        
+         */
         return slurm.getHostList();
     }
 
@@ -88,7 +88,7 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
         /**
          * SLURM provides better information about the adaptors that are present
          * i.e. static information about the host
-         */        
+         */
         return slurm.getHostAndVmList();
     }
 
@@ -114,7 +114,7 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
     public List<ApplicationOnHost> getHostApplicationList() {
         /**
          * SLURM provides this information while CollectD does not.
-         */        
+         */
         return slurm.getHostApplicationList();
     }
 
@@ -149,7 +149,10 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
     public List<HostMeasurement> getHostData(List<Host> hostList) {
         List<HostMeasurement> answer = new ArrayList<>();
         for (Host host : hostList) {
-            answer.add(getHostData(host));
+            HostMeasurement measurement = getHostData(host);
+            if (measurement != null) {
+                answer.add(measurement);
+            }
         }
         return answer;
     }
@@ -188,7 +191,7 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
     public double getCpuUtilisation(Host host, int durationSeconds) {
         return collectD.getCpuUtilisation(convertNames(host), durationSeconds);
     }
-    
+
     public Host convertNames(Host host) {
         //If it contains bullx then it is from collectd
         if (host.getHostName().contains(".bullx")) {
@@ -204,9 +207,9 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
             } else {
                 collectdToSlurm.put(collectD.getHostByName(host.getHostName() + ".bullx"), host);
                 slurmToCollectD.put(host, collectD.getHostByName(host.getHostName() + ".bullx"));
-            }            
+            }
         }
         return collectdToSlurm.get(host);
     }
-    
+
 }

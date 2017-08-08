@@ -362,6 +362,9 @@ public class DataGatherer implements Runnable {
      * @param vmList The list of VMs that are currently running
      */
     private void gatherMeasurements(Host host, HostMeasurement measurement, double hostOffset, List<VmDeployed> vmList) {
+        if (host == null || measurement == null) {
+            return;
+        }
         if (lastTimeStampSeen.get(host) == null || measurement.getClock() > lastTimeStampSeen.get(host)) {
             lastTimeStampSeen.put(host, measurement.getClock());
             Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Writing out host information");

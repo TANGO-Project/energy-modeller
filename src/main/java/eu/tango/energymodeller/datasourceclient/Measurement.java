@@ -112,7 +112,7 @@ public abstract class Measurement {
             return first - time;
         }
     }
-    
+
     /**
      * This looks at the metrics gained and compares a named metric and a
      * specified time and indicates if the values are close enough together.
@@ -128,7 +128,7 @@ public abstract class Measurement {
         } else {
             return first - time;
         }
-    }    
+    }
 
     /**
      * This tests to see if for this measurement record that two metrics have
@@ -161,7 +161,7 @@ public abstract class Measurement {
     public boolean isContemporary(String metricName, long time, int tolerance) {
         return getClockDifference(metricName, time) <= tolerance;
     }
-    
+
     /**
      * This tests to see if for this measurement record to see if a metric has a
      * clock value that is within an acceptable tolerance bound.
@@ -176,7 +176,7 @@ public abstract class Measurement {
      */
     public boolean isContemporary(long time, int tolerance) {
         return getClockDifference(getClockDifference(time)) <= tolerance;
-    }  
+    }
 
     /**
      * This returns the maximum delay that any metric encountered.
@@ -266,6 +266,9 @@ public abstract class Measurement {
      * @param item a metric to add to this measurement dataset
      */
     public void addMetric(MetricValue item) {
+        if (item == null) {
+            return; //Don't allow null metric values
+        }
         if (!metrics.containsKey(item.getKey())) {
             metrics.put(item.getKey(), item);
         } else {
@@ -288,7 +291,7 @@ public abstract class Measurement {
             addMetric(item);
         }
     }
-    
+
     /**
      * This adds several metrics and value to a measurement, essentially combining two 
      * measurement objects. If an item in the measurement is newer than the value 
@@ -303,8 +306,8 @@ public abstract class Measurement {
         if (this.clock < measurement.getClock()) {
             setClock(measurement.getClock());
         }
-    }      
-    
+    }
+
     /**
      * This gets the item that represents a given metric
      *
@@ -355,7 +358,7 @@ public abstract class Measurement {
         }
         if (metrics.containsKey(CPU_SPOT_USAGE_KPI_NAME2)) {
             return this.getMetric(CPU_SPOT_USAGE_KPI_NAME2).getValue() / 100;
-        }        
+        }
         double interrupt = 0.0;
         double iowait = 0.0;
         double nice = 0.0;
