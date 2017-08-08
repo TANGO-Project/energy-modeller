@@ -40,7 +40,7 @@ import java.util.List;
  *
  * @author Richard Kavanagh
  */
-public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
+public class TangoEnvironmentDataSourceAdaptor implements HostDataSource, ApplicationDataSource {
 
     private final SlurmDataSourceAdaptor slurm = new SlurmDataSourceAdaptor();
     private final CollectDInfluxDbDataSourceAdaptor collectD = new CollectDInfluxDbDataSourceAdaptor();
@@ -126,6 +126,7 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
         if (collectDhost != null) {
             if (answer == null) {
                 answer = collectD.getHostData(collectDhost);
+                answer.setHost(host); //This ensures a collectD host is not leaked
             } else {
                 answer.addMetrics(collectD.getHostData(collectDhost));
             }
@@ -152,6 +153,7 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
             HostMeasurement measurement = getHostData(host);
             if (measurement != null) {
                 answer.add(measurement);
+                measurement.setHost(host);
             }
         }
         return answer;
@@ -210,6 +212,21 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource {
             }
         }
         return collectdToSlurm.get(host);
+    }
+
+    @Override
+    public ApplicationMeasurement getApplicationData(ApplicationOnHost application) {
+        return slurm.getApplicationData(application);
+    }
+
+    @Override
+    public List<ApplicationMeasurement> getApplicationData() {
+        return slurm.getApplicationData();
+    }
+
+    @Override
+    public List<ApplicationMeasurement> getApplicationData(List<ApplicationOnHost> appList) {
+        return slurm.getApplicationData(appList);
     }
 
 }

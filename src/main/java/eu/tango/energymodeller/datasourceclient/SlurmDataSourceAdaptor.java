@@ -50,7 +50,7 @@ import org.apache.commons.io.input.TailerListenerAdapter;
  *
  * @author Richard Kavanagh
  */
-public class SlurmDataSourceAdaptor implements HostDataSource {
+public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSource {
 
     private Tailer tailer;
     private SlurmPoller poller;

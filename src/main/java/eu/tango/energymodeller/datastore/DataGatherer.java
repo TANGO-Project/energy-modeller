@@ -19,10 +19,10 @@
 package eu.tango.energymodeller.datastore;
 
 import eu.ascetic.ioutils.io.ResultsStore;
+import eu.tango.energymodeller.datasourceclient.ApplicationDataSource;
 import eu.tango.energymodeller.datasourceclient.ApplicationMeasurement;
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
 import eu.tango.energymodeller.datasourceclient.HostMeasurement;
-import eu.tango.energymodeller.datasourceclient.SlurmDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyShareRule;
 import eu.tango.energymodeller.types.energyuser.Accelerator;
@@ -361,10 +361,7 @@ public class DataGatherer implements Runnable {
      * @param measurement The measurement data to write to disk.
      * @param vmList The list of VMs that are currently running
      */
-    private void gatherMeasurements(Host host, HostMeasurement measurement, double hostOffset, List<VmDeployed> vmList) {
-        if (host == null || measurement == null) {
-            return;
-        }
+    private void gatherMeasurements(Host host, HostMeasurement measurement, double hostOffset, List<VmDeployed> vmList) {       
         if (lastTimeStampSeen.get(host) == null || measurement.getClock() > lastTimeStampSeen.get(host)) {
             lastTimeStampSeen.put(host, measurement.getClock());
             Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Writing out host information");
@@ -397,9 +394,9 @@ public class DataGatherer implements Runnable {
             }
             List<ApplicationOnHost> apps = datasource.getHostApplicationList(ApplicationOnHost.JOB_STATUS.RUNNING);
             apps = ApplicationOnHost.filter(apps, host);
-            if (!apps.isEmpty() && datasource instanceof SlurmDataSourceAdaptor) {
+            if (!apps.isEmpty() && datasource instanceof ApplicationDataSource) {
                 Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Obtaining specific app information");
-                List<ApplicationMeasurement> appMeasurements = ((SlurmDataSourceAdaptor) datasource).getApplicationData(apps);
+                List<ApplicationMeasurement> appMeasurements = ((ApplicationDataSource) datasource).getApplicationData(apps);
                 HostEnergyUserLoadFraction fraction = new HostEnergyUserLoadFraction(host, measurement.getClock());
                 fraction.setApplicationFraction(appMeasurements);
                 fraction.setHostPowerOffset(hostOffset);
