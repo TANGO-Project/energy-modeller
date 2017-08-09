@@ -72,7 +72,8 @@ public class NeuralNetFunction {
         /**
          * Choosing sum square_root(input + output) as the input size as the size of the hidden layer.
          */
-        network.addLayer(new BasicLayer(new ActivationTANH(), true, new Double(Math.sqrt(((double)inputSize + OUTPUT_SIZE))).intValue())); //ActivationSigmoid()
+        double hiddenLayerSize = Math.sqrt((double)inputSize + OUTPUT_SIZE);
+        network.addLayer(new BasicLayer(new ActivationTANH(), true, (int) hiddenLayerSize)); //ActivationSigmoid()
         network.addLayer(new BasicLayer(new ActivationTANH(), false, 1));
         network.getStructure().finalizeStructure();
         network.reset();
