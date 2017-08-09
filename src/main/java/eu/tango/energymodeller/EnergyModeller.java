@@ -221,7 +221,7 @@ public class EnergyModeller {
                 }
             }
         } catch (ConfigurationException ex) {
-            Logger.getLogger(DataGatherer.class.getName()).log(Level.INFO, "Error loading the configuration of the IaaS energy modeller", ex);
+            Logger.getLogger(EnergyModeller.class.getName()).log(Level.INFO, "Error loading the configuration of the energy modeller", ex);
         }
         dataGatherer = new DataGatherer(datasource, database);
         dataGatherer.setPerformDataGathering(performDataGathering);
