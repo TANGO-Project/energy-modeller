@@ -206,18 +206,19 @@ public class CpuAndAcceleratorEnergyPredictor extends AbstractEnergyPredictor {
      */
     @Override
     public double predictPowerUsed(Host host) {
-        PolynomialFunction model = retrieveCpuModel(host).getFunction();
-        //TODO move away from a univariate model for the accelerator
+        PolynomialFunction cpuModel = retrieveCpuModel(host).getFunction();
         if (getDefaultAssumedCpuUsage() == -1) {
             double answer;
-            answer = model.value(getCpuUtilisation(host));
+            answer = cpuModel.value(getCpuUtilisation(host));
             for (Accelerator acc : host.getAccelerators()) {
                 NeuralNetFunction accModel = retrieveAcceleratorModel(host, acc.getName()).getFunction();
                 accModel.value(getAcceleratorUtilisation(host, null).get(acc));
             }
             return answer;
         } else {
-            return model.value(getDefaultAssumedCpuUsage() + getDefaultAssumedAcceleratorUsage());
+            //TODO consider if this assumption is valid or not
+            //Assume no accelerator usage, given no suitable input into model
+            return cpuModel.value(getDefaultAssumedCpuUsage()); 
         }
     }
 
@@ -362,7 +363,7 @@ public class CpuAndAcceleratorEnergyPredictor extends AbstractEnergyPredictor {
 
     @Override
     public String toString() {
-        return "CPU and GPU polynomial energy predictor";
+        return "CPU (polynomial) and Accelerator (neural network) energy predictor";
     }
 
 }

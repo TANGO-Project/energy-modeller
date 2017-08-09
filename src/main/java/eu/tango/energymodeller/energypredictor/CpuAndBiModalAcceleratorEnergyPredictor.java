@@ -208,15 +208,15 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
     @Override
     public double predictPowerUsed(Host host) {
         double power;
-        PolynomialFunction model = retrieveCpuModel(host).getFunction();
+        PolynomialFunction cpuModel = retrieveCpuModel(host).getFunction();
         if (getDefaultAssumedCpuUsage() == -1) {
-            power = model.value(getCpuUtilisation(host));
+            power = cpuModel.value(getCpuUtilisation(host));
             for (Accelerator accelerator : host.getAccelerators()) {
                 GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
                 power = power + acceleratorModel.value(getAcceleratorClockRate(host, accelerator));
             }
         } else {
-            power = model.value(getDefaultAssumedCpuUsage());
+            power = cpuModel.value(getDefaultAssumedCpuUsage());
             for (Accelerator accelerator : host.getAccelerators()) {
                 GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
                 power = power + acceleratorModel.value(getDefaultAssumedAcceleratorUsage());
@@ -459,7 +459,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
 
     @Override
     public String toString() {
-        return "CPU and GPU polynomial energy predictor";
+        return "CPU (polynomial) and accelerator (bimodal) energy predictor";
     }
 
 }
