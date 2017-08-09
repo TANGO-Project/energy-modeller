@@ -53,7 +53,7 @@ public class NeuralNetFunction {
     
     private boolean trained = false;
     private int inputSize;
-    private final int OUTPUT_SIZE = 1;
+    private static final int OUTPUT_SIZE = 1;
 
     /**
      * Loads calibration data for a given accelerator
