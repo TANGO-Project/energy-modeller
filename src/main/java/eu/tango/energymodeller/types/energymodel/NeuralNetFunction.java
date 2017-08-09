@@ -70,9 +70,9 @@ public class NeuralNetFunction {
         // create a neural network, without using a factory
         network.addLayer(new BasicLayer(null, true, inputSize));
         /**
-         * Choosing half the input size as the size of the hidden layer.
+         * Choosing sum square_root(input + output) as the input size as the size of the hidden layer.
          */
-        network.addLayer(new BasicLayer(new ActivationTANH(), true, inputSize / 2)); //ActivationSigmoid()
+        network.addLayer(new BasicLayer(new ActivationTANH(), true, new Double(Math.sqrt(((double)inputSize + OUTPUT_SIZE))).intValue())); //ActivationSigmoid()
         network.addLayer(new BasicLayer(new ActivationTANH(), false, 1));
         network.getStructure().finalizeStructure();
         network.reset();
