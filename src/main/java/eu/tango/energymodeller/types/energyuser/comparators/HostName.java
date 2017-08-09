@@ -16,13 +16,14 @@
 package eu.tango.energymodeller.types.energyuser.comparators;
 
 import eu.tango.energymodeller.types.energyuser.Host;
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
  * This compares to hosts by its name, this is the natural ordering of Hosts.
  * @author Richard Kavanagh
  */
-public class HostName implements Comparator<Host> {
+public class HostName implements Comparator<Host>, Serializable {
 
     @Override
     public int compare(Host host1, Host host2) {

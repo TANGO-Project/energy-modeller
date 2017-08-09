@@ -16,13 +16,14 @@
 package eu.tango.energymodeller.types.energyuser.comparators;
 
 import eu.tango.energymodeller.types.energyuser.Host;
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
  * This compares to hosts by its maximum power consumption.
  * @author Richard Kavanagh
  */
-public class HostMaxPower implements Comparator<Host> {
+public class HostMaxPower implements Comparator<Host>, Serializable {
 
     @Override
     public int compare(Host host1, Host host2) {

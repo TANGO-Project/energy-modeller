@@ -16,6 +16,7 @@
 package eu.tango.energymodeller.types.energyuser.comparators;
 
 import eu.tango.energymodeller.types.energyuser.Host;
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
@@ -23,7 +24,7 @@ import java.util.Comparator;
  *
  * @author Richard Kavanagh
  */
-public class HostFlopsPerWatt implements Comparator<Host> {
+public class HostFlopsPerWatt implements Comparator<Host>, Serializable {
 
     @Override
     public int compare(Host host1, Host host2) {
