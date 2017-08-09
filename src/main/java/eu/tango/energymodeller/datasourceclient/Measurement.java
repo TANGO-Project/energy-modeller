@@ -33,6 +33,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This is the base class for all measurements, either for a vm instance or a
@@ -267,14 +269,16 @@ public abstract class Measurement {
      */
     public void addMetric(MetricValue item) {
         if (item == null) {
-            return; //Don't allow null metric values
+            Logger.getLogger(Measurement.class.getName()).log(Level.INFO, "Adding metric failed the value was null");
+            throw new NullPointerException("Adding metric failed the value was null");
+//            return; //Don't allow null metric values
         }
         if (!metrics.containsKey(item.getKey())) {
             metrics.put(item.getKey(), item);
         } else {
             MetricValue existing = metrics.get(item.getKey());
             // Add only the newer of the two items.
-            if (item.getClock() > existing.getClock()) {
+            if (existing != null && item.getClock() > existing.getClock()) {
                 metrics.put(item.getKey(), item);
             }
         }
