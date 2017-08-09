@@ -116,11 +116,11 @@ public class BestFitEnergyPredictor extends AbstractEnergyPredictor {
      * @return The best predictor for the host specified.
      */
     public EnergyPredictorInterface getBestFit(Host host) {
+        EnergyPredictorInterface answer = predictorMap.get(host);
         if (host.hasAccelerator() && host.isAcceleratorsCalibrated()) {
             predictorMap.put(host, acceleratorPredictor);
             return acceleratorPredictor;
-        }
-        EnergyPredictorInterface answer = predictorMap.get(host);
+        }        
         if (answer == null) {
             answer = getBestPredictor(host, predictors);
             predictorMap.put(host, answer);
