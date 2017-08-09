@@ -459,14 +459,15 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
      *
      * @param applications The list of all applications
      * @param name The name of the application
-     * @param id The unique id of the application
+     * @param id The unique id of the application's instance, if this is less than
+     * 0 then the value is ignored from the filtering.
      * @return The list of applications on host instances for a named
      * application
      */
     public static List<ApplicationOnHost> filter(List<ApplicationOnHost> applications, String name, int id) {
         List<ApplicationOnHost> answer = new ArrayList<>();
         for (ApplicationOnHost application : applications) {
-            if (application.getName().equals(name) && application.getId() == id) {
+            if (application.getName().equals(name) && (application.getId() == id || id < 0)) {
                 answer.add(application);
             }
         }
