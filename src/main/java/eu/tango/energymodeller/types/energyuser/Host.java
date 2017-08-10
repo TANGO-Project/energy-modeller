@@ -305,8 +305,11 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * @return true if calibration data exists for this host.
      */
     public boolean isAcceleratorsCalibrated() {
-        boolean answer = hasAccelerator();
-        for (Accelerator accelerator : accelerators) {
+        if (!hasAccelerator()) {
+            return false;
+        }
+        boolean answer = true;
+            for (Accelerator accelerator : accelerators) {
             answer = answer && accelerator.isCalibrated();
         }
         return answer;

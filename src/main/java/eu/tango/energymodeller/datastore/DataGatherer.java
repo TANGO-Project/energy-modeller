@@ -18,20 +18,17 @@
  */
 package eu.tango.energymodeller.datastore;
 
-import eu.ascetic.ioutils.io.ResultsStore;
 import eu.tango.energymodeller.datasourceclient.ApplicationDataSource;
 import eu.tango.energymodeller.datasourceclient.ApplicationMeasurement;
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
 import eu.tango.energymodeller.datasourceclient.HostMeasurement;
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyShareRule;
-import eu.tango.energymodeller.types.energyuser.Accelerator;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
-import eu.tango.energymodeller.types.energyuser.usage.HostAcceleratorCalibrationData;
 import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import java.io.File;
 import java.util.ArrayList;
@@ -424,70 +421,6 @@ public class DataGatherer implements Runnable {
     }
 
     /**
-     * This gets the calibration data that indicates the performance properties
-     * of a given set of host machines accelerators.
-     *
-     * @param hosts The set of hosts to get the data for.
-     * @return The calibration data for the named hosts.
-     */
-    public Collection<Host> getHostsAcceleratorCalibrationData(Collection<Host> hosts) {
-        for (Host host : hosts) {
-            host = getHostsAcceleratorCalibrationData(host);
-        }
-        return hosts;
-    }
-
-    /**
-     * This gets the calibration data that indicates the performance properties
-     * of a given host machine's accelerators.
-     *
-     * @param host The host to get the data for.
-     * @return The host with its calibration data defined.
-     */
-    public Host getHostsAcceleratorCalibrationData(Host host) {
-        //If the host is already calibrated do nothing
-        if (host.isAcceleratorsCalibrated()) {
-            return host;
-        }
-        /**
-         * Once the query to get host data has been called once i.e.
-         * HostMeasurement measurement = datasource.getHostData(host); then the
-         * host should have its accelerator data present
-         */
-        for (Accelerator accelerator : host.getAccelerators()) {
-            ResultsStore store = new ResultsStore(new File("./" + accelerator.getName() + ".csv"));
-            ArrayList<HostAcceleratorCalibrationData> calibrationData = new ArrayList<>();
-            /**
-             * The last column is expected to represent power consumption (the
-             * target of any model). The other columns are arbitrary and needed
-             * to build up the model. An individual energy modeller should
-             * understand the parameters.
-             */
-            if (new File("./" + accelerator.getName() + ".csv").exists()) {
-                store.load();
-                ArrayList<String> header = store.getRow(0);
-                for (int i = 1; i < store.size(); i++) {
-                    HashMap<String, Double> metrics = new HashMap<>(); 
-                    ArrayList<String> currentRow = store.getRow(i);
-                    int metricIndex = 0;
-                    for (String item : currentRow) {
-                        metrics.put(header.get(metricIndex), Double.parseDouble(item));
-                        metricIndex = metricIndex +1;
-                    }
-                    calibrationData.add(new HostAcceleratorCalibrationData(
-                            accelerator.getName(),
-                            metrics,
-                            Double.parseDouble(currentRow.get(currentRow.size() - 1))));
-                    store.getRow(i);
-
-                }
-                accelerator.setAcceleratorCalibrationData(calibrationData);
-            }
-        }
-        return host;
-    }
-
-    /**
      * The hash map gives a faster way to find a specific host. This converts
      * from a raw list of hosts into the indexed structure.
      *
@@ -550,7 +483,7 @@ public class DataGatherer implements Runnable {
             host = database.getHostProfileData(host);
         }
         if (host.hasAccelerator() && !host.isAcceleratorsCalibrated()) {
-            getHostsAcceleratorCalibrationData(host);
+            AcceleratorCalibrationDataLoader.getHostsAcceleratorCalibrationData(host);
         }
         return host;
     }

@@ -19,9 +19,13 @@
 package eu.tango.energymodeller.datastore;
 
 import eu.ascetic.ioutils.io.ResultsStore;
+import eu.tango.energymodeller.types.energyuser.Host;
+import eu.tango.energymodeller.types.energyuser.Accelerator;
+import eu.tango.energymodeller.types.energyuser.usage.HostAcceleratorCalibrationData;
 import java.util.HashMap;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This normalises a csv files input so that it can be used for calibrating a
@@ -179,5 +183,69 @@ public class AcceleratorCalibrationDataLoader extends ResultsStore {
         //denormalising is: (((normalised + 1) / 2) * range) + min = denormalied
         return (((value + 1) / 2) * range) + 1;         
     }
+    
+    /**
+     * This gets the calibration data that indicates the performance properties
+     * of a given host machine's accelerators.
+     *
+     * @param hosts The host to get the data for.
+     * @return The host with its calibration data defined.
+     */
+    public static List<Host> getHostsAcceleratorCalibrationData(List<Host> hosts) {  
+        for (Host host : hosts) {
+            getHostsAcceleratorCalibrationData(host);
+        }
+        return hosts;
+    }
+
+    /**
+     * This gets the calibration data that indicates the performance properties
+     * of a given host machine's accelerators.
+     *
+     * @param host The host to get the data for.
+     * @return The host with its calibration data defined.
+     */
+    public static Host getHostsAcceleratorCalibrationData(Host host) {
+        //If the host is already calibrated do nothing
+        if (host.isAcceleratorsCalibrated()) {
+            return host;
+        }
+        /**
+         * Once the query to get host data has been called once i.e.
+         * HostMeasurement measurement = datasource.getHostData(host); then the
+         * host should have its accelerator data present
+         */
+        for (Accelerator accelerator : host.getAccelerators()) {
+            ResultsStore store = new ResultsStore(new File("./" + accelerator.getName() + ".csv"));
+            ArrayList<HostAcceleratorCalibrationData> calibrationData = new ArrayList<>();
+            /**
+             * The last column is expected to represent power consumption (the
+             * target of any model). The other columns are arbitrary and needed
+             * to build up the model. An individual energy modeller should
+             * understand the parameters.
+             */
+            if (new File("./" + accelerator.getName() + ".csv").exists()) {
+                store.load();
+                ArrayList<String> header = store.getRow(0);
+                for (int i = 1; i < store.size(); i++) {
+                    HashMap<String, Double> metrics = new HashMap<>(); 
+                    ArrayList<String> currentRow = store.getRow(i);
+                    int metricIndex = 0;
+                    for (String item : currentRow) {
+                        metrics.put(header.get(metricIndex), Double.parseDouble(item));
+                        metricIndex = metricIndex +1;
+                    }
+                    calibrationData.add(new HostAcceleratorCalibrationData(
+                            accelerator.getName(),
+                            metrics,
+                            Double.parseDouble(currentRow.get(currentRow.size() - 1))));
+                    store.getRow(i);
+
+                }
+                accelerator.setAcceleratorCalibrationData(calibrationData);
+            }
+        }
+        return host;
+    }    
 
 }
