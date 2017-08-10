@@ -131,7 +131,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
     @Override
     public String toString() {
         return "HostID: " + id + " Host Name: " + hostName + " Available :" + available  
-                + " Has Accelerator: " + hasAccelerator() + " is ACC Calibrated: " + isAcceleratorsCalibrated();
+                + " Has Accelerator: " + " Has GPU: " + hasGpu() + "Has MIC: " + hasMic() + hasAccelerator() + " is ACC Calibrated: " + isAcceleratorsCalibrated();
     }
 
     @Override
