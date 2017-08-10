@@ -142,7 +142,7 @@ public class BestFitEnergyPredictor extends AbstractEnergyPredictor {
      */
     @Override
     public void printFitInformation(Host host) {
-        System.out.println("Using the " + AbstractEnergyPredictor.getBestPredictor(host, predictors).toString());
+        System.out.println("Using the " + getBestFit(host).toString());
         System.out.println("Linear - SSE: " + linear.getSumOfSquareError(host) + " RMSE: " + linear.getRootMeanSquareError(host));
         System.out.println("Polynomial - SSE: " + polynomial.getSumOfSquareError(host) + " RMSE: " + polynomial.getRootMeanSquareError(host));
         System.out.println("Polynomial Spline - SSE: " + splinePolynomial.getSumOfSquareError(host) + " RMSE: " + splinePolynomial.getRootMeanSquareError(host));
