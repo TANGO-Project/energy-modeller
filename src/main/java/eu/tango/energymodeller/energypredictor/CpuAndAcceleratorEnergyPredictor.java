@@ -187,9 +187,9 @@ public class CpuAndAcceleratorEnergyPredictor extends AbstractEnergyPredictor {
         PolynomialFunction cpuModel = retrieveCpuModel(host).getFunction();
         double powerUsed = cpuModel.value(usageCPU);
         //TODO fix the accelerator usage to mutliple accelerator mapping issue.
-        for (Accelerator acc : host.getAccelerators()) {
-            NeuralNetFunction acceleratorModel = retrieveAcceleratorModel(host, acc.getName()).getFunction();
-            powerUsed = powerUsed + acceleratorModel.value(accUsage.get(acc));
+        for (Accelerator accelerator : host.getAccelerators()) {
+            NeuralNetFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
+            powerUsed = powerUsed + acceleratorModel.value(accUsage.get(accelerator));
         }
         answer.setAvgPowerUsed(powerUsed);
         answer.setTotalEnergyUsed(powerUsed * ((double) TimeUnit.SECONDS.toHours(timePeriod.getDuration())));

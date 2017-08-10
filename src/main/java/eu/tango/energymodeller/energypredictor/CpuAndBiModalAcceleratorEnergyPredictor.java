@@ -108,9 +108,9 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
     public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> workload, TimePeriod duration) {
         EnergyUsagePrediction wattsUsed;
         if (getDefaultAssumedCpuUsage() == -1) {
-            wattsUsed = predictTotalEnergy(host, getCpuUtilisation(host, workload), new HashMap(), duration);
+            wattsUsed = predictTotalEnergy(host, getCpuUtilisation(host, workload), getAcceleratorUtilisation(host, workload), duration);
         } else {
-            wattsUsed = predictTotalEnergy(host, getDefaultAssumedCpuUsage(), new HashMap(), duration);
+            wattsUsed = predictTotalEnergy(host, getDefaultAssumedCpuUsage(), getAcceleratorUtilisation(host, workload), duration);
         }
         return wattsUsed;
     }
@@ -130,9 +130,9 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         EnergyDivision division = getEnergyUsageForVMs(host, virtualMachines);
         EnergyUsagePrediction hostAnswer;
         if (getDefaultAssumedCpuUsage() == -1) {
-            hostAnswer = predictTotalEnergy(host, getCpuUtilisation(host, VM.castToWorkloadSource(virtualMachines)), new HashMap(), timePeriod);
+            hostAnswer = predictTotalEnergy(host, getCpuUtilisation(host, VM.castToWorkloadSource(virtualMachines)), getAcceleratorUtilisation(host, VM.castToWorkloadSource(virtualMachines)), timePeriod);
         } else {
-            hostAnswer = predictTotalEnergy(host, getDefaultAssumedCpuUsage(), new HashMap(), timePeriod);
+            hostAnswer = predictTotalEnergy(host, getDefaultAssumedCpuUsage(), getAcceleratorUtilisation(host, VM.castToWorkloadSource(virtualMachines)), timePeriod);
         }
         hostAnswer.setAvgPowerUsed(hostAnswer.getTotalEnergyUsed()
                 / ((double) TimeUnit.SECONDS.toHours(timePeriod.getDuration())));
@@ -155,9 +155,9 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         EnergyDivision division = getEnergyUsageForApps(host, apps);
         EnergyUsagePrediction hostAnswer;
         if (getDefaultAssumedCpuUsage() == -1) {
-            hostAnswer = predictTotalEnergy(host, getCpuUtilisation(host, ApplicationOnHost.castToWorkloadSource(apps)), new HashMap(), timePeriod);
+            hostAnswer = predictTotalEnergy(host, getCpuUtilisation(host, ApplicationOnHost.castToWorkloadSource(apps)), getAcceleratorUtilisation(host, null), timePeriod);
         } else {
-            hostAnswer = predictTotalEnergy(host, getDefaultAssumedCpuUsage(), new HashMap(), timePeriod);
+            hostAnswer = predictTotalEnergy(host, getDefaultAssumedCpuUsage(), getAcceleratorUtilisation(host, null), timePeriod);
         }
         hostAnswer.setAvgPowerUsed(hostAnswer.getTotalEnergyUsed()
                 / ((double) TimeUnit.SECONDS.toHours(timePeriod.getDuration())));
@@ -184,7 +184,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      * @param timePeriod The time period the prediction is for
      * @return The predicted energy usage.
      */
-    public EnergyUsagePrediction predictTotalEnergy(Host host, double usageCPU, HashMap<String, Double> accUsage, TimePeriod timePeriod) {
+        //TODO fix the accelerator usage to mutliple accelerator mapping issue.
         EnergyUsagePrediction answer = new EnergyUsagePrediction(host);
         PolynomialFunction cpuModel = retrieveCpuModel(host).getFunction();
         double powerUsed = cpuModel.value(usageCPU);
@@ -395,7 +395,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      * @param observed The actual set of observed points
      * @return The sum of the square error.
      */
-    private double getSumOfSquareError(GroupingFunction function, List<WeightedObservedPoint> observed) {
+    private double getSumOfSquareError(PolynomialFunction function, List<WeightedObservedPoint> observed) {
         double answer = 0;
         for (WeightedObservedPoint current : observed) {
             double error = current.getY() - function.value(current.getX());
@@ -403,6 +403,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         }
         return answer;
     }
+    
 
     /**
      * This performs a calculation to determine how close the fit is for a given
@@ -412,14 +413,14 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      * @param observed The actual set of observed points
      * @return The sum of the square error.
      */
-    private double getSumOfSquareError(PolynomialFunction function, List<WeightedObservedPoint> observed) {
+    private double getSumOfSquareError(GroupingFunction function, List<WeightedObservedPoint> observed) {
         double answer = 0;
         for (WeightedObservedPoint current : observed) {
             double error = current.getY() - function.value(current.getX());
             answer = answer + (error * error);
         }
         return answer;
-    }
+    }    
 
     /**
      * This calculates the root means square error
