@@ -12,9 +12,9 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * This is being developed for the TANGO Project: http://tango-project.eu
- * 
+ *
  */
 package eu.tango.energymodeller.energypredictor;
 
@@ -32,8 +32,8 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 /**
  * This predictor automatically selects between a polynomial or linear
  * predictor, based upon the CPU value only. It uses sum of the root mean square
- * error to determine which option is best. In the event an accelerator is in use
- * it automatically switches to a predictor that is suitable.
+ * error to determine which option is best. In the event an accelerator is in
+ * use it automatically switches to a predictor that is suitable.
  *
  * @author Richard Kavanagh
  */
@@ -60,9 +60,10 @@ public class BestFitEnergyPredictor extends AbstractEnergyPredictor {
         predictors.add(splinePolynomial);
         predictors.add(acceleratorPredictor);
     }
-    
+
     /**
      * This creates a new Best fit energy predictor
+     *
      * @param config The config to use in order to create the abstract energy
      * predictor.
      */
@@ -75,8 +76,8 @@ public class BestFitEnergyPredictor extends AbstractEnergyPredictor {
         predictors.add(linear);
         predictors.add(polynomial);
         predictors.add(splinePolynomial);
-        predictors.add(acceleratorPredictor);        
-    }    
+        predictors.add(acceleratorPredictor);
+    }
 
     @Override
     public EnergyUsagePrediction getHostPredictedEnergy(Host host, Collection<WorkloadSource> workload, TimePeriod timePeriod) {
@@ -117,11 +118,11 @@ public class BestFitEnergyPredictor extends AbstractEnergyPredictor {
      */
     public EnergyPredictorInterface getBestFit(Host host) {
         EnergyPredictorInterface answer = predictorMap.get(host);
-        if (host.hasAccelerator() && host.isAcceleratorsCalibrated()) {
-            predictorMap.put(host, acceleratorPredictor);
-            return acceleratorPredictor;
-        }        
         if (answer == null) {
+            if (host.hasAccelerator() && host.isAcceleratorsCalibrated()) {
+                predictorMap.put(host, acceleratorPredictor);
+                return acceleratorPredictor;
+            }
             answer = getBestPredictor(host, predictors);
             predictorMap.put(host, answer);
         }
