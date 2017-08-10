@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This normalises a csv files input so that it can be used for calibrating a
@@ -243,6 +245,8 @@ public class AcceleratorCalibrationDataLoader extends ResultsStore {
 
                 }
                 accelerator.setAcceleratorCalibrationData(calibrationData);
+            } else {
+                Logger.getLogger(AcceleratorCalibrationDataLoader.class.getName()).log(Level.WARNING, "Acceleration data for {0} was not found!", accelerator.getName());
             }
         }
         return host;
