@@ -184,13 +184,14 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      * @param timePeriod The time period the prediction is for
      * @return The predicted energy usage.
      */
-        //TODO fix the accelerator usage to mutliple accelerator mapping issue.
+    public EnergyUsagePrediction predictTotalEnergy(Host host, double usageCPU, HashMap<Accelerator,HashMap<String, Double>> accUsage, TimePeriod timePeriod) {
         EnergyUsagePrediction answer = new EnergyUsagePrediction(host);
         PolynomialFunction cpuModel = retrieveCpuModel(host).getFunction();
         double powerUsed = cpuModel.value(usageCPU);
+        //TODO fix the accelerator usage to mutliple accelerator mapping issue.
         for (Accelerator accelerator : host.getAccelerators()) {
             GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-            powerUsed = powerUsed + acceleratorModel.value(getAcceleratorClockRate(host, accelerator));
+            powerUsed = powerUsed + acceleratorModel.value(getAcceleratorClockRate(host, accelerator, accUsage));
         }
         answer.setAvgPowerUsed(powerUsed);
         answer.setTotalEnergyUsed(powerUsed * ((double) TimeUnit.SECONDS.toHours(timePeriod.getDuration())));
@@ -224,7 +225,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         }
         return power;
     }
-    
+ 
     /**
      * This provides an average of the recent CPU utilisation for a given host,
      * based upon the CPU utilisation time window set for the energy predictor.
@@ -236,8 +237,28 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      * predictor's configured observation window.
      */
     protected double getAcceleratorClockRate(Host host,Accelerator accelerator) {
+        return getAcceleratorClockRate(host, accelerator, null);
+    }        
+    
+    /**
+     * This provides an average of the recent CPU utilisation for a given host,
+     * based upon the CPU utilisation time window set for the energy predictor.
+     *
+     * @param host The host for which the average CPU utilisation over the last
+     * n seconds will be calculated for.
+     * @param accelerator The accelerator to get the information for
+     * @param accUsage The representation of the accelerators workload
+     * @return The average recent CPU utilisation based upon the energy
+     * predictor's configured observation window.
+     */
+    protected double getAcceleratorClockRate(Host host,Accelerator accelerator, HashMap<Accelerator,HashMap<String, Double>> accUsage) {
         double answer = 0.0;
-        HashMap<String,Double> values = getAcceleratorUtilisation(host, null).get(accelerator);
+        HashMap<String,Double> values;
+        if (accUsage == null) {
+            values = getAcceleratorUtilisation(host, null).get(accelerator);
+        } else {
+            values = accUsage.get(accelerator);
+        }
         if (values.containsKey("clocks.current.sm [MHz]")) {
             answer = values.get("clocks.current.sm [MHz]");
         }
@@ -404,7 +425,6 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         return answer;
     }
     
-
     /**
      * This performs a calculation to determine how close the fit is for a given
      * model.
@@ -460,7 +480,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
 
     @Override
     public String toString() {
-        return "CPU (polynomial) and accelerator (bimodal) energy predictor";
+        return "CPU (polynomial) and Accelerator (bimodal) energy predictor";
     }
 
 }
