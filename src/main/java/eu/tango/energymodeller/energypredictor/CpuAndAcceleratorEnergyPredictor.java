@@ -208,13 +208,13 @@ public class CpuAndAcceleratorEnergyPredictor extends AbstractEnergyPredictor {
     public double predictPowerUsed(Host host) {
         PolynomialFunction cpuModel = retrieveCpuModel(host).getFunction();
         if (getDefaultAssumedCpuUsage() == -1) {
-            double answer;
-            answer = cpuModel.value(getCpuUtilisation(host));
-            for (Accelerator acc : host.getAccelerators()) {
-                NeuralNetFunction accModel = retrieveAcceleratorModel(host, acc.getName()).getFunction();
-                accModel.value(getAcceleratorUtilisation(host, null).get(acc));
+            double power;
+            power = cpuModel.value(getCpuUtilisation(host));
+            for (Accelerator accelerator : host.getAccelerators()) {
+                NeuralNetFunction accModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
+                accModel.value(getAcceleratorUtilisation(host, null).get(accelerator));
             }
-            return answer;
+            return power;
         } else {
             //TODO consider if this assumption is valid or not
             //Assume no accelerator usage, given no suitable input into model
