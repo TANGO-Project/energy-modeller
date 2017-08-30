@@ -34,8 +34,11 @@ import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.influxdb.dto.BatchPoints;
+import org.influxdb.dto.Point;
 
 /**
  * This data source adaptor connects directly into a collectd database.
@@ -112,7 +115,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         HashMap<String, Host> knownHosts = getHostListAsHashMap();
         return new ArrayList<>(knownHosts.values());
     }
-    
+
     private HashMap<String, Host> getHostListAsHashMap() {
         HashMap<String, Host> knownHosts = new HashMap<>();
         QueryResult results = runQuery("SHOW TAG VALUES WITH KEY=host;");
@@ -128,7 +131,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
             }
         }
         return knownHosts;
-    }    
+    }
 
     @Override
     public List<EnergyUsageSource> getHostAndVmList() {
@@ -177,7 +180,9 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
     }
 
     /**
-     * This takes a query result from the data source and converts it into a host measurement.
+     * This takes a query result from the data source and converts it into a
+     * host measurement.
+     *
      * @param host The host to convert the data for
      * @param results THe result set to convert the data for
      * @return The host measurement
@@ -207,14 +212,15 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                         answer.addMetric(estimatedPower);
                     }
                     /**
-                     * This counts up all power consumed and reported by the monitoring infrastructure usually in the format:
+                     * This counts up all power consumed and reported by the
+                     * monitoring infrastructure usually in the format:
                      * monitoring_value:0:nvidia (i.e. card 1)
                      * monitoring_value:1:nvidia (and card 2)
                      */
                     try {
                         if (metricName.contains("monitoring_value:")) {
                             acceleratorPowerUsed = acceleratorPowerUsed + Double.parseDouble(value.get(1).toString());
-                        }    
+                        }
                     } catch (NumberFormatException ex) {
                         Logger.getLogger(CollectDInfluxDbDataSourceAdaptor.class.getName()).log(Level.WARNING, "Parsing input from collectd failed", ex);
                     }
@@ -228,7 +234,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         }
         if (acceleratorPowerUsed > 0) {
             MetricValue metric = new MetricValue(KpiList.ACCELERATOR_POWER_USED, KpiList.ACCELERATOR_POWER_USED, Double.toString(acceleratorPowerUsed), answer.getClock());
-            answer.addMetric(metric);    
+            answer.addMetric(metric);
         }
         return answer;
     }
@@ -296,7 +302,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         QueryResult results = runQuery("SELECT max(value) FROM power_value WHERE host = '" + host.getHostName() + "';");
         return getSingleValueOut(results);
     }
- 
+
     @Override
     public double getCpuUtilisation(Host host, int durationSeconds) {
         /**
@@ -313,7 +319,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         answer.setScale(2, BigDecimal.ROUND_HALF_UP);
         return answer.doubleValue();
     }
-    
+
     /**
      * This checks to see if the returned result is empty or not
      * @param results The query result to test for emptiness
@@ -329,7 +335,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         }
         QueryResult.Series series = result.getSeries().get(0);
         return (series.getValues() == null || series.getValues().isEmpty());
-    }    
+    }
 
     /**
      * This parses the result of a query that provides a single result.
@@ -348,13 +354,14 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         QueryResult.Series series = result.getSeries().get(0);
         if (series.getValues() == null || series.getValues().isEmpty()) {
             return 0.0;
-        }        
+        }
         List<Object> value = series.getValues().get(0);
         return (Double) value.get(1);
     }
 
     /**
-     * This parses the result of a query that provides the average (such as for CPU utilisation).
+     * This parses the result of a query that provides the average (such as for
+     * CPU utilisation).
      *
      * @param results The result object to parse
      * @return The average value returned from the query.
@@ -389,4 +396,28 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         Query query = new Query(queryStr, dbName);
         return influxDB.query(query);
     }
+
+    /**
+     * This writes the log data out directly to influx db
+     * @param app The application to write the data out for
+     * @param power The power consumption information to write out
+     */
+    public void writeOutApplicationValuesToInflux(ApplicationOnHost app, double power) {
+
+        BatchPoints batchPoints = BatchPoints
+                .database(dbName)
+                .tag("async", "true")
+                .consistency(InfluxDB.ConsistencyLevel.ALL)
+                .build();
+        Point dataPoint = Point.measurement("app_power")
+                .tag("type_instance", app.getName())
+                .tag("type", app.getId() + "")
+                .tag("host", app.getAllocatedTo().getHostName() + ".bullx") //TODO Note fix here copes with name differences between sources.
+                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                .addField("value", power)
+                .build();
+        batchPoints.point(dataPoint);
+        influxDB.write(batchPoints);
+    }
+
 }

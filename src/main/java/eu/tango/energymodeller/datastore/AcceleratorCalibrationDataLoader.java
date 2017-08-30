@@ -25,6 +25,7 @@ import eu.tango.energymodeller.types.energyuser.usage.HostAcceleratorCalibration
 import java.util.HashMap;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -193,7 +194,7 @@ public class AcceleratorCalibrationDataLoader extends ResultsStore {
      * @param hosts The host to get the data for.
      * @return The host with its calibration data defined.
      */
-    public static List<Host> getHostsAcceleratorCalibrationData(List<Host> hosts) {  
+    public static synchronized List<Host> getHostsAcceleratorCalibrationData(List<Host> hosts) {  
         for (Host host : hosts) {
             getHostsAcceleratorCalibrationData(host);
         }
@@ -207,7 +208,7 @@ public class AcceleratorCalibrationDataLoader extends ResultsStore {
      * @param host The host to get the data for.
      * @return The host with its calibration data defined.
      */
-    public static Host getHostsAcceleratorCalibrationData(Host host) {
+    public static synchronized Host getHostsAcceleratorCalibrationData(Host host) {
         //If the host is already calibrated do nothing
         if (host.isAcceleratorsCalibrated()) {
             return host;
@@ -217,7 +218,7 @@ public class AcceleratorCalibrationDataLoader extends ResultsStore {
          * HostMeasurement measurement = datasource.getHostData(host); then the
          * host should have its accelerator data present
          */
-        for (Accelerator accelerator : host.getAccelerators()) {
+        for (Accelerator accelerator : (HashSet<Accelerator>) host.getAccelerators().clone()) {
             ResultsStore store = new ResultsStore(new File("./" + accelerator.getName() + ".csv"));
             ArrayList<HostAcceleratorCalibrationData> calibrationData = new ArrayList<>();
             /**

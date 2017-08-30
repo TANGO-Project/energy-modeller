@@ -17,6 +17,7 @@ package eu.tango.energymodeller.datastore;
 
 import eu.ascetic.ioutils.io.GenericLogger;
 import eu.ascetic.ioutils.io.ResultsStore;
+import eu.tango.energymodeller.datasourceclient.CollectDInfluxDbDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.HostMeasurement;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyDivision;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyShareRule;
@@ -40,6 +41,7 @@ public class ApplicationEnergyUsageLogger extends GenericLogger<ApplicationEnerg
 
     private EnergyShareRule rule = new LoadFractionShareRule();
     private boolean considerIdleEnergy = true;
+    private CollectDInfluxDbDataSourceAdaptor writeAdaptor = new CollectDInfluxDbDataSourceAdaptor();
 
     /**
      * This creates a new application energy user logger
@@ -93,7 +95,9 @@ public class ApplicationEnergyUsageLogger extends GenericLogger<ApplicationEnerg
             if (!Double.isNaN(powerVal) && powerVal > 0) {
                 store.add("APP:" + app.getName() + ":" + app.getId() + ":" + app.getAllocatedTo().getHostName());
                 store.append("power");
-                store.append(powerVal);           
+                store.append(powerVal);
+                writeAdaptor.writeOutApplicationValuesToInflux(app, powerVal);
+                
             }
         }
     }
