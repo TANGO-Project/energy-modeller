@@ -403,6 +403,17 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
      * @param power The power consumption information to write out
      */
     public void writeOutHostValuesToInflux(Host host, double power) {
+        writeOutHostValuesToInflux(host, power, false);
+    }
+    
+    /**
+     * This writes the log data out directly to influx db
+     * @param host The host to write the data out for
+     * @param power The power consumption information to write out
+     * @param estimated indicates if the power consumption is estimated or if
+     * they derive from actual measurement
+     */
+    public void writeOutHostValuesToInflux(Host host, double power, boolean estimated) {
 
         BatchPoints batchPoints = BatchPoints
                 .database(dbName)
@@ -410,7 +421,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                 .consistency(InfluxDB.ConsistencyLevel.ALL)
                 .build();
         Point dataPoint = Point.measurement("power_value")
-                .tag("type_instance", "measured")
+                .tag("type_instance", (estimated? "estimated" : "measured"))
                 .tag("host", host.getHostName() + ".bullx") //TODO Note fix here copes with name differences between sources.
                 .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
                 .addField("value", power)

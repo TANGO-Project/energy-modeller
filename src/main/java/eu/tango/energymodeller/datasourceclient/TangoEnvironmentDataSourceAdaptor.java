@@ -233,6 +233,17 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource, Applic
      * This writes the log data out directly to influx db
      * @param host The host to write the data out for
      * @param power The power consumption information to write out
+     * @param estimated indicates if the power consumption is estimated or if
+     * they derive from actual measurement
+     */    
+    public void writeOutHostValuesToInflux(Host host, double power, boolean estimated) {
+        collectD.writeOutHostValuesToInflux(host, power, estimated);
+    }
+    
+    /**
+     * This writes the log data out directly to influx db
+     * @param host The host to write the data out for
+     * @param power The power consumption information to write out
      */
     public void writeOutHostValuesToInflux(Host host, double power) {
         collectD.writeOutHostValuesToInflux(host, power);
