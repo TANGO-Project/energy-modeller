@@ -18,12 +18,8 @@
  */
 package eu.tango.energymodeller.datasourceclient;
 
-import static eu.tango.energymodeller.datasourceclient.KpiList.ENERGY_KPI_NAME;
-import static eu.tango.energymodeller.datasourceclient.KpiList.ESTIMATED_POWER_KPI_NAME;
-import static eu.tango.energymodeller.datasourceclient.KpiList.POWER_KPI_NAME;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.Host;
-import java.util.List;
 
 /**
  * This represents a single snapshot of the data from a data source.

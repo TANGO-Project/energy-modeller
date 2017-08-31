@@ -428,6 +428,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
      * @param application The host to get the measurement data for.
      * @return The host measurement data
      */
+    @Override
     public ApplicationMeasurement getApplicationData(ApplicationOnHost application) {
         for (HostMeasurement measure : current.values()) {
             if (measure.getHost().getHostName().equals(application.getName())) {
@@ -445,6 +446,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
      *
      * @return A list of application measurements
      */
+    @Override
     public List<ApplicationMeasurement> getApplicationData() {
         List<ApplicationOnHost> apps = getHostApplicationList();
         ArrayList<ApplicationMeasurement> answer = new ArrayList<>();
@@ -469,6 +471,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
      * @param appList The list of applications to get the data from
      * @return A list of application measurements
      */
+    @Override
     public List<ApplicationMeasurement> getApplicationData(List<ApplicationOnHost> appList) {
         if (appList == null) {
             return getApplicationData();
