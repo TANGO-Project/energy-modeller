@@ -20,8 +20,10 @@ package eu.tango.energymodeller.datastore;
 
 import eu.tango.energymodeller.datasourceclient.ApplicationDataSource;
 import eu.tango.energymodeller.datasourceclient.ApplicationMeasurement;
+import eu.tango.energymodeller.datasourceclient.CollectDInfluxDbDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
 import eu.tango.energymodeller.datasourceclient.HostMeasurement;
+import eu.tango.energymodeller.datasourceclient.TangoEnvironmentDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyShareRule;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
@@ -371,6 +373,20 @@ public class DataGatherer implements Runnable {
                 energy = measurement.getEnergy();
             }
             database.writeHostHistoricData(host, measurement.getClock(), power, energy);
+            if (datasource instanceof TangoEnvironmentDataSourceAdaptor) {
+                /**
+                * The next line writes host power values. This helps demonstrate where 
+                * the application's power consumption derives from.
+                */                
+                ((TangoEnvironmentDataSourceAdaptor)datasource).writeOutHostValuesToInflux(host, measurement.getPower(true));
+            }
+            if (datasource instanceof CollectDInfluxDbDataSourceAdaptor) {
+                /**
+                * The next line writes host power values. This helps demonstrate where 
+                * the application's power consumption derives from.
+                */                
+                ((CollectDInfluxDbDataSourceAdaptor)datasource).writeOutHostValuesToInflux(host, measurement.getPower(true));
+            }            
             Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Obtaining list of vms on host {0}", host.getHostName());
             ArrayList<VmDeployed> vms = getVMsOnHost(host, vmList);
             if (!vms.isEmpty()) {

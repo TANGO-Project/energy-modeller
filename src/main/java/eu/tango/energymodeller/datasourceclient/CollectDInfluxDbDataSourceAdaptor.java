@@ -399,6 +399,28 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
 
     /**
      * This writes the log data out directly to influx db
+     * @param host The host to write the data out for
+     * @param power The power consumption information to write out
+     */
+    public void writeOutHostValuesToInflux(Host host, double power) {
+
+        BatchPoints batchPoints = BatchPoints
+                .database(dbName)
+                .tag("async", "true")
+                .consistency(InfluxDB.ConsistencyLevel.ALL)
+                .build();
+        Point dataPoint = Point.measurement("power_value")
+                .tag("type_instance", "measured")
+                .tag("host", host.getHostName() + ".bullx") //TODO Note fix here copes with name differences between sources.
+                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                .addField("value", power)
+                .build();
+        batchPoints.point(dataPoint);
+        influxDB.write(batchPoints);
+    }    
+    
+    /**
+     * This writes the log data out directly to influx db
      * @param app The application to write the data out for
      * @param power The power consumption information to write out
      */

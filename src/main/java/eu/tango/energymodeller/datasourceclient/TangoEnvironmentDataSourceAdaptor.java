@@ -228,5 +228,23 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource, Applic
     public List<ApplicationMeasurement> getApplicationData(List<ApplicationOnHost> appList) {
         return slurm.getApplicationData(appList);
     }
+    
+    /**
+     * This writes the log data out directly to influx db
+     * @param host The host to write the data out for
+     * @param power The power consumption information to write out
+     */
+    public void writeOutHostValuesToInflux(Host host, double power) {
+        collectD.writeOutHostValuesToInflux(host, power);
+    }    
+    
+    /**
+     * This writes the log data out directly to influx db
+     * @param app The application to write the data out for
+     * @param power The power consumption information to write out
+     */
+    public void writeOutApplicationValuesToInflux(ApplicationOnHost app, double power) {
+        collectD.writeOutApplicationValuesToInflux(app, power);
+    }    
 
 }
