@@ -197,6 +197,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
             if (result == null || result.getSeries() == null) {
                 return null;
             }
+            addCpuUtilisationInfo(answer, result);
             for (QueryResult.Series series : result.getSeries()) {
                 if (series == null || series.getValues() == null) {
                     return null;
@@ -210,7 +211,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                     if (metricName.equals("power_value:estimated:estimated")) {
                         MetricValue estimatedPower = new MetricValue(KpiList.ESTIMATED_POWER_KPI_NAME, KpiList.ESTIMATED_POWER_KPI_NAME, value.get(1).toString(), time.getEpochSecond());
                         answer.addMetric(estimatedPower);
-                    }
+                    }            
                     /**
                      * This counts up all power consumed and reported by the
                      * monitoring infrastructure usually in the format:
@@ -239,6 +240,39 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         return answer;
     }
 
+    /**
+     * This method appends to a host measurement cpu utilisation information.
+     * @param measurement The host measurement to append
+     * @param result The results that contain cpu utilisation information.
+     */
+    private HostMeasurement addCpuUtilisationInfo(HostMeasurement measurement, QueryResult.Result result) {
+        double count = 0;
+        double idleValue = 0;
+        Instant time = null;
+        for (QueryResult.Series series : result.getSeries()) {
+            for (List<Object> value : series.getValues()) {
+                time = Instant.parse((String) value.get(0));
+                String metricName = series.getName() + ":" + value.get(2);
+                if (value.size() == 4) {
+                    metricName = metricName + ":" + value.get(3);
+                }
+                if (metricName.contains("cpu_value:idle")) {
+                    count = count + 1;
+                    idleValue = idleValue + Double.parseDouble(value.get(1).toString());
+                }
+            }  
+        }
+        if (count > 0 && time != null) {
+            double idleMetricValue = idleValue / count;
+            idleMetricValue = idleMetricValue / 100; //make sure its in the range 0..1 instead of 0..100
+            MetricValue idle = new MetricValue(KpiList.CPU_IDLE_KPI_NAME, KpiList.CPU_IDLE_KPI_NAME, idleMetricValue + "", time.getEpochSecond());
+            measurement.addMetric(idle);
+            MetricValue spotCpu = new MetricValue(KpiList.CPU_SPOT_USAGE_KPI_NAME, KpiList.CPU_SPOT_USAGE_KPI_NAME, 1 - idleMetricValue + "", time.getEpochSecond());
+            measurement.addMetric(spotCpu);             
+        }
+        return measurement;
+    }
+    
     @Override
     public List<HostMeasurement> getHostData() {
         return getHostData(getHostList());
@@ -311,11 +345,11 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
          * "values":[["2015-06-06T14:55:27.195Z",90],["2015-06-06T14:56:24.556Z",90]]}]}]}
          * {"results":[{"series":[{"name":"databases","columns":["name"],"values":[["mydb"]]}]}]}
          */
-        QueryResult results = runQuery("SELECT mean(value) FROM cpu_value WHERE host = '" + host.getHostName() + "' AND type_instance = 'idle' AND time > now() - " + durationSeconds + "s");
+        QueryResult results = runQuery("SELECT mean(value) FROM cpu_value WHERE host = '" + host.getHostName() + "' AND type='percent' AND type_instance = 'idle' AND time > now() - " + durationSeconds + "s");
         if (isQueryResultEmpty(results)) {
             return 0.0; //Not enough data to know therefore assume zero usage.
         }
-        BigDecimal answer = BigDecimal.valueOf(1 - ((getAverage(results)) / 100));
+        BigDecimal answer = BigDecimal.valueOf(1 - getSingleValueOut(results) / 100d);
         answer.setScale(2, BigDecimal.ROUND_HALF_UP);
         return answer.doubleValue();
     }

@@ -128,7 +128,16 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource, Applic
                 answer = collectD.getHostData(collectDhost);
                 answer.setHost(host); //This ensures a collectD host is not leaked
             } else {
-                answer.addMetrics(collectD.getHostData(collectDhost));
+                HostMeasurement data = collectD.getHostData(collectDhost);
+                if (data.metricExists(KpiList.CPU_IDLE_KPI_NAME)) {
+                    //Ensure that collectd based measures of utilisation take precedence
+                    answer.deleteMetric(KpiList.CPU_IDLE_KPI_NAME);
+                    answer.deleteMetric(KpiList.CPU_SPOT_USAGE_KPI_NAME);                    
+                    answer.addMetric(data.getMetric(KpiList.CPU_IDLE_KPI_NAME));
+                    answer.addMetric(data.getMetric(KpiList.CPU_SPOT_USAGE_KPI_NAME));
+                }
+                answer.addMetrics(data);
+                
             }
         }
         return answer;

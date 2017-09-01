@@ -283,6 +283,20 @@ public abstract class Measurement {
             }
         }
     }
+    
+    /**
+     * This deletes a metric and value from a measurement.
+     *
+     * @param metricName a metric to delete from this measurement dataset
+     */
+    public void deleteMetric(String metricName) {
+        if (metricName == null) {
+           return; //Don't allow null metric values
+        }
+        if (!metrics.containsKey(metricName)) {
+            metrics.remove(metricName);
+        }
+    }
 
     /**
      * This adds several metrics and value to a measurement. 
