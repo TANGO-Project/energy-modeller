@@ -22,8 +22,8 @@ import eu.tango.energymodeller.datasourceclient.HostMeasurement;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyDivision;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyShareRule;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.LoadFractionShareRule;
-import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.usage.HostEnergyUserLoadFraction;
 import java.io.File;
 import java.math.BigDecimal;
@@ -41,7 +41,7 @@ public class ApplicationEnergyUsageLogger extends GenericLogger<ApplicationEnerg
 
     private EnergyShareRule rule = new LoadFractionShareRule();
     private boolean considerIdleEnergy = true;
-    private CollectDInfluxDbDataSourceAdaptor writeAdaptor = new CollectDInfluxDbDataSourceAdaptor();
+    private final CollectDInfluxDbDataSourceAdaptor writeAdaptor = new CollectDInfluxDbDataSourceAdaptor();
 
     /**
      * This creates a new application energy user logger
