@@ -174,7 +174,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                 listMeasurements = listMeasurements + ", " + measurement;
             }
         }
-        QueryResult results = runQuery("SELECT last(value),type_instance, instance FROM " + listMeasurements + " WHERE host = '" + host.getHostName() + "'  GROUP BY instance, type_instance;");
+        QueryResult results = runQuery("SELECT last(value),type_instance, instance, type FROM " + listMeasurements + " WHERE host = '" + host.getHostName() + "'  GROUP BY instance, type_instance, type;");
         answer = convertToHostMeasurement(host, results);
         return answer;
     }
@@ -208,15 +208,18 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                     if (value.size() == 4) {
                         metricName = metricName + ":" + value.get(3);
                     }
-                    if (metricName.equals("power_value:estimated:estimated")) {
+                    if (value.size() == 5) {
+                        metricName = metricName + ":" + value.get(4);
+                    }                    
+                    if (metricName.equals("power_value:estimated:power")) {
                         MetricValue estimatedPower = new MetricValue(KpiList.ESTIMATED_POWER_KPI_NAME, KpiList.ESTIMATED_POWER_KPI_NAME, value.get(1).toString(), time.getEpochSecond());
                         answer.addMetric(estimatedPower);
                     }            
                     /**
                      * This counts up all power consumed and reported by the
                      * monitoring infrastructure usually in the format:
-                     * monitoring_value:0:nvidia (i.e. card 1)
-                     * monitoring_value:1:nvidia (and card 2)
+                     * monitoring_value:0:nvidia:power (i.e. card 1)
+                     * monitoring_value:1:nvidia:power (and card 2)
                      */
                     try {
                         if (metricName.contains("monitoring_value:")) {
@@ -256,7 +259,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                 if (value.size() == 4) {
                     metricName = metricName + ":" + value.get(3);
                 }
-                if (metricName.contains("cpu_value:idle")) {
+                if (metricName.contains("cpu_value:idle:percent")) {
                     count = count + 1;
                     idleValue = idleValue + Double.parseDouble(value.get(1).toString());
                 }
@@ -457,6 +460,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         Point dataPoint = Point.measurement("power_value")
                 .tag("type_instance", (estimated? "estimated" : "measured"))
                 .tag("host", host.getHostName() + ".bullx") //TODO Note fix here copes with name differences between sources.
+                .tag("type", "power")
                 .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
                 .addField("value", power)
                 .build();
