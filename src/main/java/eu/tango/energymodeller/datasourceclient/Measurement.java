@@ -335,6 +335,25 @@ public abstract class Measurement {
     public MetricValue getMetric(String key) {
         return metrics.get(key);
     }
+    
+    /**
+     * This gets the item that represents a given metric
+     *
+     * @param key The key that is used to identify a given measurement
+     * @return The metric and its value that is identified by the key.
+     */    
+    public MetricValue getMetricByRegularExpression(String key) {
+        if (metrics.get(key) != null) {
+            return metrics.get(key);
+        }
+        Set<String> keys = metrics.keySet();
+        for (String currentKey : keys) {
+            if (currentKey.matches(key)) {
+                return metrics.get(currentKey);
+            }
+        }
+        return null;
+    }
 
     /**
      * This indicates if an item exits that represents a given metric
