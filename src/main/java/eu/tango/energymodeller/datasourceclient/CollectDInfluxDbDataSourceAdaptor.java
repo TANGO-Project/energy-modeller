@@ -206,11 +206,11 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                     Instant time = Instant.parse((String) value.get(0));
                     String metricName = series.getName() + ":" + value.get(2);
                     if (value.size() == 4) {
-                        metricName = metricName + ":" + value.get(3);
+                        metricName = metricName + ":" + (value.get(3) == null ? "" : value.get(3));
                     }
                     if (value.size() == 5) {
-                        metricName = metricName + ":" + value.get(4);
-                    }                    
+                        metricName = metricName + ":" + (value.get(4) == null ? "" : value.get(4));
+                    }                     
                     if (metricName.equals("power_value:estimated:power")) {
                         MetricValue estimatedPower = new MetricValue(KpiList.ESTIMATED_POWER_KPI_NAME, KpiList.ESTIMATED_POWER_KPI_NAME, value.get(1).toString(), time.getEpochSecond());
                         answer.addMetric(estimatedPower);
