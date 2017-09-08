@@ -20,8 +20,8 @@ package eu.tango.energymodeller.datasourceclient;
 
 import eu.ascetic.ioutils.io.Settings;
 import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_ALLOCATED_TO_HOST_COUNT;
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_AVERAGE_POWER;
 import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_RUNNING_ON_HOST_COUNT;
-import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_STATUS;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
@@ -570,7 +570,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
      * over its lifetime.
      * @param application The application to query. 
      */
-    public void getAverageAppPower(ApplicationOnHost application) {
+    public double getAverageAppPower(ApplicationOnHost application) {
         QueryResult results = runQuery("SELECT mean(value) WHERE host= '" + application.getAllocatedTo().getHostName() + "' AND type = '" + application.getId() + "' FROM app_power");
         if (isQueryResultEmpty(results)) {
             return 0.0; //Not enough data to know therefore assume zero usage.
@@ -586,7 +586,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
      * @param application The application to query.
      * @param hostname The hostname to query against, if null or empty runs against all hosts.
      */
-    public void getAverageAppPower(String applicationName, String hostname) {
+    public double getAverageAppPower(String applicationName, String hostname) {
         String hostQueryString = "";
         if (hostname != null && !hostname.isEmpty()) {
             hostQueryString = " AND host= '" + hostname + "' ";
