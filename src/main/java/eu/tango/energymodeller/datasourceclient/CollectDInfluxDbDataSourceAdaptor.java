@@ -154,8 +154,61 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
 
     @Override
     public List<ApplicationOnHost> getHostApplicationList(ApplicationOnHost.JOB_STATUS state) {
-        return new ArrayList<>();
+        /**
+         * Application power can list all applications that were running. It can therefore get the start and end times of any application as well.
+         * 
+         * A query such as: SELECT last(value), type, host, type_instance FROM 
+         * app_power WHERE time > now() - 30s GROUP BY type, host;
+         * 
+         * Followed by first on the selected applications. 
+         * 
+         * should be effective
+         */
+        List<ApplicationOnHost> answer;
+        QueryResult results = runQuery("SELECT last(value), type, host, type_instance FROM app_power WHERE time > now() - 30s GROUP BY type, host");
+        answer = convertToApplication(results);
+        return answer;
     }
+
+    /**
+     * This takes a query result from the data source and converts it into a
+     * host measurement.
+     *
+     * @param host The host to convert the data for
+     * @param results The result set to convert the data for
+     * @return The host measurement
+     */
+    private List<ApplicationOnHost> convertToApplication(QueryResult results) {
+        if (results == null) {
+            return null;
+        }
+        List<ApplicationOnHost> answer = new ArrayList<>();
+        for (QueryResult.Result result : results.getResults()) {
+            if (result == null || result.getSeries() == null) {
+                return null;
+            }
+            for (QueryResult.Series series : result.getSeries()) {
+                if (series == null || series.getValues() == null) {
+                    return null;
+                }
+                for (List<Object> value : series.getValues()) {
+                    /**
+                     * 
+                     * Example of metric: app_power:RK-Bench:3110
+                     * 
+                     * Clock, last(value), type, host, type_instance
+                     * Clock, 0.0, 3110, ns50, RK-BENCH
+                     * type_instance = app name
+                     * type = app id
+                     * 
+                     */
+                     ApplicationOnHost app = new ApplicationOnHost(Integer.getInteger(value.get(3) + ""), value.get(4) + "", getHostByName(value.get(3) + ""));
+                     answer.add(app);
+                }
+            }
+        }
+        return answer;
+    }    
 
     @Override
     public List<ApplicationOnHost> getHostApplicationList() {
@@ -491,4 +544,4 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         influxDB.write(batchPoints);
     }
     
-    }
+}
