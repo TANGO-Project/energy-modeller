@@ -68,6 +68,7 @@ public abstract class KpiList {
     public static final String APPS_ALLOCATED_TO_HOST_COUNT = "app_on_host_count";
     public static final String APPS_RUNNING_ON_HOST_COUNT = "app_on_host_count";
     public static final String APPS_STATUS = "application_status";
+    public static final String APPS_AVERAGE_POWER = "application_average_power";
     //accelerators
     public static final String ACCELERATOR_POWER_USED = "accelerator_power";    
     public static final String HAS_ACCELERATOR = "has_accelerator";

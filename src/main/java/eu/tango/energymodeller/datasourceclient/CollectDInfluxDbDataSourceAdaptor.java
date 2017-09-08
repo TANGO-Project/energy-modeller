@@ -560,9 +560,45 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
         //TODO change the assumption here regarding running applications
         //Must assume all applications are running, as can't get job status.
         answer.addMetric(new MetricValue(APPS_RUNNING_ON_HOST_COUNT, APPS_RUNNING_ON_HOST_COUNT, appsOnThisHost.size() + "", measure.getClock()));
-        //TODO add power consumption info? running energy for application??
+        answer.addMetric(new MetricValue(APPS_AVERAGE_POWER, APPS_AVERAGE_POWER, getAverageAppPower(application) + "", measure.getClock()));
+        //TODO add power consumption info? running energy for application?? or just utilisation information?? latter is best
         return answer;
     }
+    
+    /**
+     * This gets for a given application the average power that it consumes,
+     * over its lifetime.
+     * @param application The application to query. 
+     */
+    public void getAverageAppPower(ApplicationOnHost application) {
+        QueryResult results = runQuery("SELECT mean(value) WHERE host= '" + application.getAllocatedTo().getHostName() + "' AND type = '" + application.getId() + "' FROM app_power");
+        if (isQueryResultEmpty(results)) {
+            return 0.0; //Not enough data to know therefore assume zero usage.
+        }
+        BigDecimal answer = BigDecimal.valueOf(1 - getSingleValueOut(results) / 100d);
+        answer.setScale(2, BigDecimal.ROUND_HALF_UP);
+        return answer.doubleValue();                
+    }
+    
+    /**
+     * This gets for a given application the average power that it consumes,
+     * over its lifetime.
+     * @param application The application to query.
+     * @param hostname The hostname to query against, if null or empty runs against all hosts.
+     */
+    public void getAverageAppPower(String applicationName, String hostname) {
+        String hostQueryString = "";
+        if (hostname != null && !hostname.isEmpty()) {
+            hostQueryString = " AND host= '" + hostname + "' ";
+        }
+        QueryResult results = runQuery("SELECT mean(value) WHERE instance_type = '" + applicationName + "' " + hostQueryString + "FROM app_power");
+        if (isQueryResultEmpty(results)) {
+            return 0.0; //Not enough data to know therefore assume zero usage.
+        }
+        BigDecimal answer = BigDecimal.valueOf(1 - getSingleValueOut(results) / 100d);
+        answer.setScale(2, BigDecimal.ROUND_HALF_UP);
+        return answer.doubleValue();                
+    }    
 
     @Override
     public List<ApplicationMeasurement> getApplicationData() {
