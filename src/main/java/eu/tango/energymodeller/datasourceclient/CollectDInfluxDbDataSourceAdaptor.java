@@ -19,6 +19,9 @@
 package eu.tango.energymodeller.datasourceclient;
 
 import eu.ascetic.ioutils.io.Settings;
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_ALLOCATED_TO_HOST_COUNT;
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_RUNNING_ON_HOST_COUNT;
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_STATUS;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
 import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
@@ -45,7 +48,7 @@ import org.influxdb.dto.Point;
  *
  * @author Richard Kavanagh
  */
-public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
+public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, ApplicationDataSource {
 
     private final Settings settings = new Settings(CONFIG_FILE);
     private static final String CONFIG_FILE = "energy-modeller-influx-db-config.properties";
@@ -154,20 +157,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
 
     @Override
     public List<ApplicationOnHost> getHostApplicationList(ApplicationOnHost.JOB_STATUS state) {
-        /**
-         * Application power can list all applications that were running. It can therefore get the start and end times of any application as well.
-         * 
-         * A query such as: SELECT last(value), type, host, type_instance FROM 
-         * app_power WHERE time > now() - 30s GROUP BY type, host;
-         * 
-         * Followed by first on the selected applications. 
-         * 
-         * should be effective
-         */
-        List<ApplicationOnHost> answer;
-        QueryResult results = runQuery("SELECT last(value), type, host, type_instance FROM app_power WHERE time > now() - 30s GROUP BY type, host");
-        answer = convertToApplication(results);
-        return answer;
+        return getHostApplicationList(); //Can't detect job state through influx
     }
 
     /**
@@ -212,7 +202,20 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
 
     @Override
     public List<ApplicationOnHost> getHostApplicationList() {
-        return new ArrayList<>();
+        /**
+         * Application power can list all applications that were running. It can therefore get the start and end times of any application as well.
+         * 
+         * A query such as: SELECT last(value), type, host, type_instance FROM 
+         * app_power WHERE time > now() - 30s GROUP BY type, host;
+         * 
+         * Followed by first on the selected applications. 
+         * 
+         * should be effective
+         */
+        List<ApplicationOnHost> answer;
+        QueryResult results = runQuery("SELECT last(value), type, host, type_instance FROM app_power WHERE time > now() - 30s GROUP BY type, host");
+        answer = convertToApplication(results);
+        return answer;
     }
 
     @Override
@@ -542,6 +545,40 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                 .build();
         batchPoints.point(dataPoint);
         influxDB.write(batchPoints);
+    }
+    
+    @Override
+    public ApplicationMeasurement getApplicationData(ApplicationOnHost application) {
+        Host host = application.getAllocatedTo();
+        HostMeasurement measure = getHostData(host);
+        ApplicationMeasurement answer = new ApplicationMeasurement(
+            application,
+            measure.getClock());
+            answer.setMetrics(measure.getMetrics());
+        List<ApplicationOnHost> appsOnThisHost = ApplicationOnHost.filter(getHostApplicationList(), measure.getHost());
+        answer.addMetric(new MetricValue(APPS_ALLOCATED_TO_HOST_COUNT, APPS_ALLOCATED_TO_HOST_COUNT, appsOnThisHost.size() + "", measure.getClock()));
+        //TODO change the assumption here regarding running applications
+        //Must assume all applications are running, as can't get job status.
+        answer.addMetric(new MetricValue(APPS_RUNNING_ON_HOST_COUNT, APPS_RUNNING_ON_HOST_COUNT, appsOnThisHost.size() + "", measure.getClock()));
+        //TODO add power consumption info? running energy for application??
+        return answer;
+    }
+
+    @Override
+    public List<ApplicationMeasurement> getApplicationData() {
+        return getApplicationData(getHostApplicationList());
+    }
+
+    @Override
+    public List<ApplicationMeasurement> getApplicationData(List<ApplicationOnHost> appList) {
+        if (appList == null) {
+            return getApplicationData();
+        }
+        ArrayList<ApplicationMeasurement> answer = new ArrayList<>();
+        for (ApplicationOnHost app : appList) {
+            answer.add(getApplicationData(app));
+        }
+        return answer;
     }
     
 }
