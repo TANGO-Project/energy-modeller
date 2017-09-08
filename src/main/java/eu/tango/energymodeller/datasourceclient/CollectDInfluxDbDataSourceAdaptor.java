@@ -184,7 +184,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
      * host measurement.
      *
      * @param host The host to convert the data for
-     * @param results THe result set to convert the data for
+     * @param results The result set to convert the data for
      * @return The host measurement
      */
     private HostMeasurement convertToHostMeasurement(Host host, QueryResult results) {
@@ -218,11 +218,11 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
                     /**
                      * This counts up all power consumed and reported by the
                      * monitoring infrastructure usually in the format:
-                     * monitoring_value:0:nvidia:power (i.e. card 1)
-                     * monitoring_value:1:nvidia:power (and card 2)
+                     * nvidia_value:0:nvidia:power (i.e. card 1)
+                     * nvidia_value:1:nvidia:power (and card 2)
                      */
                     try {
-                        if (metricName.contains("monitoring_value:")) {
+                        if (metricName.contains("nvidia_value:")) {
                             acceleratorPowerUsed = acceleratorPowerUsed + Double.parseDouble(value.get(1).toString());
                         }
                     } catch (NumberFormatException ex) {
@@ -490,5 +490,5 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource {
         batchPoints.point(dataPoint);
         influxDB.write(batchPoints);
     }
-
-}
+    
+    }
