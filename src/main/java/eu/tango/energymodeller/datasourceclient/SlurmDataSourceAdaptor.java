@@ -430,15 +430,16 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
      */
     @Override
     public ApplicationMeasurement getApplicationData(ApplicationOnHost application) {
-        for (HostMeasurement measure : current.values()) {
-            if (measure.getHost().getHostName().equals(application.getName())) {
-                ApplicationMeasurement answer = new ApplicationMeasurement(application, measure.getClock());
-                answer.setMetrics(measure.getMetrics());
-                appendApplicationData(answer, measure);
-                return answer;
-            }
+        if (application == null) {
+            return null;
         }
-        return null;
+        HostMeasurement measure = current.get(application.getAllocatedTo().getHostName());
+        ApplicationMeasurement appData = new ApplicationMeasurement(
+            application,
+            measure.getClock());
+            appData.setMetrics(measure.getMetrics());
+            appendApplicationData(appData, measure);
+        return appData;
     }
 
     /**
@@ -448,20 +449,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
      */
     @Override
     public List<ApplicationMeasurement> getApplicationData() {
-        List<ApplicationOnHost> apps = getHostApplicationList();
-        ArrayList<ApplicationMeasurement> answer = new ArrayList<>();
-        for (HostMeasurement measure : current.values()) {
-            List<ApplicationOnHost> appsOnThisHost = ApplicationOnHost.filter(apps, measure.getHost());
-            for (ApplicationOnHost appOnThisHost : appsOnThisHost) {
-                ApplicationMeasurement appData = new ApplicationMeasurement(
-                        appOnThisHost,
-                        measure.getClock());
-                appData.setMetrics(measure.getMetrics());
-                appendApplicationData(appData, measure);
-                answer.add(appData);
-            }
-        }
-        return answer;
+        return getApplicationData(getHostApplicationList());
     }
 
     /**
@@ -474,22 +462,26 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
     @Override
     public List<ApplicationMeasurement> getApplicationData(List<ApplicationOnHost> appList) {
         if (appList == null) {
-            return getApplicationData();
+            appList = getHostApplicationList();
         }
         ArrayList<ApplicationMeasurement> answer = new ArrayList<>();
         for (ApplicationOnHost app : appList) {
-
-            HostMeasurement measure = current.get(app.getAllocatedTo().getHostName());
-            ApplicationMeasurement appData = new ApplicationMeasurement(
-                    app,
-                    measure.getClock());
-            appData.setMetrics(measure.getMetrics());
-            appendApplicationData(appData, measure);
-            answer.add(appData);
+            ApplicationMeasurement measurement = getApplicationData(app);
+            if (measurement != null) {
+                answer.add(measurement); 
+            }
         }
         return answer;
     }
 
+    /**
+     * This takes an application measurement and adds onto it the metrics for the 
+     * applications status, along with a count of applications both running and 
+     * allocated to the host
+     * @param appData The application specific data
+     * @param measure The host measurement to take the data from
+     * @return The application measurement with more data appended into it.
+     */
     private ApplicationMeasurement appendApplicationData(ApplicationMeasurement appData, HostMeasurement measure) {
         List<ApplicationOnHost> appsOnThisHost = ApplicationOnHost.filter(getHostApplicationList(), measure.getHost());
         List<ApplicationOnHost> appsRunningOnThisHost = getHostApplicationList(appsOnThisHost, JOB_STATUS.RUNNING);
