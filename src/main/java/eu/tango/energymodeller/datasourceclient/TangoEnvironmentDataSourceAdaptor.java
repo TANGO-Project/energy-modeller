@@ -120,6 +120,9 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource, Applic
 
     @Override
     public HostMeasurement getHostData(Host host) {
+        if (host == null) {
+            return null;
+        }
         HostMeasurement answer = slurm.getHostData(host);
         //Adds various information such as memory usage, including static upper bound values.
         Host collectDhost = convertNames(host);
@@ -157,6 +160,9 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource, Applic
 
     @Override
     public List<HostMeasurement> getHostData(List<Host> hostList) {
+        if (hostList == null) {
+            hostList = new ArrayList<>();
+        }
         List<HostMeasurement> answer = new ArrayList<>();
         for (Host host : hostList) {
             HostMeasurement measurement = getHostData(host);
