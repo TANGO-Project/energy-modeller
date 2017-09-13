@@ -259,16 +259,16 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
                     }
                     String name = items[1];
                     String status = items[3];
-                    long runningTime = parseDurationString(items[4]); //to parse into duration
-                    long maxRuntime = parseDurationString(items[5]); //to parse into duration
-                    long currentTime = System.currentTimeMillis();
-                    long startTime = currentTime - TimeUnit.SECONDS.toMillis(runningTime);
+                    long runningTime = parseDurationString(items[4]); //units seconds
+                    long maxRuntime = parseDurationString(items[5]); //units seconds
+                    long currentTime = System.currentTimeMillis(); //units milliseconds
+                    long startTime = currentTime - TimeUnit.SECONDS.toMillis(runningTime); //unit milliseconds
                     GregorianCalendar start = new GregorianCalendar();
                     GregorianCalendar deadline = null;
                     start.setTimeInMillis(startTime);
                     if (maxRuntime != 0) {
                         deadline = new GregorianCalendar();
-                        deadline.setTimeInMillis(TimeUnit.SECONDS.toMillis(startTime + maxRuntime));
+                        deadline.setTimeInMillis(startTime + TimeUnit.SECONDS.toMillis(maxRuntime));
                     }
                     ArrayList<String> hostStrings = getHostList(items[6]);
                     for (String hostStr : hostStrings) {
