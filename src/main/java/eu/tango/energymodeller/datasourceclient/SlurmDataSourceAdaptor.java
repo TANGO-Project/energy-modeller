@@ -304,7 +304,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
     public static long parseDurationString(String duration) {
         long seconds = 0;
         //If this is used to parse maximum runtime then the value may be UNLIMITED, thus this is guarded against
-        if (duration == null || duration.isEmpty() || !duration.matches("\\d+(:\\d+)*?")) {
+        if (duration == null || duration.isEmpty() || !duration.matches("\\d+(:\\d+)*?") || duration.equals("UNLIMITED")) {
             return 0;
         }
         String[] durationSplit = duration.split(":"); //0:03 i.e. mins:seconds or 1:0:0 i.e. 1 hour
