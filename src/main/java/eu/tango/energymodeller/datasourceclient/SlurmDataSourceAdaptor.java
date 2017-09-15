@@ -45,6 +45,7 @@ import java.util.logging.Logger;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListenerAdapter;
+
 /**
  * This requests information for SLURM via the command "scontrol show node="
  *
@@ -301,13 +302,26 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
      * @return The time in seconds the duration string translates to.
      */
     public static long parseDurationString(String duration) {
-        if (duration == null || duration.isEmpty()) {
+        long seconds = 0;
+        //If this is used to parse maximum runtime then the value may be UNLIMITED, thus this is guarded against
+        if (duration == null || duration.isEmpty() || !duration.matches("\\d+(:\\d+)*?")) {
             return 0;
         }
-        String[] durationSplit = duration.split(":"); //0:03 i.e. mins:seconds
-        long min = Long.parseLong(durationSplit[0]);
-        long seconds = Long.parseLong(durationSplit[1]);
-        seconds = seconds + TimeUnit.MINUTES.toSeconds(min);
+        String[] durationSplit = duration.split(":"); //0:03 i.e. mins:seconds or 1:0:0 i.e. 1 hour
+        switch (durationSplit.length) {
+            case 1:
+                seconds = seconds + Long.parseLong(durationSplit[0]);
+                break;
+            case 2:
+                seconds = seconds + TimeUnit.MINUTES.toSeconds(Long.parseLong(durationSplit[0]));
+                seconds = seconds + Long.parseLong(durationSplit[1]);
+                break;
+            case 3:
+                seconds = seconds + TimeUnit.HOURS.toSeconds(Long.parseLong(durationSplit[0]));
+                seconds = seconds + TimeUnit.MINUTES.toSeconds(Long.parseLong(durationSplit[1]));
+                seconds = seconds + Long.parseLong(durationSplit[2]);
+                break;
+        }
         return seconds;
     }
 
@@ -435,10 +449,10 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
         }
         HostMeasurement measure = current.get(application.getAllocatedTo().getHostName());
         ApplicationMeasurement appData = new ApplicationMeasurement(
-            application,
-            measure.getClock());
-            appData.setMetrics(measure.getMetrics());
-            appendApplicationData(appData, measure);
+                application,
+                measure.getClock());
+        appData.setMetrics(measure.getMetrics());
+        appendApplicationData(appData, measure);
         return appData;
     }
 
@@ -468,16 +482,17 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
         for (ApplicationOnHost app : appList) {
             ApplicationMeasurement measurement = getApplicationData(app);
             if (measurement != null) {
-                answer.add(measurement); 
+                answer.add(measurement);
             }
         }
         return answer;
     }
 
     /**
-     * This takes an application measurement and adds onto it the metrics for the 
-     * applications status, along with a count of applications both running and 
-     * allocated to the host
+     * This takes an application measurement and adds onto it the metrics for
+     * the applications status, along with a count of applications both running
+     * and allocated to the host
+     *
      * @param appData The application specific data
      * @param measure The host measurement to take the data from
      * @return The application measurement with more data appended into it.
@@ -519,7 +534,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
     @Override
     public double getCpuUtilisation(Host host, int durationSeconds) {
         if (durationSeconds < 0) {
-            return current.get(host.getHostName()).getCpuUtilisation();            
+            return current.get(host.getHostName()).getCpuUtilisation();
         }
         if (cpuMeasure.containsKey(host.getHostName())) {
             CircularFifoQueue recentItems = cpuMeasure.get(host.getHostName());
@@ -528,11 +543,11 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
                 itemsToGet = recentItems.size();
             }
             double totalUtil = 0;
-            for(int i = 0;i < itemsToGet;i++) {
+            for (int i = 0; i < itemsToGet; i++) {
                 SlurmDataSourceAdaptor.CPUUtilisation item = (SlurmDataSourceAdaptor.CPUUtilisation) recentItems.get(i);
-                totalUtil = totalUtil + item.getCpuBusy();    
+                totalUtil = totalUtil + item.getCpuBusy();
             }
-            return totalUtil / ((double)itemsToGet);
+            return totalUtil / ((double) itemsToGet);
         }
         return current.get(host.getHostName()).getCpuUtilisation();
     }
@@ -717,7 +732,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
         String gresString = getValue("GresUsed", values);
         if (gresString.isEmpty()) {
             return measurement;
-        }        
+        }
         String[] gresStringSplit = gresString.split(",");
         for (String dataItem : gresStringSplit) {
             boolean gpu = dataItem.contains("gpu");
@@ -826,13 +841,13 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
             }
             host.setAvailable(!state.isEmpty() && !state.equals("DOWN*"));
             /**
-             * The further metrics from this host are not relevant and may 
-             * cause parse errors
-            */
+             * The further metrics from this host are not relevant and may cause
+             * parse errors
+             */
             if (!host.isAvailable()) {
                 return;
             }
-            
+
             //Note CPU Load = N/A when the node is down, but perhas might occur in some other case. The previous guard should prevent this error.
             String cpuLoad = getValue("CPULoad", values);
             if (!cpuLoad.equals("N/A") && cpuLoad.matches("-?\\d+(\\.\\d+)?")) {
