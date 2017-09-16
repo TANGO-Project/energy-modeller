@@ -29,8 +29,10 @@ import static eu.tango.energymodeller.datasourceclient.KpiList.MEMORY_AVAILABLE_
 import static eu.tango.energymodeller.datasourceclient.KpiList.MEMORY_TOTAL_KPI_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.NETWORK_IN_STARTS_WITH_KPI_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.NETWORK_OUT_STARTS_WITH_KPI_NAME;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -179,6 +181,28 @@ public abstract class Measurement {
     public boolean isContemporary(long time, int tolerance) {
         return getClockDifference(getClockDifference(time)) <= tolerance;
     }
+    
+    /**
+     * This removes stale data from the measurement.
+     * @param tolerance The tolerance in seconds from the latest measurement
+     * @return The count of metric values removed
+     */
+    public int cleanStaleMetrics(int tolerance) {
+        int count = 0;
+        ArrayList<String> toRemove = new ArrayList<>();
+        for (Iterator iterator = metrics.entrySet().iterator(); iterator.hasNext();) {
+            Object next = iterator.next();
+            Map.Entry<String,MetricValue> item = (Map.Entry<String,MetricValue>)next;
+            if (!isContemporary(item.getValue().getName(),clock , tolerance)) {
+                toRemove.add(item.getKey());
+                count = count + 1;
+            }
+        }
+        for (String item : toRemove) {
+            metrics.remove(item);
+        }
+        return count;
+    }    
 
     /**
      * This returns the maximum delay that any metric encountered.
