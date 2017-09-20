@@ -352,7 +352,9 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
     public boolean equals(Object obj) {
         if (obj instanceof ApplicationOnHost) {
             ApplicationOnHost app = (ApplicationOnHost) obj;
-            return name.equals(app.getName()) && id == app.getId();
+            return name.equals(app.getName()) && 
+                    id == app.getId() && 
+                    this.getAllocatedTo().equals(app.getAllocatedTo());
         }
         return false;
 
@@ -360,15 +362,25 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
 
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 47 * hash + this.id;
-        hash = 47 * hash + Objects.hashCode(this.name);
+        int hash = 3;
+        hash = 23 * hash + this.id;
+        hash = 23 * hash + Objects.hashCode(this.name);
+        hash = 23 * hash + Objects.hashCode(this.allocatedTo);
         return hash;
     }
 
     @Override
     public int compareTo(ApplicationOnHost application) {
-        return this.getName().compareTo(application.getName());
+    int nameddirection = name.compareTo(application.getName());
+    if (nameddirection != 0) {
+        return nameddirection;
+    }
+    int idDirection = Integer.compare(id, application.getId());
+    if (idDirection != 0){
+        return idDirection;
+    }
+    int allocatedToDirection = allocatedTo.compareTo(application.getAllocatedTo());
+        return allocatedToDirection;
     }
 
     @Override
