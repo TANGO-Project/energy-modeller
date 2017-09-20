@@ -409,7 +409,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
             return 0.0; //Not enough data to know therefore assume zero usage.
         }
         BigDecimal answer = BigDecimal.valueOf(1 - getSingleValueOut(results) / 100d);
-        answer.setScale(2, BigDecimal.ROUND_HALF_UP);
+        answer = answer.setScale(2, BigDecimal.ROUND_HALF_UP);
         return answer.doubleValue();
     }
 
@@ -569,6 +569,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
      * This gets for a given application the average power that it consumes,
      * over its lifetime.
      * @param application The application to query. 
+     * @return The average power consumption of an application 
      */
     public double getAverageAppPower(ApplicationOnHost application) {
         QueryResult results = runQuery("SELECT mean(value) WHERE host= '" + application.getAllocatedTo().getHostName() + "' AND type = '" + application.getId() + "' FROM app_power");
@@ -576,14 +577,14 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
             return 0.0; //Not enough data to know therefore assume zero usage.
         }
         BigDecimal answer = BigDecimal.valueOf(1 - getSingleValueOut(results) / 100d);
-        answer.setScale(2, BigDecimal.ROUND_HALF_UP);
+        answer = answer.setScale(2, BigDecimal.ROUND_HALF_UP);
         return answer.doubleValue();                
     }
     
     /**
      * This gets for a given application the average power that it consumes,
      * over its lifetime.
-     * @param application The application to query.
+     * @param applicationName The application to query.
      * @param hostname The hostname to query against, if null or empty runs against all hosts.
      */
     public double getAverageAppPower(String applicationName, String hostname) {
