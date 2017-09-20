@@ -597,7 +597,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
             return 0.0; //Not enough data to know therefore assume zero usage.
         }
         BigDecimal answer = BigDecimal.valueOf(1 - getSingleValueOut(results) / 100d);
-        answer.setScale(2, BigDecimal.ROUND_HALF_UP);
+        answer = answer.setScale(2, BigDecimal.ROUND_HALF_UP);
         return answer.doubleValue();                
     }    
 
