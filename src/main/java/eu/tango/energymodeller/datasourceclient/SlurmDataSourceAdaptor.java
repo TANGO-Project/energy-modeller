@@ -525,14 +525,14 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
             return current.get(host.getHostName()).getCpuUtilisation();
         }
         if (cpuMeasure.containsKey(host.getHostName())) {
-            CircularFifoQueue recentItems = cpuMeasure.get(host.getHostName());
+            CircularFifoQueue<SlurmDataSourceAdaptor.CPUUtilisation> recentItems = cpuMeasure.get(host.getHostName());
             int itemsToGet = durationSeconds / poller.getPollRate();
             if (itemsToGet > recentItems.size()) {
                 itemsToGet = recentItems.size();
             }
             double totalUtil = 0;
             for (int i = 0; i < itemsToGet; i++) {
-                SlurmDataSourceAdaptor.CPUUtilisation item = (SlurmDataSourceAdaptor.CPUUtilisation) recentItems.get(i);
+                SlurmDataSourceAdaptor.CPUUtilisation item = recentItems.get(i);
                 totalUtil = totalUtil + item.getCpuBusy();
             }
             return totalUtil / ((double) itemsToGet);
@@ -814,7 +814,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
                 return;
             }
             String hostId = hostname.replaceAll("[^0-9]", "");
-            CircularFifoQueue lastCpuMeasurements = cpuMeasure.get(hostname);
+            CircularFifoQueue<SlurmDataSourceAdaptor.CPUUtilisation> lastCpuMeasurements = cpuMeasure.get(hostname);
             if (lastCpuMeasurements == null) {
                 //Needs enough information to cover any recent queries of cpu utilisation, thus gather last 10mins of data
                 lastCpuMeasurements = new CircularFifoQueue((int) TimeUnit.MINUTES.toSeconds(10) / poller.getPollRate());
