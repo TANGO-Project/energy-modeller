@@ -19,6 +19,10 @@
 package eu.tango.energymodeller.datasourceclient;
 
 import eu.ascetic.ioutils.io.Settings;
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_ALLOCATED_TO_HOST_COUNT;
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_RUNNING_ON_HOST_COUNT;
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_STATUS;
+import static eu.tango.energymodeller.datasourceclient.KpiList.POWER_KPI_NAME;
 import eu.tango.energymodeller.types.energyuser.Accelerator;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost.JOB_STATUS;
