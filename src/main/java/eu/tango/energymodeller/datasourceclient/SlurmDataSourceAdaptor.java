@@ -18,7 +18,6 @@
  */
 package eu.tango.energymodeller.datasourceclient;
 
-//import eu.ascetic.ioutils.caching.LRUCache;
 import eu.ascetic.ioutils.io.Settings;
 import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_ALLOCATED_TO_HOST_COUNT;
 import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_RUNNING_ON_HOST_COUNT;
@@ -37,7 +36,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -63,7 +61,6 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
     private SlurmDataSourceAdaptor.SlurmTailer fileTailer;
     private final Settings settings = new Settings("energy-modeller-slurm-config.properties");
     private final HashMap<String, CircularFifoQueue<SlurmDataSourceAdaptor.CPUUtilisation>> cpuMeasure = new HashMap<>();
-//    private final LRUCache<Integer, HashSet<ApplicationOnHost>> appCache = new LRUCache<>(10, 50);
 
     public SlurmDataSourceAdaptor() {
         startup(1);
@@ -250,16 +247,6 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
                 String[] items = line.split(" ");
                 try {
                     int appId = Integer.parseInt(items[0]);
-//                    if (appCache.get(appId) != null) {
-//                        /**
-//                         * Get the cached copy, avoids duplicating objects
-//                         */
-//                        for (ApplicationOnHost cachedApp : appCache.get(appId)) {
-//                            cachedApp.setStatus(items[3]);
-//                            answer.add(cachedApp);                                
-//                        }
-//                        continue;
-//                    }
                     String name = items[1];
                     String status = items[3];
                     long runningTime = parseDurationString(items[4]); //units seconds
@@ -285,10 +272,6 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
                             app.setStatus(status);
                         }
                         answer.add(app);
-//                        if (appCache.get(appId) == null) {
-//                            appCache.put(appId, new HashSet<ApplicationOnHost>());
-//                        }
-//                        appCache.get(appId).add(app);
                     }
                 } catch (NumberFormatException ex) {
                     Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE,
