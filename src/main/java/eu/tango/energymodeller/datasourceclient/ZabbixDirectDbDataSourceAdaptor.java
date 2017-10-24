@@ -17,6 +17,7 @@ package eu.tango.energymodeller.datasourceclient;
 
 import eu.tango.energymodeller.datastore.MySqlDatabaseConnector;
 import static eu.tango.energymodeller.datasourceclient.KpiList.BOOT_TIME_KPI_NAME;
+import static eu.tango.energymodeller.datasourceclient.KpiList.CPU_COUNT_KPI_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.CPU_IDLE_KPI_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.CPU_SPOT_USAGE_KPI_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.DISK_TOTAL_KPI_NAME;
@@ -309,7 +310,10 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
      * @return The host object with more information attached.
      */
     private Host fullyDescribeHost(Host host, Collection<MetricValue> items) {
-        for (MetricValue item : items) {
+        for (MetricValue item : items) {        
+            if (item.getKey().equals(CPU_COUNT_KPI_NAME)) {
+                host.setCoreCount((int) (item.getValue()));
+            }            
             if (item.getKey().equals(MEMORY_TOTAL_KPI_NAME)) { //Convert to Mb
                 //Original value given in bytes. 1024 * 1024 = 1048576
                 host.setRamMb((int) (item.getValue() / 1048576));

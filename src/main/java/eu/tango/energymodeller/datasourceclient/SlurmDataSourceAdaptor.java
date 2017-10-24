@@ -810,6 +810,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
             String wattskwh = getValue("ConsumedJoules", values);
             String hostname = getValue("NodeName", values);
             String state = getValue("State", values);
+            String coreCount = getValue("CPUTot", values);
             if (hostname.isEmpty()) {
                 return;
             }
@@ -822,9 +823,12 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
             }
             Host host = getHostByName(hostname);
 
-            //Check for need to disover host
+            //Check for need to discover host
             if (host == null) {
                 host = new Host(Integer.parseInt(hostId), hostname);
+                if (coreCount.matches("-?\\d+(\\.\\d+)?")) {
+                    host.setCoreCount(Integer.parseInt(coreCount));
+                }
                 hosts.put(hostname, host);
             }
             host.setAvailable(!state.isEmpty() && !state.equals("DOWN*"));

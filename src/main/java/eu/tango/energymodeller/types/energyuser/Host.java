@@ -39,6 +39,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
     private int id = -1;
     private String hostName = "";
     private boolean available = true;
+    private int coreCount;
     private int ramMb;
     private double diskGb;
     private final HashSet<Accelerator> accelerators = new HashSet<>();
@@ -416,6 +417,27 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
         this.defaultIdleRamUsage = defaultIdleRamUsage;
     }
 
+    /**
+     * This gets the maximum amount of cores this host has.
+     *
+     * @return The core count this host has physically available.
+     */    
+    public int getCoreCount() {
+        return coreCount;
+    }
+
+    /**
+     * This sets the maximum amount of cpus this host has.
+     *
+     * @param coreCount The core count this host has physically available.
+     */    
+    public void setCoreCount(int coreCount) {
+        if (coreCount < 0) {
+            throw new IllegalArgumentException("The amount of cores must not be less than zero.");
+        }        
+        this.coreCount = coreCount;
+    }
+    
     /**
      * This gets the maximum amount of ram this host has.
      *
