@@ -492,6 +492,32 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
     }
     
     /**
+     * Provides the count of GPUs attached to the host
+     * @return The count of GPUs attached to the host
+     */
+    public int getGpuCount () {
+        int count = 0;
+        for (Accelerator current : accelerators) {
+            if (current.getType().equals(Accelerator.AcceleratorType.GPU))
+                count = count + current.getCount();
+        }
+        return count;
+    }
+    
+    /**
+     * Provides the count of Intel Many Integrated Core (MIC) processor attached to the host
+     * @return The count of Intel Many Integrated Core (MIC) processor attached to the host
+     */
+    public int getMicCount () {
+        int count = 0;
+        for (Accelerator current : accelerators) {
+            if (current.getType().equals(Accelerator.AcceleratorType.MIC))
+                count = count + current.getCount();
+        }
+        return count;
+    }    
+    
+    /**
      * Adds an accelerator to the physical host
      * @param accelerator Indicates which accelerator to add to the host.
      */
