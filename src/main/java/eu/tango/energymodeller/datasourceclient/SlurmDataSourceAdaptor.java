@@ -225,13 +225,17 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
          * printf values[1] " " ; printf values[2] " "; printf values[4] " "; 
          * printf values[5] " "; printf values[6] " "; printf values[7] " " ; 
          * printf values[8] " "; print values[10]}'
+         * -l parameter swapped out with -o "%.30i %.30P %.50j %.30u %.30T %.30M %.30l %.30D %R"
+         * as per: https://slurm.schedmd.com/squeue.html. This changes the length 
+         * of things such as the job name and helps avoid truncation
          *
          * The output looks like:
          * 
          * 3009 RK-BENCH Kavanagr RUNNING 8:06 ns52
          *        
-         */
-        String maincmd = "squeue " + jobState + " -l | awk 'NR> 2 {split($0,values,\"[ \\t\\n]+\"); "
+         */ 
+        String maincmd = "squeue " + jobState + " -o \"%.30i %.30P %.50j %.30u %.30T %.30M %.20l %.20D %R\""
+                + " | awk 'NR> 2 {split($0,values,\"[ \\t\\n]+\"); "
                 + "printf values[1] \" \"; "
                 + "printf values[2] \" \"; "
                 + "printf values[4] \" \"; "
@@ -832,6 +836,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
                 hosts.put(hostname, host);
             }
             host.setAvailable(!state.isEmpty() && !state.equals("DOWN*"));
+            host.setState(state);
             /**
              * The further metrics from this host are not relevant and may cause
              * parse errors
