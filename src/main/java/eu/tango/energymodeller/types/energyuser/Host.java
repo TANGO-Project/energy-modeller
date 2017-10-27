@@ -39,6 +39,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
     private int id = -1;
     private String hostName = "";
     private boolean available = true;
+    private String state = "";
     private int coreCount;
     private int ramMb;
     private double diskGb;
@@ -128,6 +129,25 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
     public void setAvailable(boolean available) {
         this.available = available;
     }
+    
+    /**
+     * This indicates the state of the host and allows for more complex states
+     * rather than just up or down. Such as SLURMs drain and maintenance states.
+     * @return 
+     */
+    public String getState() {
+        return state;
+    }
+
+    /**
+     * This allows the state of the host to be set. This property allows for more 
+     * complex states rather than just up or down. Such as SLURMs drain and 
+     * maintenance states.
+     * @param state 
+     */
+    public void setState(String state) {
+        this.state = state;
+    }    
 
     @Override
     public String toString() {
