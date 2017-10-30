@@ -387,8 +387,8 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
     public String toString() {
         return "name: " + name
                 + " id: " + id
-                + "host : " + allocatedTo
-                + "started: " + created;
+                + " host : " + allocatedTo
+                + " started: " + created;
     }
 
     /**
