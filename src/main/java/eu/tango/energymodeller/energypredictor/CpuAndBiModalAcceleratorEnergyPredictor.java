@@ -373,8 +373,13 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
          */
         public double value(double input) {
             if (totalPower.isEmpty()) {
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "No calibration data found for grouping function");
                 return 0.0;
             }
+            if (input <= 0) {
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Incorrect input frequency value was : {0}", input);
+                return 0.0;
+            }            
             if (totalPower.containsKey(input)) {
                 return totalPower.get(input) / countPower.get(input);
             }

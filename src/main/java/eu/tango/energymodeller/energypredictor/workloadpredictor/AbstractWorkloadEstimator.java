@@ -29,6 +29,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This produces workload estimates for the purpose of providing better 
@@ -66,7 +68,12 @@ public abstract class AbstractWorkloadEstimator<AT extends WorkloadSource> imple
     @Override
     public HashMap<Accelerator,HashMap<String, Double>> getAcceleratorUtilisation(Host host, Collection<WorkloadSource> workloadsource) {
         HashMap<Accelerator,HashMap<String, Double>> answer = new HashMap<>();
-        if (!host.hasAccelerator() || datasource == null) {
+        if (datasource == null) {
+            Logger.getLogger(AbstractWorkloadEstimator.class.getName()).log(Level.SEVERE,
+                    "Internal error the datasource used by the workload predictor should not be null!");
+            return answer;
+        }
+        if (!host.hasAccelerator()) {
             return answer;
         }
         HashSet<Accelerator> accelerators = host.getAccelerators();
