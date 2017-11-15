@@ -212,18 +212,23 @@ public class CpuAndAcceleratorEnergyPredictor extends AbstractEnergyPredictor {
             power = cpuModel.value(getCpuUtilisation(host));
             for (Accelerator accelerator : host.getAccelerators()) {
                 NeuralNetFunction accModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-                accModel.value(getAcceleratorUtilisation(host, null).get(accelerator));
+                power = power + accModel.value(getAcceleratorUtilisation(host, null).get(accelerator));
             }
             return power;
         } else {
-            //TODO consider if this assumption is valid or not
-            //Assume no accelerator usage, given no suitable input into model
-            return cpuModel.value(getDefaultAssumedCpuUsage()); 
+            //TODO consider if this is valid, it assumes the accelerator usage remains constant, given no input source for an alternative estimate
+            double power = cpuModel.value(getDefaultAssumedCpuUsage());
+            for (Accelerator accelerator : host.getAccelerators()) {
+                NeuralNetFunction accModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
+                power = power + accModel.value(getAcceleratorUtilisation(host, null).get(accelerator));
+            }
+            return power; 
         }
     }
 
     /**
-     * This estimates the power used by a host, given its CPU load.
+     * This estimates the power used by a host, given its CPU load. It assumes
+     * accelerator load remains the same.
      *
      * @param host The host to get the energy prediction for
      * @param usageCPU The amount of CPU load placed on the host
@@ -232,7 +237,12 @@ public class CpuAndAcceleratorEnergyPredictor extends AbstractEnergyPredictor {
     @Override
     public double predictPowerUsed(Host host, double usageCPU) {
         PolynomialFunction model = retrieveCpuModel(host).getFunction();
-        return model.value(usageCPU);
+        double power = model.value(usageCPU);
+        for (Accelerator accelerator : host.getAccelerators()) {
+            NeuralNetFunction accModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
+            power = power + accModel.value(getAcceleratorUtilisation(host, null).get(accelerator));
+        }       
+        return power;        
     }
 
     /**

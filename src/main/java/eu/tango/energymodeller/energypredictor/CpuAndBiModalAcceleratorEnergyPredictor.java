@@ -217,6 +217,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                 power = power + acceleratorModel.value(getAcceleratorClockRate(host, accelerator));
             }
         } else {
+            //TODO consider if this is valid, it assumes the accelerator usage remains constant, given no input source for an alternative estimate
             power = cpuModel.value(getDefaultAssumedCpuUsage());
             for (Accelerator accelerator : host.getAccelerators()) {
                 GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
@@ -266,7 +267,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
     }    
 
     /**
-     * This estimates the power used by a host, given its CPU load.
+     * This estimates the power used by a host, given its CPU load. It assumes
+     * accelerator load remains the same.
      *
      * @param host The host to get the energy prediction for
      * @param usageCPU The amount of CPU load placed on the host
@@ -275,7 +277,12 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
     @Override
     public double predictPowerUsed(Host host, double usageCPU) {
         PolynomialFunction model = retrieveCpuModel(host).getFunction();
-        return model.value(usageCPU);
+        double power = model.value(usageCPU);
+        for (Accelerator accelerator : host.getAccelerators()) {
+            GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
+            power = power + acceleratorModel.value(getAcceleratorClockRate(host, accelerator));
+        }        
+        return power;
     }
 
     /**
