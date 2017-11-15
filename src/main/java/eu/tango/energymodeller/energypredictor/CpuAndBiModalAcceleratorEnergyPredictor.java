@@ -284,8 +284,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
             if (values.isEmpty()) {
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "An error occured, no load data was available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});    
             }
-            if (values.containsKey("nvida_value:null:percent")) {
-                answer = values.get("nvida_value:null:percent"); //A much better definition "clocks.current.sm [MHz]"
+            if (values.containsKey("nvidia_value:null:percent")) {
+                answer = values.get("nvidia_value:null:percent"); //A much better definition "clocks.current.sm [MHz]"
             } else {
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "The load data item needed was not available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});
             }
@@ -395,6 +395,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "No calibration data found for grouping function");
                 return 0.0;
             }
+            Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Util: {0}", input);
             if (input < 0) {
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Incorrect input frequency value was: {0}", input);
                 return 0.0;
@@ -432,8 +433,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         WeightedObservedPoints points = new WeightedObservedPoints();
         for (Accelerator acc : host.getAccelerators()) {
             for (HostAcceleratorCalibrationData data : acc.getAcceleratorCalibrationData()) {
-                if (data.getIdentifier().equals(accelerator) && data.hasParameter("nvida_value:null:percent")) { //"clocks.current.sm [MHz]"
-                    points.add(data.getParameter("nvida_value:null:percent"), data.getPower());
+                if (data.getIdentifier().equals(accelerator) && data.hasParameter("nvidia_value:null:percent")) { //"clocks.current.sm [MHz]"
+                    points.add(data.getParameter("nvidia_value:null:percent"), data.getPower());
                 }
             }
         }
