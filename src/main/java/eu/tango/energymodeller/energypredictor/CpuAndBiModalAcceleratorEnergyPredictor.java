@@ -238,6 +238,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
             for (Accelerator accelerator : host.getAccelerators()) {
                 if (!useAssumedDefaultUsage) {
                     acceleratorClockRate = getAcceleratorClockRate(host, accelerator);
+                    System.out.println(host.getHostName() + " Current Clock Rate:" + acceleratorClockRate);
                 }
                 GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
                 power = power + acceleratorModel.value(acceleratorClockRate);
@@ -283,8 +284,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
             if (values.isEmpty()) {
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "An error occured, no load data was available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});    
             }
-            if (values.containsKey("clocks.current.sm [MHz]")) {
-                answer = values.get("clocks.current.sm [MHz]");
+            if (values.containsKey("nvida_value:null:percent")) {
+                answer = values.get("nvida_value:null:percent"); //A much better definition "clocks.current.sm [MHz]"
             } else {
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "The load data item needed was not available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});
             }
@@ -394,8 +395,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "No calibration data found for grouping function");
                 return 0.0;
             }
-            if (input <= 0) {
-                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Incorrect input frequency value was : {0}", input);
+            if (input < 0) {
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Incorrect input frequency value was: {0}", input);
                 return 0.0;
             }            
             if (totalPower.containsKey(input)) {
@@ -431,8 +432,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         WeightedObservedPoints points = new WeightedObservedPoints();
         for (Accelerator acc : host.getAccelerators()) {
             for (HostAcceleratorCalibrationData data : acc.getAcceleratorCalibrationData()) {
-                if (data.getIdentifier().equals(accelerator) && data.hasParameter("clocks.current.sm [MHz]")) {
-                    points.add(data.getParameter("clocks.current.sm [MHz]"), data.getPower());
+                if (data.getIdentifier().equals(accelerator) && data.hasParameter("nvida_value:null:percent")) { //"clocks.current.sm [MHz]"
+                    points.add(data.getParameter("nvida_value:null:percent"), data.getPower());
                 }
             }
         }
