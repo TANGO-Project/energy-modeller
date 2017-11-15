@@ -191,10 +191,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         PolynomialFunction cpuModel = retrieveCpuModel(host).getFunction();
         double powerUsed = cpuModel.value(usageCPU);
         //TODO fix the accelerator usage to mutliple accelerator mapping issue.
-        for (Accelerator accelerator : host.getAccelerators()) {
-            GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-            powerUsed = powerUsed + acceleratorModel.value(getAcceleratorClockRate(host, accelerator, accUsage));
-        }
+        powerUsed = powerUsed + getCurrentAcceleratorPowerUsage(host, false);
         answer.setAvgPowerUsed(powerUsed);
         answer.setTotalEnergyUsed(powerUsed * ((double) TimeUnit.SECONDS.toHours(timePeriod.getDuration())));
         answer.setDuration(timePeriod);
@@ -214,16 +211,36 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         PolynomialFunction cpuModel = retrieveCpuModel(host).getFunction();
         if (getDefaultAssumedCpuUsage() == -1) {
             power = cpuModel.value(getCpuUtilisation(host));
-            for (Accelerator accelerator : host.getAccelerators()) {
-                GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-                power = power + acceleratorModel.value(getAcceleratorClockRate(host, accelerator));
-            }
+            power = power + getCurrentAcceleratorPowerUsage(host, false);
         } else {
             //TODO consider if this is valid, it assumes the accelerator usage remains constant, given no input source for an alternative estimate
             power = cpuModel.value(getDefaultAssumedCpuUsage());
+            power = power + getCurrentAcceleratorPowerUsage(host, true);
+        }
+        return power;
+    }
+    
+    /**
+     * This gets the accelerators current power usage information.
+     * @param host The host to get the power usage data for
+     * @param useAssumedDefaultUsage Takes the default assumed usage value, otherwise
+     * assumes current usage continues.
+     * @return The current power consumption of the accelerators.
+     */
+    private double getCurrentAcceleratorPowerUsage(Host host, boolean useAssumedDefaultUsage) {
+        double power = 0;
+        double acceleratorClockRate = 0;
+        if (useAssumedDefaultUsage) {
+            acceleratorClockRate = getDefaultAssumedAcceleratorUsage();
+        }
+        //This guard ensures the host's accelerator usage data is available
+        if (host.isAvailable()) {
             for (Accelerator accelerator : host.getAccelerators()) {
+                if (!useAssumedDefaultUsage) {
+                    acceleratorClockRate = getAcceleratorClockRate(host, accelerator);
+                }
                 GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-                power = power + acceleratorModel.value(getDefaultAssumedAcceleratorUsage());
+                power = power + acceleratorModel.value(acceleratorClockRate);
             }
         }
         return power;
@@ -285,10 +302,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
     public double predictPowerUsed(Host host, double usageCPU) {
         PolynomialFunction model = retrieveCpuModel(host).getFunction();
         double power = model.value(usageCPU);
-        for (Accelerator accelerator : host.getAccelerators()) {
-            GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-            power = power + acceleratorModel.value(getAcceleratorClockRate(host, accelerator));
-        }        
+        power = power + getCurrentAcceleratorPowerUsage(host, false);     
         return power;
     }
 
