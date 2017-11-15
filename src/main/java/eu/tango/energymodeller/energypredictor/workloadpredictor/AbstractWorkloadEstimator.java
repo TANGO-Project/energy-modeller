@@ -66,7 +66,7 @@ public abstract class AbstractWorkloadEstimator<AT extends WorkloadSource> imple
     @Override
     public HashMap<Accelerator,HashMap<String, Double>> getAcceleratorUtilisation(Host host, Collection<WorkloadSource> workloadsource) {
         HashMap<Accelerator,HashMap<String, Double>> answer = new HashMap<>();
-        if (!host.hasAccelerator()) {
+        if (!host.hasAccelerator() || datasource == null) {
             return answer;
         }
         HashSet<Accelerator> accelerators = host.getAccelerators();
