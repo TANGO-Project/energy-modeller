@@ -272,22 +272,26 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      * predictor's configured observation window.
      */
     protected double getAcceleratorClockRate(Host host,Accelerator accelerator, HashMap<Accelerator,HashMap<String, Double>> accUsage) {
+        double answer = 0.0;
         try {
-            double answer = 0.0;
             HashMap<String,Double> values;
             if (accUsage == null) {
                 values = getAcceleratorUtilisation(host, null).get(accelerator);
             } else {
                 values = accUsage.get(accelerator);
             }
+            if (values.isEmpty()) {
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "An error occured, no load data was available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});    
+            }
             if (values.containsKey("clocks.current.sm [MHz]")) {
                 answer = values.get("clocks.current.sm [MHz]");
+            } else {
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "The load data item needed was not available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});
             }
-            return answer;
         } catch (Exception ex) {
-            Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "An error occured! Host: " + (host != null ? host : "null") + " : Accelerator " + (accelerator != null ? accelerator.getName() : "null"), ex);
-            return 0.0;
+            Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.SEVERE, "An error occured! Host: " + (host != null ? host : "null") + " : Accelerator " + (accelerator != null ? accelerator.getName() : "null"), ex);
         }
+        return answer;
     }    
 
     /**
