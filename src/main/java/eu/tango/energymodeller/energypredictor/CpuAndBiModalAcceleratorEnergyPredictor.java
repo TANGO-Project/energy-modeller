@@ -33,6 +33,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
 import org.apache.commons.math3.exception.NumberIsTooSmallException;
@@ -253,6 +255,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      * predictor's configured observation window.
      */
     protected double getAcceleratorClockRate(Host host,Accelerator accelerator, HashMap<Accelerator,HashMap<String, Double>> accUsage) {
+        try {
         double answer = 0.0;
         HashMap<String,Double> values;
         if (accUsage == null) {
@@ -264,6 +267,10 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
             answer = values.get("clocks.current.sm [MHz]");
         }
         return answer;
+        } catch (Exception ex) {
+            Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "An error occured! Host: " + (host != null ? host : "null") + " : Accelerator " + (accelerator != null ? accelerator.getName() : "null"), ex);
+            return 0.0;
+        }
     }    
 
     /**
