@@ -401,7 +401,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         WeightedObservedPoints points = new WeightedObservedPoints();
         for (Accelerator acc : host.getAccelerators()) {
             for (HostAcceleratorCalibrationData data : acc.getAcceleratorCalibrationData()) {
-                if (data.getIdentifier().equals(accelerator)) {
+                if (data.getIdentifier().equals(accelerator) && data.hasParameter("clocks.current.sm [MHz]")) {
                     points.add(data.getParameter("clocks.current.sm [MHz]"), data.getPower());
                 }
             }

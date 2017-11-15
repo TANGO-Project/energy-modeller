@@ -62,7 +62,7 @@ public class HostAcceleratorCalibrationData {
             double power = hostMeasurement.getPower();
             HashMap<String, Double> params = new HashMap<>();
             for (String metric : metrics) {
-                params.put(metric, hostMeasurement.getMetric(metric).getValue());
+                params.put(metric.trim(), hostMeasurement.getMetric(metric).getValue());
             }            
             HostAcceleratorCalibrationData newItem = new HostAcceleratorCalibrationData(acceleratorId, params, power);
             answer.add(newItem);
@@ -122,8 +122,17 @@ public class HostAcceleratorCalibrationData {
      * @return the value of the parameter
      */
     public double getParameter(String parameter) {
-        return parameters.get(parameter);
+        return parameters.get(parameter.trim());
     }
+    
+     /**
+     * This indicates if the parameter exists within the calibration data
+     * @param parameter This parameter to test existence for calibration data
+     * @return if the value exists or not
+     */
+    public boolean hasParameter(String parameter) {
+        return parameters.containsKey(parameter.trim());
+    }    
     
      /**
      * This lists the possible parameters that are stored.
@@ -131,7 +140,7 @@ public class HostAcceleratorCalibrationData {
      * @param value The value for the parameter
      */
     public void addParameter(String parameter, double value) {
-        parameters.put(parameter, value);
+        parameters.put(parameter.trim(), value);
     }      
 
     /**
