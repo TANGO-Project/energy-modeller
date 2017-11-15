@@ -326,7 +326,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      *
      * @return true if calibration data exists for this host.
      */
-    public boolean isAcceleratorsCalibrated() {
+    public synchronized boolean isAcceleratorsCalibrated() {
         if (!hasAccelerator()) {
             return false;
         }
@@ -504,7 +504,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * Indicates if this host has an accelerator or not
      * @return if the host has any type of accelerator or not 
      */
-    public boolean hasAccelerator () {
+    public synchronized boolean hasAccelerator () {
         return !accelerators.isEmpty();
     }
     
@@ -512,7 +512,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * Indicates if this host has an GPU as an accelerator or not
      * @return If the host has a GPU or not
      */
-    public boolean hasGpu () {
+    public synchronized boolean hasGpu () {
         for (Accelerator current : accelerators) {
             if (current.getType().equals(Accelerator.AcceleratorType.GPU))
                 return true;
@@ -525,7 +525,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * as an accelerator or not
      * @return if the host has a Intel Many Integrated Core (MIC) processor 
      */
-    public boolean hasMic () {
+    public synchronized boolean hasMic () {
         for (Accelerator current : accelerators) {
             if (current.getType().equals(Accelerator.AcceleratorType.MIC))
                 return true;
@@ -537,7 +537,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * Provides the count of GPUs attached to the host
      * @return The count of GPUs attached to the host
      */
-    public int getGpuCount () {
+    public synchronized int getGpuCount () {
         int count = 0;
         for (Accelerator current : accelerators) {
             if (current.getType().equals(Accelerator.AcceleratorType.GPU))
@@ -550,7 +550,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * Provides the count of Intel Many Integrated Core (MIC) processor attached to the host
      * @return The count of Intel Many Integrated Core (MIC) processor attached to the host
      */
-    public int getMicCount () {
+    public synchronized int getMicCount () {
         int count = 0;
         for (Accelerator current : accelerators) {
             if (current.getType().equals(Accelerator.AcceleratorType.MIC))
@@ -563,7 +563,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * Adds an accelerator to the physical host
      * @param accelerator Indicates which accelerator to add to the host.
      */
-    public void addAccelerator(Accelerator accelerator) {
+    public synchronized void addAccelerator(Accelerator accelerator) {
         this.accelerators.add(accelerator);
     }
     
@@ -571,7 +571,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * Adds an accelerator to the physical host
      * @param accelerator Indicates which accelerator to add to the host.
      */
-    public void addAccelerator(Accelerator.AcceleratorType accelerator) {
+    public synchronized void addAccelerator(Accelerator.AcceleratorType accelerator) {
         this.accelerators.add(new Accelerator("",1, accelerator));
     }    
     
@@ -579,7 +579,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * Adds an accelerator to the physical host
      * @param accelerator Indicates which accelerator to add to the host.
      */
-    public void addAccelerator(HashSet<Accelerator> accelerator) {
+    public synchronized void addAccelerator(HashSet<Accelerator> accelerator) {
         this.accelerators.addAll(accelerator);
     } 
     
@@ -587,7 +587,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * Removes an accelerator to the physical host
      * @param accelerator Indicates which accelerator to remove from the host.
      */
-    public void removeAccelerator(Accelerator accelerator) {
+    public synchronized void removeAccelerator(Accelerator accelerator) {
         this.accelerators.remove(accelerator);
     }
     
@@ -595,7 +595,7 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * Removes an accelerator to the physical host
      * @param accelerator Indicates which accelerator to remove from the host.
      */
-    public void removeAccelerator(HashSet<Accelerator> accelerator) {
+    public synchronized void removeAccelerator(HashSet<Accelerator> accelerator) {
         this.accelerators.removeAll(accelerator);
     }
     
@@ -603,8 +603,8 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * This provides the list of accelerators for this physical host.
      * @return The list of accelerators this host has.
      */
-    public HashSet<Accelerator> getAccelerators() {
-        return accelerators;
+    public synchronized HashSet<Accelerator> getAccelerators() {
+        return (HashSet<Accelerator>) accelerators.clone();
     }
     
 

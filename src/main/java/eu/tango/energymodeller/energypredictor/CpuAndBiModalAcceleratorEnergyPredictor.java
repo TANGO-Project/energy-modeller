@@ -256,17 +256,17 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      */
     protected double getAcceleratorClockRate(Host host,Accelerator accelerator, HashMap<Accelerator,HashMap<String, Double>> accUsage) {
         try {
-        double answer = 0.0;
-        HashMap<String,Double> values;
-        if (accUsage == null) {
-            values = getAcceleratorUtilisation(host, null).get(accelerator);
-        } else {
-            values = accUsage.get(accelerator);
-        }
-        if (values.containsKey("clocks.current.sm [MHz]")) {
-            answer = values.get("clocks.current.sm [MHz]");
-        }
-        return answer;
+            double answer = 0.0;
+            HashMap<String,Double> values;
+            if (accUsage == null) {
+                values = getAcceleratorUtilisation(host, null).get(accelerator);
+            } else {
+                values = accUsage.get(accelerator);
+            }
+            if (values.containsKey("clocks.current.sm [MHz]")) {
+                answer = values.get("clocks.current.sm [MHz]");
+            }
+            return answer;
         } catch (Exception ex) {
             Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "An error occured! Host: " + (host != null ? host : "null") + " : Accelerator " + (accelerator != null ? accelerator.getName() : "null"), ex);
             return 0.0;
