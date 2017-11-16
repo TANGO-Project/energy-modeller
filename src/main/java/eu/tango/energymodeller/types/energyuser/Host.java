@@ -564,7 +564,9 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
      * @param accelerator Indicates which accelerator to add to the host.
      */
     public synchronized void addAccelerator(Accelerator accelerator) {
-        this.accelerators.add(accelerator);
+        if (!accelerators.contains(accelerator)) {
+            this.accelerators.add(accelerator);
+        }
     }
     
     /**

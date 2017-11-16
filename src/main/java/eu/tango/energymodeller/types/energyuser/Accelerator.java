@@ -19,8 +19,10 @@
 package eu.tango.energymodeller.types.energyuser;
 
 import eu.tango.energymodeller.types.energyuser.usage.HostAcceleratorCalibrationData;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -28,14 +30,13 @@ import java.util.Set;
  *
  * @author Richard Kavanagh
  */
-public class Accelerator {
+public class Accelerator implements Comparable<Accelerator>, Serializable {
 
     private String name = "";
     private AcceleratorType type;
     private int count = 0;
     private ArrayList<HostAcceleratorCalibrationData> acceleratorCalibrationData = new ArrayList<>();
-    
-    
+
     public enum AcceleratorType {
 
         GPU, MIC, FPGA
@@ -43,6 +44,7 @@ public class Accelerator {
 
     /**
      * This creates a new accelerator
+     *
      * @param name The name of the accelerator
      * @param count The count of accelerators on the physical host
      * @param type The type of accelerator on the host
@@ -52,9 +54,10 @@ public class Accelerator {
         this.name = name;
         this.count = count;
     }
-    
+
     /**
      * This gets the name of the accelerator
+     *
      * @return The name of the accelerator
      */
     public String getName() {
@@ -63,6 +66,7 @@ public class Accelerator {
 
     /**
      * This sets the name of the accelerator
+     *
      * @param name The name of the accelerator
      */
     public void setName(String name) {
@@ -71,6 +75,7 @@ public class Accelerator {
 
     /**
      * This indicates the type of accelerator
+     *
      * @return the accelerator
      */
     public AcceleratorType getType() {
@@ -79,15 +84,18 @@ public class Accelerator {
 
     /**
      * This sets the type of accelerator
+     *
      * @param type the accelerator to set
      */
     public void setType(AcceleratorType type) {
         this.type = type;
     }
-    
+
     /**
      * This lists the metric names that are stored as part of the accelerators
-     * calibration data. i.e. the ones that define the workload and power consumption
+     * calibration data. i.e. the ones that define the workload and power
+     * consumption
+     *
      * @return the parameters that define the workload
      */
     public Set<String> getMetricsInCalibrationData() {
@@ -100,6 +108,7 @@ public class Accelerator {
 
     /**
      * This gets the count of accelerators on the physical host
+     *
      * @return the count
      */
     public int getCount() {
@@ -108,20 +117,22 @@ public class Accelerator {
 
     /**
      * This sets count of accelerators on the physical host
+     *
      * @param count the count to set
      */
     public void setCount(int count) {
         this.count = count;
     }
-    
+
     /**
      * Indicates if this accelerator has calibration data for it.
-     * @return 
+     *
+     * @return
      */
     public boolean isCalibrated() {
         return !acceleratorCalibrationData.isEmpty();
     }
-    
+
     /**
      * This returns a list of all the calibration data that is held on the host
      * for its accelerators.
@@ -131,7 +142,7 @@ public class Accelerator {
     public ArrayList<HostAcceleratorCalibrationData> getAcceleratorCalibrationData() {
         return acceleratorCalibrationData;
     }
-    
+
     /**
      * This allows the calibration data of a host to be set.
      *
@@ -139,6 +150,28 @@ public class Accelerator {
      */
     public void setAcceleratorCalibrationData(ArrayList<HostAcceleratorCalibrationData> calibrationData) {
         this.acceleratorCalibrationData = calibrationData;
-    }       
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Accelerator) {
+            if (this.name.equals(((Accelerator) obj).getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 53 * hash + Objects.hashCode(this.name);
+        return hash;
+    }
+
+    @Override
+    public int compareTo(Accelerator o) {
+        return name.compareTo(o.getName());
+    }
 
 }
