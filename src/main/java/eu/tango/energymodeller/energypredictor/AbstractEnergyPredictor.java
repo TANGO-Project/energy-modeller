@@ -102,7 +102,7 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
             config.setAutoSave(true); //This will save the configuration file back to disk. In case the defaults need setting.
             readSettings(config);
         } catch (ConfigurationException ex) {
-            Logger.getLogger(CpuOnlyEnergyPredictor.class.getName()).log(Level.SEVERE,
+            Logger.getLogger(AbstractEnergyPredictor.class.getName()).log(Level.SEVERE,
                     "Taking the default load from the settings file did not work", ex);
         }
     }

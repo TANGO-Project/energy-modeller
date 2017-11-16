@@ -19,6 +19,7 @@
 package eu.tango.energymodeller.energypredictor;
 
 import eu.ascetic.ioutils.caching.LRUCache;
+import static eu.tango.energymodeller.energypredictor.AbstractEnergyPredictor.CONFIG_FILE;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyDivision;
 import eu.tango.energymodeller.types.TimePeriod;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
@@ -29,12 +30,14 @@ import eu.tango.energymodeller.types.energyuser.Accelerator;
 import eu.tango.energymodeller.types.energyuser.usage.HostAcceleratorCalibrationData;
 import eu.tango.energymodeller.types.energyuser.usage.HostEnergyCalibrationData;
 import eu.tango.energymodeller.types.usage.EnergyUsagePrediction;
+import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
 import org.apache.commons.math3.exception.NumberIsTooSmallException;
@@ -58,6 +61,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
 
     private final LRUCache<Host, PredictorFunction<PolynomialFunction>> modelCache = new LRUCache<>(5, 50);
     private final LRUCache<Host, PredictorFunction<GroupingFunction>> modelAcceleratorCache = new LRUCache<>(5, 50);
+    //A much better definition "clocks.current.sm [MHz]"
+    private String groupingParameter = "nvidia_value:null:percent";
 
     /**
      * This creates a new CPU only energy predictor that uses a polynomial fit.
@@ -79,7 +84,32 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      */
     public CpuAndBiModalAcceleratorEnergyPredictor() {
         super();
+        try {
+            PropertiesConfiguration config;
+            if (new File(CONFIG_FILE).exists()) {
+                config = new PropertiesConfiguration(CONFIG_FILE);
+            } else {
+                config = new PropertiesConfiguration();
+                config.setFile(new File(CONFIG_FILE));
+            }
+            config.setAutoSave(true); //This will save the configuration file back to disk. In case the defaults need setting.
+            readSettings(config);
+        } catch (ConfigurationException ex) {
+            Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.SEVERE,
+                    "Taking the default load from the settings file did not work", ex);
+        }        
     }
+    
+    /**
+     * This takes the settings and reads them into memory and sets defaults as
+     * needed.
+     *
+     * @param config The settings to read.
+     */
+    private void readSettings(PropertiesConfiguration config) {
+        String dataSrcStr = config.getString("energy.modeller.grouping.parameter", groupingParameter);
+        config.setProperty("energy.modeller.grouping.parameter", dataSrcStr);
+    }    
 
     /**
      * This creates a new CPU only energy predictor that uses a polynomial fit.
@@ -284,8 +314,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
             if (values.isEmpty()) {
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "An error occured, no load data was available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});    
             }
-            if (values.containsKey("nvidia_value:null:percent")) {
-                answer = values.get("nvidia_value:null:percent"); //A much better definition "clocks.current.sm [MHz]"
+            if (values.containsKey(groupingParameter)) {
+                answer = values.get(groupingParameter);
             } else {
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "The load data item needed was not available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});
             }
@@ -433,8 +463,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         WeightedObservedPoints points = new WeightedObservedPoints();
         for (Accelerator acc : host.getAccelerators()) {
             for (HostAcceleratorCalibrationData data : acc.getAcceleratorCalibrationData()) {
-                if (data.getIdentifier().equals(accelerator) && data.hasParameter("nvidia_value:null:percent")) { //"clocks.current.sm [MHz]"
-                    points.add(data.getParameter("nvidia_value:null:percent"), data.getPower());
+                if (data.getIdentifier().equals(accelerator) && data.hasParameter(groupingParameter)) {
+                    points.add(data.getParameter(groupingParameter), data.getPower());
                 }
             }
         }
