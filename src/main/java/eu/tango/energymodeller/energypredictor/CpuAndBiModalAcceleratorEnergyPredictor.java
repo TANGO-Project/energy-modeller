@@ -268,7 +268,6 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
             for (Accelerator accelerator : host.getAccelerators()) {
                 if (!useAssumedDefaultUsage) {
                     acceleratorClockRate = getAcceleratorClockRate(host, accelerator);
-                    System.out.println(host.getHostName() + " Current Clock Rate:" + acceleratorClockRate);
                 }
                 GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
                 power = power + acceleratorModel.value(acceleratorClockRate);
