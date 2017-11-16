@@ -97,8 +97,8 @@ public abstract class AbstractWorkloadEstimator<AT extends WorkloadSource> imple
     private HashMap<String, Double> filterHostsAcceleratorMeasurements(HostMeasurement measurement, Set<String> acceleratorMetrics) {
         HashMap<String, Double> metrics = new HashMap<>();
         for (String param : acceleratorMetrics) {
-            MetricValue metric = measurement.getMetric(param);
-            if (metric != null) {
+            MetricValue metric = measurement.getMetric(param.trim());
+            if (metric != null && !metric.getValueAsString().isEmpty()) {
                 metrics.put(metric.getKey(),metric.getValue());
             }
         }

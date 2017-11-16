@@ -422,10 +422,9 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
          */
         public double value(double input) {
             if (totalPower.isEmpty()) {
-                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "No calibration data found for grouping function");
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "No calibration data found for grouping function.");
                 return 0.0;
             }
-            Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Util: {0}", input);
             if (input < 0) {
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Incorrect input frequency value was: {0}", input);
                 return 0.0;
@@ -465,6 +464,12 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
             for (HostAcceleratorCalibrationData data : acc.getAcceleratorCalibrationData()) {
                 if (data.getIdentifier().equals(accelerator) && data.hasParameter(groupingParameter)) {
                     points.add(data.getParameter(groupingParameter), data.getPower());
+                } else {
+                    String parameterlist = "";
+                    for (String dataParam : data.getParameters()) {
+                        parameterlist = parameterlist + ":" + dataParam;
+                    }
+                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.SEVERE, "Failed to Calibrate: {0} for {1}. Valid Parameters: {2}", new Object[]{accelerator, groupingParameter, parameterlist});                    
                 }
             }
         }
