@@ -93,7 +93,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                 config.setFile(new File(CONFIG_FILE));
             }
             config.setAutoSave(true); //This will save the configuration file back to disk. In case the defaults need setting.
-            readSettings(config);
+            readModelSpecificSettings(config);
         } catch (ConfigurationException ex) {
             Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.SEVERE,
                     "Taking the default load from the settings file did not work", ex);
@@ -102,11 +102,11 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
     
     /**
      * This takes the settings and reads them into memory and sets defaults as
-     * needed.
+     * needed. These settings are in addition to the ones loaded by the parent class.
      *
      * @param config The settings to read.
      */
-    private void readSettings(PropertiesConfiguration config) {
+    private void readModelSpecificSettings(PropertiesConfiguration config) {
         String dataSrcStr = config.getString("energy.modeller.grouping.parameter", groupingParameter);
         config.setProperty("energy.modeller.grouping.parameter", dataSrcStr);
     }    
