@@ -103,7 +103,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
      * @return The current power cap value
      */
     public static double getCurrentPowerCap() {
-        ArrayList<String> powerStr = execCmd("scontrol show power"); //using the command
+        ArrayList<String> powerStr = execCmd("scontrol show power");
         if (powerStr.isEmpty()) {
             return Double.NaN;
         }
