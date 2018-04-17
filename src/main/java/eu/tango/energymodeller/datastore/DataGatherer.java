@@ -268,7 +268,7 @@ public class DataGatherer implements Runnable {
      * @param energyUsers The list of energy users
      * @return The list of VMs that have been deployed.
      */
-    private List<VmDeployed> getVMList(List<EnergyUsageSource> energyUsers) {
+    private List<VmDeployed> filterVmsFromList(List<EnergyUsageSource> energyUsers) {
         ArrayList<VmDeployed> answer = new ArrayList<>();
         for (EnergyUsageSource item : energyUsers) {
             if (item.getClass().equals(VmDeployed.class)) {
@@ -305,7 +305,7 @@ public class DataGatherer implements Runnable {
                 refreshKnownHostList(hostList);
                 List<GeneralPurposePowerConsumer> generalPurposeList = datasource.getGeneralPowerConsumerList();
                 refreshKnownGeneralPurposeNodesList(generalPurposeList);
-                List<VmDeployed> vmList = getVMList(energyConsumers);
+                List<VmDeployed> vmList = filterVmsFromList(energyConsumers);
                 refreshKnownVMList(vmList);
                 Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Obtaining specific host information");
                 List<HostMeasurement> measurements = datasource.getHostData(hostList);
