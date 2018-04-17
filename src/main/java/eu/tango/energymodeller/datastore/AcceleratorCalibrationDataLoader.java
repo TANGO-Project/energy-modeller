@@ -235,7 +235,7 @@ public class AcceleratorCalibrationDataLoader extends ResultsStore {
                     ArrayList<String> currentRow = store.getRow(i);
                     int metricIndex = 0;
                     for (String item : currentRow) {
-                        metrics.put(header.get(metricIndex), Double.parseDouble(item));
+                        metrics.put(header.get(metricIndex).trim(), Double.parseDouble(item));
                         metricIndex = metricIndex +1;
                     }
                     calibrationData.add(new HostAcceleratorCalibrationData(

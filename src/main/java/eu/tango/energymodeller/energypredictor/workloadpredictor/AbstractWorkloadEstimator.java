@@ -29,6 +29,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This produces workload estimates for the purpose of providing better 
@@ -66,6 +68,11 @@ public abstract class AbstractWorkloadEstimator<AT extends WorkloadSource> imple
     @Override
     public HashMap<Accelerator,HashMap<String, Double>> getAcceleratorUtilisation(Host host, Collection<WorkloadSource> workloadsource) {
         HashMap<Accelerator,HashMap<String, Double>> answer = new HashMap<>();
+        if (datasource == null) {
+            Logger.getLogger(AbstractWorkloadEstimator.class.getName()).log(Level.SEVERE,
+                    "Internal error the datasource used by the workload predictor should not be null!");
+            return answer;
+        }
         if (!host.hasAccelerator()) {
             return answer;
         }
@@ -73,7 +80,9 @@ public abstract class AbstractWorkloadEstimator<AT extends WorkloadSource> imple
         for (Accelerator accelerator : accelerators) {
             Set<String> params = accelerator.getMetricsInCalibrationData();
             HostMeasurement measurement = datasource.getHostData(host);
-            answer.put(accelerator, filterHostsAcceleratorMeasurements(measurement, params));
+            if (measurement != null) { //Guards against hosts that are down
+                answer.put(accelerator, filterHostsAcceleratorMeasurements(measurement, params));
+            }
         }
         return answer;
     }
@@ -88,8 +97,8 @@ public abstract class AbstractWorkloadEstimator<AT extends WorkloadSource> imple
     private HashMap<String, Double> filterHostsAcceleratorMeasurements(HostMeasurement measurement, Set<String> acceleratorMetrics) {
         HashMap<String, Double> metrics = new HashMap<>();
         for (String param : acceleratorMetrics) {
-            MetricValue metric = measurement.getMetric(param);
-            if (metric != null) {
+            MetricValue metric = measurement.getMetric(param.trim());
+            if (metric != null && !metric.getValueAsString().isEmpty()) {
                 metrics.put(metric.getKey(),metric.getValue());
             }
         }

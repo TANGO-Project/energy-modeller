@@ -44,13 +44,11 @@ In this case, we are going to detail how to run the application in its standalon
 
 The energy modeller is also highly configurable and has several files that may be used to change its behaviour. The energy modeller has the following settings files in order to achieve these changes:
 
-*energy-modeller.properites:* holds basic configuration specifying which data source and predictor to use.  
+*energy-modeller.properties:* holds basic configuration specifying which data source and predictor to use.  
 *energy-modeller-db.properties:* Holds database information for the energy modeller.  
 *energy-modeller-predictor.properties:* Holds settings relating to the prediction of energy usage.  
 *energy-modeller-influx-db-config.properties:* Holds settings on how to connect to ConnectD's influxdb database directly, in the event the CollectDInfluxDbDatasoruceAdaptor or TangoEnvironmentDataSourceAdaptor are in use. This is the default.  
 *energy-modeller-db-zabbix.properties:* Holds information on how to connect to the Zabbix database directly, in the event the ZabbixDirectDbDataSourceAdaptor is in use.  
-*ascetic-zabbix-api.properties:* Settings for the Zabbix client, used to connect to a Zabbix based information source.  
-*filter.properties:* This holds settings to distinguish between a host and a VM.  
 
 These settings must be tailored to the specific infrastructure. The settings are described below and an example of the settings is provided for reference.
 
@@ -80,8 +78,7 @@ The data source parameter indicates how the energy modeller's will gain the envi
 *CollectDInfluxDbDataSourceAdaptor:* This connector that directly accesses collectd's influxdb database for the information that it requires. This adaptor utilises the configuration file energy-modeller-influx-db-config.properties.  
 *SlurmDataSourceAdaptor:* This is an adaptor that connects the energy modeller into a SLURM job management based environment. Allowing access to information about the physical host.  
 *TangoEnvironmentDataSourceAdaptor:* This makes use of both the SlurmDataSourceAdaptor and the CollectDInfluxDbDataSourceAdaptor.  
-*ZabbixDirectDbDataSourceAdaptor:* This connector that directly accesses the Zabbix database for the information that it requires. This adaptor utilises the configuration file energy-modeller-db-zabbix.properties.  
-*ZabbixDataSourceAdaptor:* This is an alternative adaptor that utilises at the JSON API of Zabbix in order to get hold of the required host and VM data.  
+*ZabbixDirectDbDataSourceAdaptor:* This connector that directly accesses the Zabbix database for the information that it requires. This adaptor utilises the configuration file energy-modeller-db-zabbix.properties.   
 *WattsUpMeterDataSourceAdaptor:* for local usage of the energy modeller.
 
 It should be noted that the observation window should not be too small, especially during the usage of the Zabbix data source adaptors, which may provide fewer data points than the WattsUpMeterDataSourceAdaptor, the latter been able to report at an interval as low as every second. 
@@ -150,22 +147,13 @@ energy.modeller.zabbix.db.driver = org.mariadb.jdbc.Driver
 energy.modeller.zabbix.db.url = jdbc:mysql://192.168.3.199:3306/zabbix
 energy.modeller.zabbix.db.user = zabbix
 energy.modeller.zabbix.db.password = XXXXX
-energy.modeller.filter.begins = wally
-energy.modeller.filter.isHost = true
+energy.modeller.host.group = Hypervisors
+energy.modeller.vm.group = Virtual Machines
+energy.modeller.dfs.group = DFS
+energy.modeller.only.available.hosts = false
 ```
 
 This includes specifying the database username and password for the energy modeller to connect to directly with the Zabbix database. This also includes information such as the connection URL, the driver to use, the username and password to use.
-
-#### filter.properties
-
-This settings file is used in conjunction with the ZabbixDataSourceAdaptor and the ascetic-zabbix-api.properties configuration file. This settings file has two properties; the first indicates a string that is at the start of a host/vms name to be searched for. The second parameter indicates that if this string is found that it is a host or virtual machine (VM). True if a host false if a VM. The following is an example of the defaults that are written to disk in the event the file is not found.
-
-```
-energy.modeller.filter.begins = wally
-energy.modeller.filter.isHost = true
-```
-
-The energy modeller in addition to this settings file has a method called setHostFilter, that allows alternative patterns such as looking at the ending of a hostname to determine if it is a host or VM or not.
 
 ## Relation to other TANGO components
 

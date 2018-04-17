@@ -297,6 +297,9 @@ public abstract class Measurement {
             throw new NullPointerException("Adding metric failed the value was null");
 //            return; //Don't allow null metric values
         }
+        if (item.getValueAsString().isEmpty()) {
+            return; //Don't allow empty values          
+        }
         if (!metrics.containsKey(item.getKey())) {
             metrics.put(item.getKey(), item);
         } else {

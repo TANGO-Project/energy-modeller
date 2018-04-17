@@ -19,6 +19,7 @@
 package eu.tango.energymodeller.energypredictor;
 
 import eu.ascetic.ioutils.caching.LRUCache;
+import static eu.tango.energymodeller.energypredictor.AbstractEnergyPredictor.CONFIG_FILE;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyDivision;
 import eu.tango.energymodeller.types.TimePeriod;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
@@ -29,10 +30,14 @@ import eu.tango.energymodeller.types.energyuser.Accelerator;
 import eu.tango.energymodeller.types.energyuser.usage.HostAcceleratorCalibrationData;
 import eu.tango.energymodeller.types.energyuser.usage.HostEnergyCalibrationData;
 import eu.tango.energymodeller.types.usage.EnergyUsagePrediction;
+import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
 import org.apache.commons.math3.exception.NumberIsTooSmallException;
@@ -56,6 +61,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
 
     private final LRUCache<Host, PredictorFunction<PolynomialFunction>> modelCache = new LRUCache<>(5, 50);
     private final LRUCache<Host, PredictorFunction<GroupingFunction>> modelAcceleratorCache = new LRUCache<>(5, 50);
+    //A much better definition "clocks.current.sm [MHz]"
+    private String groupingParameter = "nvidia_value:null:percent";
 
     /**
      * This creates a new CPU only energy predictor that uses a polynomial fit.
@@ -77,7 +84,32 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      */
     public CpuAndBiModalAcceleratorEnergyPredictor() {
         super();
+        try {
+            PropertiesConfiguration config;
+            if (new File(CONFIG_FILE).exists()) {
+                config = new PropertiesConfiguration(CONFIG_FILE);
+            } else {
+                config = new PropertiesConfiguration();
+                config.setFile(new File(CONFIG_FILE));
+            }
+            config.setAutoSave(true); //This will save the configuration file back to disk. In case the defaults need setting.
+            readModelSpecificSettings(config);
+        } catch (ConfigurationException ex) {
+            Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.SEVERE,
+                    "Taking the default load from the settings file did not work", ex);
+        }        
     }
+    
+    /**
+     * This takes the settings and reads them into memory and sets defaults as
+     * needed. These settings are in addition to the ones loaded by the parent class.
+     *
+     * @param config The settings to read.
+     */
+    private void readModelSpecificSettings(PropertiesConfiguration config) {
+        String dataSrcStr = config.getString("energy.modeller.grouping.parameter", groupingParameter);
+        config.setProperty("energy.modeller.grouping.parameter", dataSrcStr);
+    }    
 
     /**
      * This creates a new CPU only energy predictor that uses a polynomial fit.
@@ -189,10 +221,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         PolynomialFunction cpuModel = retrieveCpuModel(host).getFunction();
         double powerUsed = cpuModel.value(usageCPU);
         //TODO fix the accelerator usage to mutliple accelerator mapping issue.
-        for (Accelerator accelerator : host.getAccelerators()) {
-            GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-            powerUsed = powerUsed + acceleratorModel.value(getAcceleratorClockRate(host, accelerator, accUsage));
-        }
+        powerUsed = powerUsed + getCurrentAcceleratorPowerUsage(host, false);
         answer.setAvgPowerUsed(powerUsed);
         answer.setTotalEnergyUsed(powerUsed * ((double) TimeUnit.SECONDS.toHours(timePeriod.getDuration())));
         answer.setDuration(timePeriod);
@@ -212,15 +241,36 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         PolynomialFunction cpuModel = retrieveCpuModel(host).getFunction();
         if (getDefaultAssumedCpuUsage() == -1) {
             power = cpuModel.value(getCpuUtilisation(host));
-            for (Accelerator accelerator : host.getAccelerators()) {
-                GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-                power = power + acceleratorModel.value(getAcceleratorClockRate(host, accelerator));
-            }
+            power = power + getCurrentAcceleratorPowerUsage(host, false);
         } else {
+            //TODO consider if this is valid, it assumes the accelerator usage remains constant, given no input source for an alternative estimate
             power = cpuModel.value(getDefaultAssumedCpuUsage());
+            power = power + getCurrentAcceleratorPowerUsage(host, true);
+        }
+        return power;
+    }
+    
+    /**
+     * This gets the accelerators current power usage information.
+     * @param host The host to get the power usage data for
+     * @param useAssumedDefaultUsage Takes the default assumed usage value, otherwise
+     * assumes current usage continues.
+     * @return The current power consumption of the accelerators.
+     */
+    private double getCurrentAcceleratorPowerUsage(Host host, boolean useAssumedDefaultUsage) {
+        double power = 0;
+        double acceleratorClockRate = 0;
+        if (useAssumedDefaultUsage) {
+            acceleratorClockRate = getDefaultAssumedAcceleratorUsage();
+        }
+        //This guard ensures the host's accelerator usage data is available
+        if (host.isAvailable()) {
             for (Accelerator accelerator : host.getAccelerators()) {
+                if (!useAssumedDefaultUsage) {
+                    acceleratorClockRate = getAcceleratorClockRate(host, accelerator);
+                }
                 GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-                power = power + acceleratorModel.value(getDefaultAssumedAcceleratorUsage());
+                power = power + acceleratorModel.value(acceleratorClockRate);
             }
         }
         return power;
@@ -253,20 +303,30 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      */
     protected double getAcceleratorClockRate(Host host,Accelerator accelerator, HashMap<Accelerator,HashMap<String, Double>> accUsage) {
         double answer = 0.0;
-        HashMap<String,Double> values;
-        if (accUsage == null) {
-            values = getAcceleratorUtilisation(host, null).get(accelerator);
-        } else {
-            values = accUsage.get(accelerator);
-        }
-        if (values.containsKey("clocks.current.sm [MHz]")) {
-            answer = values.get("clocks.current.sm [MHz]");
+        try {
+            HashMap<String,Double> values;
+            if (accUsage == null) {
+                values = getAcceleratorUtilisation(host, null).get(accelerator);
+            } else {
+                values = accUsage.get(accelerator);
+            }
+            if (values.isEmpty()) {
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "An error occured, no load data was available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});    
+            }
+            if (values.containsKey(groupingParameter)) {
+                answer = values.get(groupingParameter);
+            } else {
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "The load data item needed was not available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.SEVERE, "An error occured! Host: " + (host != null ? host : "null") + " : Accelerator " + (accelerator != null ? accelerator.getName() : "null"), ex);
         }
         return answer;
     }    
 
     /**
-     * This estimates the power used by a host, given its CPU load.
+     * This estimates the power used by a host, given its CPU load. It assumes
+     * accelerator load remains the same.
      *
      * @param host The host to get the energy prediction for
      * @param usageCPU The amount of CPU load placed on the host
@@ -275,7 +335,9 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
     @Override
     public double predictPowerUsed(Host host, double usageCPU) {
         PolynomialFunction model = retrieveCpuModel(host).getFunction();
-        return model.value(usageCPU);
+        double power = model.value(usageCPU);
+        power = power + getCurrentAcceleratorPowerUsage(host, false);     
+        return power;
     }
 
     /**
@@ -359,8 +421,13 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
          */
         public double value(double input) {
             if (totalPower.isEmpty()) {
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "No calibration data found for grouping function.");
                 return 0.0;
             }
+            if (input < 0) {
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Incorrect input frequency value was: {0}", input);
+                return 0.0;
+            }            
             if (totalPower.containsKey(input)) {
                 return totalPower.get(input) / countPower.get(input);
             }
@@ -394,8 +461,14 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         WeightedObservedPoints points = new WeightedObservedPoints();
         for (Accelerator acc : host.getAccelerators()) {
             for (HostAcceleratorCalibrationData data : acc.getAcceleratorCalibrationData()) {
-                if (data.getIdentifier().equals(accelerator)) {
-                    points.add(data.getParameter("clocks.current.sm [MHz]"), data.getPower());
+                if (data.getIdentifier().equals(accelerator) && data.hasParameter(groupingParameter)) {
+                    points.add(data.getParameter(groupingParameter), data.getPower());
+                } else {
+                    String parameterlist = "";
+                    for (String dataParam : data.getParameters()) {
+                        parameterlist = parameterlist + ":" + dataParam;
+                    }
+                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.SEVERE, "Failed to Calibrate: {0} for {1}. Valid Parameters: {2}", new Object[]{accelerator, groupingParameter, parameterlist});                    
                 }
             }
         }

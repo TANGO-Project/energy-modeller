@@ -102,7 +102,7 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
             config.setAutoSave(true); //This will save the configuration file back to disk. In case the defaults need setting.
             readSettings(config);
         } catch (ConfigurationException ex) {
-            Logger.getLogger(CpuOnlyEnergyPredictor.class.getName()).log(Level.SEVERE,
+            Logger.getLogger(AbstractEnergyPredictor.class.getName()).log(Level.SEVERE,
                     "Taking the default load from the settings file did not work", ex);
         }
     }
@@ -139,6 +139,9 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
      * @param config The settings to read.
      */
     private void readSettings(PropertiesConfiguration config) {
+        String dataSrcStr = config.getString("energy.modeller.energy.predictor.datasource", "SlurmDataSourceAdaptor");
+        config.setProperty("energy.modeller.energy.predictor.datasource", dataSrcStr);
+        setDataSource(dataSrcStr);        
         String workloadPredictorStr = config.getString("energy.modeller.energy.predictor.workload.predictor", "CpuRecentHistoryWorkloadPredictor");
         config.setProperty("energy.modeller.energy.predictor.workload.predictor", workloadPredictorStr);
         setWorkloadPredictor(workloadPredictorStr);
@@ -153,11 +156,6 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
         config.setProperty("energy.modeller.energy.predictor.consider_idle_energy", considerIdleEnergy);
         defaultPowerOverheadPerHost = config.getDouble("energy.modeller.energy.predictor.overheadPerHostInWatts", defaultPowerOverheadPerHost);
         config.setProperty("energy.modeller.energy.predictor.overheadPerHostInWatts", defaultPowerOverheadPerHost);
-        if (defaultAssumedCpuUsage == -1) {
-            String dataSrcStr = config.getString("energy.modeller.energy.predictor.datasource", "SlurmDataSourceAdaptor");
-            config.setProperty("energy.modeller.energy.predictor.datasource", dataSrcStr);
-            setDataSource(dataSrcStr);
-        }
     }
 
     /**

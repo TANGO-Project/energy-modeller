@@ -249,21 +249,25 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
          * printf values[1] " " ; printf values[2] " "; printf values[4] " "; 
          * printf values[5] " "; printf values[6] " "; printf values[7] " " ; 
          * printf values[8] " "; print values[10]}'
+         * -l parameter swapped out with -o "%.30i %.30P %.50j %.30u %.30T %.30M %.30l %.30D %R"
+         * as per: https://slurm.schedmd.com/squeue.html. This changes the length 
+         * of things such as the job name and helps avoid truncation
          *
          * The output looks like:
          * 
          * 3009 RK-BENCH Kavanagr RUNNING 8:06 ns52
          *        
-         */
-        String maincmd = "squeue " + jobState + " -l | awk 'NR> 2 {split($0,values,\"[ \\t\\n]+\"); "
+         */ 
+        String maincmd = "squeue " + jobState + " -o \"%.30i %.50j %.30u %.30T %.30M %.20l %R\""
+                + " | awk 'NR> 1 {split($0,values,\"[ \\t\\n]+\"); "
                 + "printf values[1] \" \"; "
                 + "printf values[2] \" \"; "
+                + "printf values[3] \" \"; "
                 + "printf values[4] \" \"; "
                 + "printf values[5] \" \"; "
                 + "printf values[6] \" \"; "
-                + "printf values[7] \" \"; "
-                + "printf values[8] \" \"; "
-                + "print values[10]}'";
+                + "printf values[7] \" \"; "                
+                + "print values[8]}'";
         ArrayList<String> output = execCmd(maincmd);
         for (String line : output) { //Each line represents a different application
             if (line != null && !line.isEmpty()) {
@@ -335,8 +339,8 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
                 break;
         }
         return seconds;
-    }
-
+    } 
+    
     /**
      * This executes a command and returns the output as a line of strings.
      *
@@ -375,7 +379,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
             Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE, null, ex);
         }
         return new ArrayList<>();
-    }
+    }    
 
     @Override
     public HostMeasurement getHostData(Host host) {
@@ -834,6 +838,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
             String wattskwh = getValue("ConsumedJoules", values);
             String hostname = getValue("NodeName", values);
             String state = getValue("State", values);
+            String coreCount = getValue("CPUTot", values);
             if (hostname.isEmpty()) {
                 return;
             }
@@ -846,12 +851,16 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
             }
             Host host = getHostByName(hostname);
 
-            //Check for need to disover host
+            //Check for need to discover host
             if (host == null) {
                 host = new Host(Integer.parseInt(hostId), hostname);
+                if (coreCount.matches("-?\\d+(\\.\\d+)?")) {
+                    host.setCoreCount(Integer.parseInt(coreCount));
+                }
                 hosts.put(hostname, host);
             }
             host.setAvailable(!state.isEmpty() && !state.equals("DOWN*"));
+            host.setState(state);
             /**
              * The further metrics from this host are not relevant and may cause
              * parse errors
