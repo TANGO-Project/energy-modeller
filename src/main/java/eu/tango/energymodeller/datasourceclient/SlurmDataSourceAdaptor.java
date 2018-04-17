@@ -95,6 +95,30 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
             settings.save("energy-modeller-slurm-config.properties");
         }
     }
+    
+    /**
+     * This obtains the current cluster level power cap from SLURM. In the event 
+     * the value isn't read correctly the value Double.NaN is provided instead.
+     *
+     * @return The current power cap value
+     */
+    public static double getCurrentPowerCap() {
+        ArrayList<String> powerStr = execCmd("scontrol show power"); //using the command
+        if (powerStr.isEmpty()) {
+            return Double.NaN;
+        }
+        try {
+            String[] values = powerStr.get(0).split(" ");
+            for (String value : values) {
+                if (value.startsWith("PowerCap")) {
+                    return Double.parseDouble(value.split("=")[1]);
+                }
+            }
+        } catch (NumberFormatException ex) {
+
+        }
+        return Double.NaN;
+    }    
 
     /**
      * The host string from SLURM follows a format that must be parsed into a
@@ -817,7 +841,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
             CircularFifoQueue<SlurmDataSourceAdaptor.CPUUtilisation> lastCpuMeasurements = cpuMeasure.get(hostname);
             if (lastCpuMeasurements == null) {
                 //Needs enough information to cover any recent queries of cpu utilisation, thus gather last 10mins of data
-                lastCpuMeasurements = new CircularFifoQueue((int) TimeUnit.MINUTES.toSeconds(10) / poller.getPollRate());
+                lastCpuMeasurements = new CircularFifoQueue<>((int) TimeUnit.MINUTES.toSeconds(10) / poller.getPollRate());
                 cpuMeasure.put(hostname, lastCpuMeasurements);
             }
             Host host = getHostByName(hostname);
