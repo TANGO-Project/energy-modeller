@@ -12,6 +12,9 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ *
+ * This is being developed for the TANGO Project: http://tango-project.eu 
+ * 
  */
 package eu.tango.energymodeller.types.energyuser.comparators;
 
@@ -24,6 +27,8 @@ import java.util.Comparator;
  * @author Richard Kavanagh
  */
 public class HostMaxPower implements Comparator<Host>, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Override
     public int compare(Host host1, Host host2) {
