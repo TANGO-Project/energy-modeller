@@ -22,11 +22,11 @@ import eu.ascetic.ioutils.caching.LRUCache;
 import static eu.tango.energymodeller.energypredictor.AbstractEnergyPredictor.CONFIG_FILE;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyDivision;
 import eu.tango.energymodeller.types.TimePeriod;
+import eu.tango.energymodeller.types.energyuser.Accelerator;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
 import eu.tango.energymodeller.types.energyuser.WorkloadSource;
-import eu.tango.energymodeller.types.energyuser.Accelerator;
 import eu.tango.energymodeller.types.energyuser.usage.HostAcceleratorCalibrationData;
 import eu.tango.energymodeller.types.energyuser.usage.HostEnergyCalibrationData;
 import eu.tango.energymodeller.types.usage.EnergyUsagePrediction;
@@ -311,18 +311,21 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                 values = accUsage.get(accelerator);
             }
             if (values.isEmpty()) {
+                printMetricsList();                
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "An error occured, no load data was available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});    
             }
             if (values.containsKey(groupingParameter)) {
                 answer = values.get(groupingParameter);
             } else {
-                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "The load data item needed was not available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});
+                printMetricsList();
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "The load data item needed was not available! Host: {0} : Accelerator {1} : Key {2}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null", groupingParameter != null ? groupingParameter : "null"});
             }
         } catch (Exception ex) {
+            printMetricsList();            
             Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.SEVERE, "An error occured! Host: " + (host != null ? host : "null") + " : Accelerator " + (accelerator != null ? accelerator.getName() : "null"), ex);
         }
         return answer;
-    }    
+    }  
 
     /**
      * This estimates the power used by a host, given its CPU load. It assumes
@@ -421,11 +424,13 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
          */
         public double value(double input) {
             if (totalPower.isEmpty()) {
+                printMetricsList();
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "No calibration data found for grouping function.");
                 return 0.0;
             }
             if (input < 0) {
-                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Incorrect input frequency value was: {0}", input);
+                printMetricsList();
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Incorrect input utilisation value, its value was: {0}", input);
                 return 0.0;
             }            
             if (totalPower.containsKey(input)) {
@@ -468,6 +473,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                     for (String dataParam : data.getParameters()) {
                         parameterlist = parameterlist + ":" + dataParam;
                     }
+                    printMetricsList();                    
                     Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.SEVERE, "Failed to Calibrate: {0} for {1}. Valid Parameters: {2}", new Object[]{accelerator, groupingParameter, parameterlist});                    
                 }
             }

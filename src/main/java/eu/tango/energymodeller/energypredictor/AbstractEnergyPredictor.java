@@ -18,7 +18,9 @@
  */
 package eu.tango.energymodeller.energypredictor;
 
+import eu.ascetic.ioutils.io.ResultsStore;
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
+import eu.tango.energymodeller.datasourceclient.HostMeasurement;
 import eu.tango.energymodeller.datasourceclient.WattsUpMeterDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.ZabbixDirectDbDataSourceAdaptor;
 import eu.tango.energymodeller.datastore.DatabaseConnector;
@@ -42,6 +44,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -544,6 +548,39 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
         }
         return answer;
     }
+    
+    /**
+     * This prints out a list of metric for the hosts, it therefore aids the
+     * user in writing the file for accelerator calibration data.
+     */
+    protected void printMetricsList() {
+        if (new File("MetricsList.csv").exists()) {
+            //Skip recreating the metrics file list
+            return;
+        }
+        //Wait for the environment to catch up before printing.
+        try {
+            Thread.sleep(1000);
+
+        } catch (InterruptedException ex) {
+            Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class
+                    .getName()).log(Level.SEVERE, null, ex);
+        }
+        HashSet<String> namesList = new HashSet<>();
+        ResultsStore store = new ResultsStore("MetricsList.csv");
+        List<HostMeasurement> data = source.getHostData();
+        for (HostMeasurement item : data) {
+            namesList.addAll(item.getMetricNameList());
+        }
+
+        store.add("This lists all recognised metrics, thus helping "
+                + "to list metrics available for the accelerator's model generation.");
+        store.add("");
+        for (String termname : namesList) {
+            store.add(termname);
+        }
+        store.save();
+    }      
 
     /**
      * This predicts the total amount of energy used by a general service hosts.
