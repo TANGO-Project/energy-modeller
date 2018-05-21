@@ -63,6 +63,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
     private final LRUCache<Host, PredictorFunction<GroupingFunction>> modelAcceleratorCache = new LRUCache<>(5, 50);
     //A much better definition "clocks.current.sm [MHz]"
     private String groupingParameter = "nvidia_value:null:percent";
+    private int noAcceleratorLoadDataErrorCount = 0;
 
     /**
      * This creates a new CPU only energy predictor that uses a polynomial fit.
@@ -275,7 +276,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         }
         return power;
     }
- 
+    
     /**
      * This provides an average of the recent CPU utilisation for a given host,
      * based upon the CPU utilisation time window set for the energy predictor.
@@ -311,8 +312,12 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                 values = accUsage.get(accelerator);
             }
             if (values.isEmpty()) {
-                printMetricsList();                
-                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "An error occured, no load data was available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});    
+                noAcceleratorLoadDataErrorCount = noAcceleratorLoadDataErrorCount + 1;
+                //The next check prevents initialisation error warnings that disapear quickly
+                if (noAcceleratorLoadDataErrorCount >= 5) {
+                    printMetricsList();                
+                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator load data was not available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});
+                }  
             }
             if (values.containsKey(groupingParameter)) {
                 answer = values.get(groupingParameter);
