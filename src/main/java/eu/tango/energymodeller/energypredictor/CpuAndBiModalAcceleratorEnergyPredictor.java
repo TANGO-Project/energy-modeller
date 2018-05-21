@@ -322,8 +322,11 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
             if (values.containsKey(groupingParameter)) {
                 answer = values.get(groupingParameter);
             } else {
-                printMetricsList();
-                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "The load data item needed was not available! Host: {0} : Accelerator {1} : Key {2}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null", groupingParameter != null ? groupingParameter : "null"});
+                noAcceleratorLoadDataErrorCount = noAcceleratorLoadDataErrorCount + 1;                
+                if (noAcceleratorLoadDataErrorCount >= 5) {
+                    printMetricsList();
+                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "The data item needed for grouping was not available! Host: {0} : Accelerator {1} : Key {2}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null", groupingParameter != null ? groupingParameter : "null"});
+                }
             }
         } catch (Exception ex) {
             printMetricsList();            
