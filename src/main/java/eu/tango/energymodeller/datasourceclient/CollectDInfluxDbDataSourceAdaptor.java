@@ -29,19 +29,19 @@ import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VmDeployed;
 import eu.tango.energymodeller.types.usage.CurrentUsageRecord;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import org.influxdb.InfluxDB;
-import org.influxdb.InfluxDBFactory;
-import org.influxdb.dto.Query;
-import org.influxdb.dto.QueryResult;
-import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.influxdb.InfluxDB;
+import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.BatchPoints;
 import org.influxdb.dto.Point;
+import org.influxdb.dto.Query;
+import org.influxdb.dto.QueryResult;
 
 /**
  * This data source adaptor connects directly into a collectd database.
@@ -260,11 +260,11 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
                 }
                 for (List<Object> value : series.getValues()) {
                     Instant time = Instant.parse((String) value.get(0));
-                    String metricName = series.getName() + ":" + value.get(2);
-                    if (value.size() == 4) {
+                    String metricName = series.getName() + ":" + (value.get(2) == null ? "" : value.get(2));
+                    if (value.size() >= 4) {
                         metricName = metricName + ":" + (value.get(3) == null ? "" : value.get(3));
                     }
-                    if (value.size() == 5) {
+                    if (value.size() >= 5) {
                         metricName = metricName + ":" + (value.get(4) == null ? "" : value.get(4));
                     }                     
                     if (metricName.equals("power_value:estimated:power")) {
@@ -274,11 +274,11 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
                     /**
                      * This counts up all power consumed and reported by the
                      * monitoring infrastructure usually in the format:
-                     * nvidia_value:0:nvidia:power (i.e. card 1)
-                     * nvidia_value:1:nvidia:power (and card 2)
+                     * nvidia_value::0:nvidia:power (i.e. card 1)
+                     * nvidia_value::1:nvidia:power (and card 2)
                      */
                     try {
-                        if (metricName.contains("nvidia_value:")) {
+                        if (metricName.matches("nvidia_value::[0-9]+:power")) {
                             acceleratorPowerUsed = acceleratorPowerUsed + Double.parseDouble(value.get(1).toString());
                         }
                     } catch (NumberFormatException ex) {
@@ -298,7 +298,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
         }
         return answer;
     }
-
+    
     /**
      * This method appends to a host measurement cpu utilisation information.
      * @param measurement The host measurement to append
@@ -311,11 +311,14 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
         for (QueryResult.Series series : result.getSeries()) {
             for (List<Object> value : series.getValues()) {
                 time = Instant.parse((String) value.get(0));
-                String metricName = series.getName() + ":" + value.get(2);
-                if (value.size() == 4) {
-                    metricName = metricName + ":" + value.get(3);
+                String metricName = series.getName() + ":" + (value.get(2) == null ? "" : value.get(2));
+                if (value.size() >= 4) {
+                    metricName = metricName + ":" + (value.get(3) == null ? "" : value.get(3));
                 }
-                if (metricName.contains("cpu_value:idle:percent")) {
+                if (value.size() >= 5) {
+                    metricName = metricName + ":" + (value.get(4) == null ? "" : value.get(4));
+                }   
+                if (metricName.matches("cpu_value:idle:[0-9]+:percent")) {
                     count = count + 1;
                     idleValue = idleValue + Double.parseDouble(value.get(1).toString());
                 }
