@@ -358,11 +358,13 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
             if (entry.getKey().matches(groupingParameter)) {
                 String indexString = entry.getKey().trim().replaceAll("[^0-9]","");
                 if (indexString == null || indexString.isEmpty()) {
+                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Index value not found in metric: {0}", entry.getKey().trim());
                     continue;
                 }
                 int index = Integer.parseInt(indexString);
                 if (index >=0 && index <= acceleratorCount -1) {
                     answer[index] = entry.getValue();
+                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Usage inserted: {0}", entry.getValue());
                     acted = true;
                 }
             }
