@@ -32,6 +32,7 @@ import static eu.tango.energymodeller.datasourceclient.KpiList.NETWORK_OUT_START
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -369,17 +370,19 @@ public abstract class Measurement {
      * @param key The key that is used to identify a given measurement
      * @return The metric and its value that is identified by the key.
      */    
-    public MetricValue getMetricByRegularExpression(String key) {
+    public HashSet<MetricValue> getMetricByRegularExpression(String key) {
+        HashSet<MetricValue> answer = new HashSet<>();
         if (metrics.get(key) != null) {
-            return metrics.get(key);
+            answer.add(metrics.get(key));
+            return answer;
         }
         Set<String> keys = metrics.keySet();
         for (String currentKey : keys) {
             if (currentKey.matches(key)) {
-                return metrics.get(currentKey);
+                answer.add(metrics.get(currentKey));
             }
         }
-        return null;
+        return answer;
     }
 
     /**

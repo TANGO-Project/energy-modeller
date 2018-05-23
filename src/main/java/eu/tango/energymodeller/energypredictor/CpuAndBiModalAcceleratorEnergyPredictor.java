@@ -354,10 +354,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
          */
         double[] answer = new double[acceleratorCount];
         java.util.Arrays.fill(answer, 0.0); //ensure default is no utilisation.
-        for (Map.Entry<String, Double> entry : values.entrySet()) {
-Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Pre-Key: {0} Pre-Check Inserted: {1}", new Object[]{entry.getKey(), entry.getValue()});            
+        for (Map.Entry<String, Double> entry : values.entrySet()) {           
             if (entry.getKey().matches(groupingParameter)) {
-                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Key: {0} Check Inserted: {1}", new Object[]{entry.getKey(), entry.getValue()});
                 String indexString = entry.getKey().trim().replaceAll("[^0-9]","");
                 if (indexString == null || indexString.isEmpty()) {
                     Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Index value not found in metric: {0}", entry.getKey().trim());
@@ -366,7 +364,6 @@ Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Le
                 int index = Integer.parseInt(indexString);
                 if (index >=0 && index <= acceleratorCount -1) {
                     answer[index] = entry.getValue();
-                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Index: {0} Key: {1} Usage inserted: {2}", new Object[]{index,entry.getKey(), entry.getValue()});
                     acted = true;
                 }
             }

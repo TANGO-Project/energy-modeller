@@ -96,10 +96,12 @@ public abstract class AbstractWorkloadEstimator<AT extends WorkloadSource> imple
      */
     private HashMap<String, Double> filterHostsAcceleratorMeasurements(HostMeasurement measurement, Set<String> acceleratorMetrics) {
         HashMap<String, Double> metrics = new HashMap<>();
-        for (String param : acceleratorMetrics) {
-            MetricValue metric = measurement.getMetricByRegularExpression(param.trim());
-            if (metric != null && !metric.getValueAsString().isEmpty()) {
-                metrics.put(metric.getKey(),metric.getValue());
+        for (String metricName : acceleratorMetrics) {
+            HashSet<MetricValue> metricSet = measurement.getMetricByRegularExpression(metricName.trim());
+            for (MetricValue metric : metricSet) {
+                if (metric != null && !metric.getValueAsString().isEmpty()) {
+                    metrics.put(metric.getKey(),metric.getValue());
+                }
             }
         }
         return metrics;
