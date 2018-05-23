@@ -109,8 +109,8 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      * @param config The settings to read.
      */
     private void readModelSpecificSettings(PropertiesConfiguration config) {
-        String dataSrcStr = config.getString("energy.modeller.grouping.parameter", groupingParameter);
-        config.setProperty("energy.modeller.grouping.parameter", dataSrcStr);
+        groupingParameter = config.getString("energy.modeller.grouping.parameter", groupingParameter);
+        config.setProperty("energy.modeller.grouping.parameter", groupingParameter);
     }    
 
     /**
