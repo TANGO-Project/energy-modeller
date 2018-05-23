@@ -268,10 +268,13 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         if (host.isAvailable()) {
             for (Accelerator accelerator : host.getAccelerators()) {
                 GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
+                double[] usageArray = getAcceleratorUsage(host, accelerator);
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator load data: ", usageArray);
                 for (int acceleratorIndex = 0; acceleratorIndex < accelerator.getCount(); acceleratorIndex++) {
                     if (!useAssumedDefaultUsage) {
-                        acceleratorUsage = getAcceleratorUsage(host, accelerator)[acceleratorIndex];
+                        acceleratorUsage = usageArray[acceleratorIndex];
                     }
+                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator additional power: ", acceleratorModel.value(acceleratorUsage));
                     power = power + acceleratorModel.value(acceleratorUsage);
                 }
             }
@@ -367,12 +370,17 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         /**
          * Error handling, prints metric list in the event the metric value 
          * which data is being grouped by is persistently not present:
-         * i.e. groupingParameter is not in the incoming dataset
+         * i.e. groupingParameter is not in the incoming dataset.
+         * 
+         * It avoids both spaming the same message and issuing the error message
+         * to early i.e. not fully initialised monitoring.
          */
         if (acted == false) {
             noAcceleratorLoadDataErrorCount = noAcceleratorLoadDataErrorCount + 1;                
         }
-        if (noAcceleratorLoadDataErrorCount >= 5 && acted == false) {
+        if (noAcceleratorLoadDataErrorCount >= 5 && 
+                noAcceleratorLoadDataErrorCount <= 10 
+                && acted == false) {
             printMetricsList();
             Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "The data item needed for grouping was not available! Key: {0}", (groupingParameter != null ? groupingParameter : "null"));
         }        
