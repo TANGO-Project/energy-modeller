@@ -364,7 +364,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                 int index = Integer.parseInt(indexString);
                 if (index >=0 && index <= acceleratorCount -1) {
                     answer[index] = entry.getValue();
-                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Usage inserted: {0}", entry.getValue());
+                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Key: {0} Usage inserted: {1}", new Object[]{entry.getKey(), entry.getValue()});
                     acted = true;
                 }
             }
