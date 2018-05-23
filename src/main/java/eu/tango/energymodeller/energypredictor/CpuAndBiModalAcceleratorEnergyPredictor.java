@@ -272,9 +272,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                 for (int acceleratorIndex = 0; acceleratorIndex < accelerator.getCount(); acceleratorIndex++) {
                     if (!useAssumedDefaultUsage) {
                         acceleratorUsage = usageArray[acceleratorIndex];
-                        Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator {0} load data: {1}", new Object[]{acceleratorIndex, acceleratorUsage});
                     }
-                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator {0} additional power: {1}", new Object[]{acceleratorIndex, acceleratorModel.value(acceleratorUsage)});
                     power = power + acceleratorModel.value(acceleratorUsage);
                 }
             }
