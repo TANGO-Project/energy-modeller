@@ -356,6 +356,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         java.util.Arrays.fill(answer, 0.0); //ensure default is no utilisation.
         for (Map.Entry<String, Double> entry : values.entrySet()) {
             if (entry.getKey().matches(groupingParameter)) {
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Key: {1} Check Inserted: {2}", new Object[]{entry.getKey(), entry.getValue()});
                 String indexString = entry.getKey().trim().replaceAll("[^0-9]","");
                 if (indexString == null || indexString.isEmpty()) {
                     Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "Index value not found in metric: {0}", entry.getKey().trim());
