@@ -354,6 +354,9 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         for (Map.Entry<String, Double> entry : values.entrySet()) {
             if (entry.getKey().matches(groupingParameter)) {
                 String indexString = entry.getKey().trim().replaceAll("[^0-9]","");
+                if (indexString == null || indexString.isEmpty()) {
+                    continue;
+                }
                 int index = Integer.parseInt(indexString);
                 if (index >=0 && index <= acceleratorCount -1) {
                     answer[index] = entry.getValue();
