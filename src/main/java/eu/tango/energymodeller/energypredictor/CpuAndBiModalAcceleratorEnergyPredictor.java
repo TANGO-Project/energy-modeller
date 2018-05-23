@@ -268,9 +268,9 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         if (host.isAvailable()) {
             for (Accelerator accelerator : host.getAccelerators()) {
                 GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-                for (int acceleratorIndex = 1; acceleratorIndex <= accelerator.getCount(); acceleratorIndex++) {
+                for (int acceleratorIndex = 0; acceleratorIndex < accelerator.getCount(); acceleratorIndex++) {
                     if (!useAssumedDefaultUsage) {
-                        acceleratorUsage = getAcceleratorUsage(host, accelerator)[acceleratorIndex -1];
+                        acceleratorUsage = getAcceleratorUsage(host, accelerator)[acceleratorIndex];
                     }
                     power = power + acceleratorModel.value(acceleratorUsage);
                 }
