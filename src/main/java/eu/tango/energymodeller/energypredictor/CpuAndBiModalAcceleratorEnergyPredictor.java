@@ -272,9 +272,9 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                 for (int acceleratorIndex = 0; acceleratorIndex < accelerator.getCount(); acceleratorIndex++) {
                     if (!useAssumedDefaultUsage) {
                         acceleratorUsage = usageArray[acceleratorIndex];
-                        Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator load data: {0}", acceleratorUsage);
+                        Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator {0} load data: {1}", new Object[]{acceleratorIndex, acceleratorUsage});
                     }
-                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator additional power: {0}", acceleratorModel.value(acceleratorUsage));
+                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator {0} additional power: {1}", new Object[]{acceleratorIndex, acceleratorModel.value(acceleratorUsage)});
                     power = power + acceleratorModel.value(acceleratorUsage);
                 }
             }
@@ -364,7 +364,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                 int index = Integer.parseInt(indexString);
                 if (index >=0 && index <= acceleratorCount -1) {
                     answer[index] = entry.getValue();
-                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Key: {0} Usage inserted: {1}", new Object[]{entry.getKey(), entry.getValue()});
+                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Index: {0} Key: {1} Usage inserted: {2}", new Object[]{index,entry.getKey(), entry.getValue()});
                     acted = true;
                 }
             }
