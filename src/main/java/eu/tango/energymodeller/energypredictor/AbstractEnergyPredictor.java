@@ -480,10 +480,10 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
     }
     
     /**
-     * This provides an average of the recent CPU utilisation for a given host,
-     * based upon the CPU utilisation time window set for the energy predictor.
+     * This provides an average of the recent accelerator utilisation for a given host,
+     * based upon the utilisation time window set for the energy predictor.
      *
-     * @param host The host for which the average CPU utilisation over the last
+     * @param host The host for which the average accelerator utilisation over the last
      * n seconds will be calculated for.
      * @param energyUser The source of workload
      * @return The average recent CPU utilisation based upon the energy
@@ -573,8 +573,8 @@ public abstract class AbstractEnergyPredictor implements EnergyPredictorInterfac
             namesList.addAll(item.getMetricNameList());
         }
 
-        store.add("This lists all recognised metrics, thus helping "
-                + "to list metrics available for the accelerator's model generation.");
+        store.add("This lists all recognised metrics. Tha aim is to list all metrics "
+                + "available for the accelerator's model generation.");
         store.add("");
         for (String termname : namesList) {
             store.add(termname);

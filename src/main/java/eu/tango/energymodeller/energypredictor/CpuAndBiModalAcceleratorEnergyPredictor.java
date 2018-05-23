@@ -34,6 +34,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -221,7 +222,6 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         EnergyUsagePrediction answer = new EnergyUsagePrediction(host);
         PolynomialFunction cpuModel = retrieveCpuModel(host).getFunction();
         double powerUsed = cpuModel.value(usageCPU);
-        //TODO fix the accelerator usage to mutliple accelerator mapping issue.
         powerUsed = powerUsed + getCurrentAcceleratorPowerUsage(host, false);
         answer.setAvgPowerUsed(powerUsed);
         answer.setTotalEnergyUsed(powerUsed * ((double) TimeUnit.SECONDS.toHours(timePeriod.getDuration())));
@@ -260,25 +260,27 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      */
     private double getCurrentAcceleratorPowerUsage(Host host, boolean useAssumedDefaultUsage) {
         double power = 0;
-        double acceleratorClockRate = 0;
+        double acceleratorUsage = 0;
         if (useAssumedDefaultUsage) {
-            acceleratorClockRate = getDefaultAssumedAcceleratorUsage();
+            acceleratorUsage = getDefaultAssumedAcceleratorUsage();
         }
         //This guard ensures the host's accelerator usage data is available
         if (host.isAvailable()) {
             for (Accelerator accelerator : host.getAccelerators()) {
-                if (!useAssumedDefaultUsage) {
-                    acceleratorClockRate = getAcceleratorClockRate(host, accelerator);
-                }
                 GroupingFunction acceleratorModel = retrieveAcceleratorModel(host, accelerator.getName()).getFunction();
-                power = power + acceleratorModel.value(acceleratorClockRate);
+                for (int acceleratorIndex = 1; acceleratorIndex <= accelerator.getCount(); acceleratorIndex++) {
+                    if (!useAssumedDefaultUsage) {
+                        acceleratorUsage = getAcceleratorUsage(host, accelerator)[acceleratorIndex];
+                    }
+                    power = power + acceleratorModel.value(acceleratorUsage);
+                }
             }
         }
         return power;
     }
     
     /**
-     * This provides an average of the recent CPU utilisation for a given host,
+     * This provides an average of the recent accelerator utilisation for a given host,
      * based upon the CPU utilisation time window set for the energy predictor.
      *
      * @param host The host for which the average CPU utilisation over the last
@@ -287,23 +289,23 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
      * @return The average recent CPU utilisation based upon the energy
      * predictor's configured observation window.
      */
-    protected double getAcceleratorClockRate(Host host,Accelerator accelerator) {
-        return getAcceleratorClockRate(host, accelerator, null);
+    protected double[] getAcceleratorUsage(Host host,Accelerator accelerator) {
+        return getAcceleratorUsage(host, accelerator, null);
     }        
     
     /**
-     * This provides an average of the recent CPU utilisation for a given host,
-     * based upon the CPU utilisation time window set for the energy predictor.
+     * This provides an average of the recent accelerator utilisation for a given host,
+     * based upon the utilisation time window set for the energy predictor.
      *
-     * @param host The host for which the average CPU utilisation over the last
+     * @param host The host for which the average accelerator utilisation over the last
      * n seconds will be calculated for.
      * @param accelerator The accelerator to get the information for
      * @param accUsage The representation of the accelerators workload
-     * @return The average recent CPU utilisation based upon the energy
+     * @return The average recent accelerator utilisation based upon the energy
      * predictor's configured observation window.
      */
-    protected double getAcceleratorClockRate(Host host,Accelerator accelerator, HashMap<Accelerator,HashMap<String, Double>> accUsage) {
-        double answer = 0.0;
+    protected double[] getAcceleratorUsage(Host host,Accelerator accelerator, HashMap<Accelerator,HashMap<String, Double>> accUsage) {
+        double[] answer = new double[accelerator.getCount()];
         try {
             HashMap<String,Double> values;
             if (accUsage == null) {
@@ -319,21 +321,60 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                     Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator load data was not available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});
                 }  
             }
-            if (values.containsKey(groupingParameter)) {
-                answer = values.get(groupingParameter);
-            } else {
-                noAcceleratorLoadDataErrorCount = noAcceleratorLoadDataErrorCount + 1;                
-                if (noAcceleratorLoadDataErrorCount >= 5) {
-                    printMetricsList();
-                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "The data item needed for grouping was not available! Host: {0} : Accelerator {1} : Key {2}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null", groupingParameter != null ? groupingParameter : "null"});
-                }
-            }
+            answer = getAcceleratorUsage(values, groupingParameter, accelerator.getCount());
         } catch (Exception ex) {
             printMetricsList();            
             Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.SEVERE, "An error occured! Host: " + (host != null ? host : "null") + " : Accelerator " + (accelerator != null ? accelerator.getName() : "null"), ex);
         }
         return answer;
-    }  
+    }
+    
+    /**
+     * This performs the final mapping between parameters in the calibration file 
+     * and multiple accelerators.
+     * @param values The accelerators incoming metrics and measured values
+     * @param groupingParameter The regular expression to match against
+     * @param acceleratorCount The amount of accelerators on the host
+     * @return The list of accelerator utilisation values
+     */
+    private double[] getAcceleratorUsage(HashMap<String,Double> values, String groupingParameter, int acceleratorCount) {
+        //Copes with a base base with no regular expression i.e. one accelerator
+        if (values.containsKey(groupingParameter)) {
+            return new double[]{values.get(groupingParameter)};
+        }
+        
+        boolean acted = false;          
+        
+        /**
+         * regular expression with a number for the accelerators index value contained
+         * within the metrics name
+         */
+        double[] answer = new double[acceleratorCount];
+        java.util.Arrays.fill(answer, 0.0); //ensure default is no utilisation.
+        for (Map.Entry<String, Double> entry : values.entrySet()) {
+            if (entry.getKey().matches(groupingParameter)) {
+                String indexString = entry.getKey().trim().replaceAll("[^0-9]","");
+                int index = Integer.parseInt(indexString);
+                if (index >=0 && index <= acceleratorCount -1) {
+                    answer[index] = entry.getValue();
+                    acted = true;
+                }
+            }
+        }
+        /**
+         * Error handling, prints metric list in the event the metric value 
+         * which data is being grouped by is persistently not present:
+         * i.e. groupingParameter is not in the incoming dataset
+         */
+        if (acted == false) {
+            noAcceleratorLoadDataErrorCount = noAcceleratorLoadDataErrorCount + 1;                
+        }
+        if (noAcceleratorLoadDataErrorCount >= 5 && acted == false) {
+            printMetricsList();
+            Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.WARNING, "The data item needed for grouping was not available! Key: {0}", (groupingParameter != null ? groupingParameter : "null"));
+        }        
+        return answer;
+    }
 
     /**
      * This estimates the power used by a host, given its CPU load. It assumes
