@@ -63,7 +63,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
     private final LRUCache<Host, PredictorFunction<PolynomialFunction>> modelCache = new LRUCache<>(5, 50);
     private final LRUCache<Host, PredictorFunction<GroupingFunction>> modelAcceleratorCache = new LRUCache<>(5, 50);
     //A much better definition "clocks.current.sm [MHz]"
-    private String groupingParameter = "nvidia_value:null:percent";
+    private String groupingParameter = "nvidia_value:[0-9]?:percent";
     private int noAcceleratorLoadDataErrorCount = 0;
 
     /**
@@ -355,6 +355,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
         double[] answer = new double[acceleratorCount];
         java.util.Arrays.fill(answer, 0.0); //ensure default is no utilisation.
         for (Map.Entry<String, Double> entry : values.entrySet()) {
+Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Pre-Key: {0} Pre-Check Inserted: {1}", new Object[]{entry.getKey(), entry.getValue()});            
             if (entry.getKey().matches(groupingParameter)) {
                 Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Key: {0} Check Inserted: {1}", new Object[]{entry.getKey(), entry.getValue()});
                 String indexString = entry.getKey().trim().replaceAll("[^0-9]","");
