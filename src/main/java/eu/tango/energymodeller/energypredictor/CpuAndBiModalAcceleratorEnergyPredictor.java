@@ -308,26 +308,21 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
     protected double[] getAcceleratorUsage(Host host,Accelerator accelerator, HashMap<Accelerator,HashMap<String, Double>> accUsage) {
         double[] answer = new double[accelerator.getCount()];
         java.util.Arrays.fill(answer, 0.0); //ensure default is no utilisation.
-        try {
-            HashMap<String,Double> allAccUsageData;
-            if (accUsage == null) {
-                allAccUsageData = getAcceleratorUtilisation(host, null).get(accelerator);
-            } else {
-                allAccUsageData = accUsage.get(accelerator);
-            }
-            if (allAccUsageData == null || allAccUsageData.isEmpty()) {
-                noAcceleratorLoadDataErrorCount = noAcceleratorLoadDataErrorCount + 1;
-                //The next check prevents initialisation error warnings that disapear quickly
-                if (noAcceleratorLoadDataErrorCount >= 5) {
-                    printMetricsList();                
-                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator load data was not available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator.getName()});
-                }  
-            } else {
-                answer = getAcceleratorUsage(allAccUsageData, groupingParameter, accelerator.getCount());
-            }
-        } catch (Exception ex) {
-            printMetricsList();            
-            Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.SEVERE, "An error occured! Host: " + (host != null ? host : "null") + " : Accelerator " + (accelerator != null ? accelerator.getName() : "null"), ex);
+        HashMap<String,Double> allAccUsageData;
+        if (accUsage == null) {
+            allAccUsageData = getAcceleratorUtilisation(host, null).get(accelerator);
+        } else {
+            allAccUsageData = accUsage.get(accelerator);
+        }
+        if (allAccUsageData == null || allAccUsageData.isEmpty()) {
+            noAcceleratorLoadDataErrorCount = noAcceleratorLoadDataErrorCount + 1;
+            //The next check prevents initialisation error warnings that disapear quickly
+            if (noAcceleratorLoadDataErrorCount >= 5) {
+                printMetricsList();                
+                Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator load data was not available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator.getName()});
+            }  
+        } else {
+            answer = getAcceleratorUsage(allAccUsageData, groupingParameter, accelerator.getCount());
         }
         return answer;
     }
