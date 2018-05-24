@@ -31,7 +31,8 @@ import java.util.Set;
  * @author Richard Kavanagh
  */
 public class Accelerator implements Comparable<Accelerator>, Serializable {
-
+    
+    private static final long serialVersionUID = 1L;
     private String name = "";
     private AcceleratorType type;
     private int count = 0;

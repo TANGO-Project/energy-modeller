@@ -117,7 +117,7 @@ public class CollectdDataSourceAdaptor implements HostDataSource, Dispatcher {
 
     @Override
     public List<HostMeasurement> getHostData() {
-        return new ArrayList(recentMeasurements.values());
+        return new ArrayList<>(recentMeasurements.values());
     }
 
     @Override

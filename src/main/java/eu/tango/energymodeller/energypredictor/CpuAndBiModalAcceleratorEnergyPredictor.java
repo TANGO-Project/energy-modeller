@@ -319,7 +319,7 @@ public class CpuAndBiModalAcceleratorEnergyPredictor extends AbstractEnergyPredi
                 //The next check prevents initialisation error warnings that disapear quickly
                 if (noAcceleratorLoadDataErrorCount >= 5) {
                     printMetricsList();                
-                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator load data was not available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator != null ? accelerator.getName() : "null"});
+                    Logger.getLogger(CpuAndBiModalAcceleratorEnergyPredictor.class.getName()).log(Level.INFO, "Accelerator load data was not available! Host: {0} : Accelerator {1}", new Object[]{host != null ? host : "null", accelerator.getName()});
                 }  
             }
             answer = getAcceleratorUsage(values, groupingParameter, accelerator.getCount());
