@@ -787,6 +787,8 @@ public class DataGatherer implements Runnable {
     public ArrayList<ApplicationOnHost> getApplications(Host host) {
         ArrayList<ApplicationOnHost> answer = new ArrayList<>();
         if (host == null) {
+            Logger.getLogger(DataGatherer.class.getName()).log(Level.SEVERE,
+                    "The host to get the list of applications for was not detected correctly");
             return answer;
         }
         for (ApplicationOnHost app : datasource.getHostApplicationList()) {

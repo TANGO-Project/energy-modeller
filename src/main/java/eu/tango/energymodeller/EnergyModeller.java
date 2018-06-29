@@ -614,6 +614,8 @@ public class EnergyModeller {
             rule = (EnergyShareRule) currentEnergyDivisionMethod.newInstance();
         } catch (InstantiationException | IllegalAccessException ex) {
             rule = new DefaultEnergyShareRule();
+            Logger.getLogger(EnergyModeller.class.getName()).log(Level.WARNING,
+                    "An error occured loading the share rule, reverting to the default");            
         }
         Host host = app.getAllocatedTo();
         if (host == null) {
