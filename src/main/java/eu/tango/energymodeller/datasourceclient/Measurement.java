@@ -191,7 +191,7 @@ public abstract class Measurement {
     public int cleanStaleMetrics(int tolerance) {
         int count = 0;
         ArrayList<String> toRemove = new ArrayList<>();
-        for (Iterator iterator = metrics.entrySet().iterator(); iterator.hasNext();) {
+        for (Iterator<Map.Entry<String,MetricValue>> iterator = metrics.entrySet().iterator(); iterator.hasNext();) {
             Object next = iterator.next();
             Map.Entry<String,MetricValue> item = (Map.Entry<String,MetricValue>)next;
             if (!isContemporary(item.getValue().getName(),clock , tolerance)) {
