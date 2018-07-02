@@ -226,6 +226,11 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
 
     @Override
     public HostMeasurement getHostData(Host host) {
+        if (host == null) {
+            Logger.getLogger(CollectDInfluxDbDataSourceAdaptor.class.getName()).log(Level.SEVERE,
+                        "The host to get data for was null"); 
+            return null;
+        }        
         HostMeasurement answer;
         String listMeasurements = "";
         ArrayList<String> measurements = getMeasurements();
@@ -388,6 +393,11 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
 
     @Override
     public CurrentUsageRecord getCurrentEnergyUsage(Host host) {
+        if (host == null) {
+            Logger.getLogger(CollectDInfluxDbDataSourceAdaptor.class.getName()).log(Level.SEVERE,
+                        "The host to get current energy usage was null"); 
+            return null;
+        }
         QueryResult results = runQuery("SELECT last(value) FROM power_value WHERE host = '" + host.getHostName() + "';");
         double currentPower = getSingleValueOut(results);
         return new CurrentUsageRecord(host, currentPower);
@@ -395,18 +405,33 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
 
     @Override
     public double getLowestHostPowerUsage(Host host) {
+        if (host == null) {
+            Logger.getLogger(CollectDInfluxDbDataSourceAdaptor.class.getName()).log(Level.SEVERE,
+                        "The host to get the lowest power usage was null"); 
+            return 0.0;
+        }        
         QueryResult results = runQuery("SELECT min(value) FROM power_value WHERE host = '" + host.getHostName() + "'");
         return getSingleValueOut(results);
     }
 
     @Override
     public double getHighestHostPowerUsage(Host host) {
+        if (host == null) {
+            Logger.getLogger(CollectDInfluxDbDataSourceAdaptor.class.getName()).log(Level.SEVERE,
+                        "The host to get highest power usage was null"); 
+            return 0.0;
+        }        
         QueryResult results = runQuery("SELECT max(value) FROM power_value WHERE host = '" + host.getHostName() + "';");
         return getSingleValueOut(results);
     }
 
     @Override
     public double getCpuUtilisation(Host host, int durationSeconds) {
+        if (host == null) {
+            Logger.getLogger(CollectDInfluxDbDataSourceAdaptor.class.getName()).log(Level.SEVERE,
+                        "The host to get the CPU utilisation was null"); 
+            return 0.0;
+        }        
         /**
          * An example output of the query result looks like:
          * {"results":[{"series":[{"name":"cpu","columns":["time","value"],
@@ -522,9 +547,11 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
                 .tag("async", "true")
                 .consistency(InfluxDB.ConsistencyLevel.ALL)
                 .build();
+        //TODO Note fix here copes with name differences between sources.
+        String influxHostname = host.getHostName() + (host.getHostName().contains(".bullx") ? "" : ".bullx");
         Point dataPoint = Point.measurement("power_value")
                 .tag("type_instance", (estimated? "estimated" : "measured"))
-                .tag("host", host.getHostName() + ".bullx") //TODO Note fix here copes with name differences between sources.
+                .tag("host", influxHostname)
                 .tag("type", "power")
                 .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
                 .addField("value", power)
