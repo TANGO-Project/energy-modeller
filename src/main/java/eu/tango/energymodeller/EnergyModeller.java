@@ -19,6 +19,7 @@
 package eu.tango.energymodeller;
 
 import eu.ascetic.utils.ovf.api.OvfDefinition;
+import eu.tango.energymodeller.datasourceclient.CollectDInfluxDbDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
 import eu.tango.energymodeller.datasourceclient.SlurmDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.WattsUpMeterDataSourceAdaptor;
@@ -92,7 +93,7 @@ public class EnergyModeller {
     private DataGatherer dataGatherer;
     private Thread dataGatherThread;
     private Class<?> historicEnergyDivisionMethod = LoadBasedDivision.class;
-    private Class<?> currentEnergyDivisionMethod = LoadFractionShareRule.class;
+    private Class<?> currentEnergyDivisionMethod = DefaultEnergyShareRule.class;//LoadFractionShareRule.class;
     private boolean considerIdleEnergyCurrentVm = true;
     private static final String CONFIG_FILE = "energy-modeller.properties";
 
@@ -624,6 +625,7 @@ public class EnergyModeller {
             answer.setPower(0);
             Logger.getLogger(EnergyModeller.class.getName()).log(Level.SEVERE,
                     "The application {0} host was not correctly detected!", app.getName());
+            return answer;
         }
         ArrayList<ApplicationOnHost> otherApps = dataGatherer.getApplications(host);
         ArrayList<EnergyUsageSource> appsOnHost = new ArrayList<>();
@@ -636,10 +638,15 @@ public class EnergyModeller {
 //            appsDeployedOnHost.add(app);
 //            ((LoadFractionShareRule) rule).setVmMeasurements(datasource.getAppData(appsDeployedOnHost));
 //        }
-        CurrentUsageRecord hostAnswer = datasource.getCurrentEnergyUsage(host);
+        CurrentUsageRecord hostAnswer = datasource.getCurrentEnergyUsage(host);     
         EnergyDivision divider = rule.getEnergyUsage(host, appsOnHost);
         divider.setConsiderIdleEnergy(considerIdleEnergyCurrentVm);
         CurrentUsageRecord answer = new CurrentUsageRecord(app);
+        if (hostAnswer == null) {
+            Logger.getLogger(EnergyModeller.class.getName()).log(Level.SEVERE,
+                    "Host Power consumption not detected correctly!");            
+            return answer;
+        }
         answer.setTime(hostAnswer.getTime());
         answer.setPower(divider.getEnergyUsage(hostAnswer.getPower(), app));
         return answer;
@@ -663,7 +670,10 @@ public class EnergyModeller {
     public HashSet<CurrentUsageRecord> getCurrentEnergyForApplication(Collection<ApplicationOnHost> apps) {
         HashSet<CurrentUsageRecord> answer = new HashSet<>();
         for (ApplicationOnHost app : apps) {
-            answer.add(getCurrentEnergyForApplication(app));
+            CurrentUsageRecord current = getCurrentEnergyForApplication(app);
+            if (current != null) {
+                answer.add(current);
+            }
         }
         return answer;
     }
