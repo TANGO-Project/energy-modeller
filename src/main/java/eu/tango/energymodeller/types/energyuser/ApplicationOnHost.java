@@ -18,6 +18,7 @@
  */
 package eu.tango.energymodeller.types.energyuser;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -385,10 +386,11 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
 
     @Override
     public String toString() {
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-mm-yyyy hh:mm:ss");  
         return "name: " + name
                 + " id: " + id
                 + " host : " + allocatedTo
-                + " started: " + created;
+                + " started: " + formatter.format(created.getTime());
     }
 
     /**
