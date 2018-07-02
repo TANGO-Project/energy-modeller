@@ -75,6 +75,23 @@ public class Host extends EnergyUsageSource implements Comparable<Host> {
         this.id = id;
         this.hostName = hostName;
     }
+    
+    /**
+     * This is a copy constructor for a host
+     * @param id The host id
+     * @param hostName The host name
+     * @param host The old host to copy information from
+     */
+    public Host(int id, String hostName, Host host) {
+        this.id = id;
+        this.hostName = hostName;
+        this.available = true;
+        this.state = host.getState();
+        this.coreCount = host.getCoreCount();
+        this.ramMb = host.getRamMb();
+        this.diskGb = host.getDiskGb();       
+        this.accelerators.addAll(host.getAccelerators());
+    }
 
     /**
      * This returns the host's id.
