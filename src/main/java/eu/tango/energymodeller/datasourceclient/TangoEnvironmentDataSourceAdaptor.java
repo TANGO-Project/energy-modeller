@@ -27,6 +27,8 @@ import eu.tango.energymodeller.types.usage.CurrentUsageRecord;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This adaptor allows for the gathering of environment information from both
@@ -191,7 +193,14 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource, Applic
 
     @Override
     public CurrentUsageRecord getCurrentEnergyUsage(Host host) {
-        return collectD.getCurrentEnergyUsage(convertNames(host));
+        Host collectDHost = convertNames(host);
+        if (collectDHost == null) {
+            Logger.getLogger(TangoEnvironmentDataSourceAdaptor.class.getName()).log(Level.WARNING,
+                        "Running Collectd host detection fix"); 
+            collectDHost = new Host(host.getId(), host.getHostName() + ".bullx", host);
+        }
+        CurrentUsageRecord answer = collectD.getCurrentEnergyUsage(collectDHost);
+        return answer;
     }
 
     @Override
@@ -222,8 +231,14 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource, Applic
             if (slurmToCollectD.containsKey(host)) {
                 return slurmToCollectD.get(host);
             } else {
-                collectdToSlurm.put(collectD.getHostByName(host.getHostName() + ".bullx"), host);
-                slurmToCollectD.put(host, collectD.getHostByName(host.getHostName() + ".bullx"));
+                Host collectDHost = collectD.getHostByName(host.getHostName() + ".bullx");
+                if (collectDHost == null) {
+                    Logger.getLogger(TangoEnvironmentDataSourceAdaptor.class.getName()).log(Level.WARNING,
+                        "Running Collectd host detection fix"); 
+                    collectDHost = new Host(host.getId(), host.getHostName() + ".bullx", host);
+                }
+                collectdToSlurm.put(collectDHost, host);
+                slurmToCollectD.put(host, collectDHost);
             }
         }
         return collectdToSlurm.get(host);
