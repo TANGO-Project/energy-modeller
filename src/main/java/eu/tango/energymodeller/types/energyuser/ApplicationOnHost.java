@@ -516,6 +516,9 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
      * @param value The value for the property
      */
     public void addProperty(String key, String value) {
+        if (properties == null) {
+            properties = new JSONObject();
+        }         
         properties.put(key, value);
     }
     
@@ -527,6 +530,9 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
      * @param value The value for the property
      */
     public void addProperty(String key, Object value) {
+        if (properties == null) {
+            properties = new JSONObject();
+        }          
         properties.put(key, value);
     }   
     
@@ -536,16 +542,40 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
      * @return The string representation of a named property
      */
     public String getPropertyAsString(String key) {
+        if (properties == null) {
+            return null;
+        }
+        if (properties.get(key) instanceof String) {
+            return properties.getString(key);
+        }
+        //Backup option to use toString method
         return properties.get(key).toString();
     }
     
     /**
      * This gets the string representation of a named property
      * @param key The key value of the property to return
-     * @return The string representation of a named property
+     * @return The string representation of a named property. Null if no properties
+     * are set
      */
     public Object getProperty(String key) {
+        if (properties == null) {
+            return null;
+        }        
         return properties.get(key);
+    }
+    
+    /**
+     * This indicates if this application on a host has a particular key value
+     * pair stored
+     * @param key The key to search for
+     * @return If a value is stored for a given property.
+     */
+    public boolean hasProperty(String key) {
+        if (properties == null) {
+            return false;
+        }
+        return properties.has(key);
     }
     
 }
