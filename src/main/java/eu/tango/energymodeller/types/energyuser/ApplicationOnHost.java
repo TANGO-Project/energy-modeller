@@ -31,6 +31,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONObject;
 
 /**
  * This class represents an energy user of the Tango project and in particular
@@ -38,7 +39,7 @@ import java.util.logging.Logger;
  *
  * @author Richard Kavanagh
  */
-public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSource, Comparable<ApplicationOnHost> {
+public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSource, Comparable<ApplicationOnHost> { 
 
     public enum JOB_STATUS {
 
@@ -81,6 +82,7 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
     private Calendar created;
     private Calendar deadline;
     private JOB_STATUS status;
+    private JSONObject properties; //helps better describe the application
 
     /**
      * Creates an instance of an application which is to be allocated power
@@ -491,5 +493,59 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
         }
         return answer;
     }
+    
+    /**
+     * @return the properties
+     */
+    public JSONObject getProperties() {
+        return properties;
+    }
 
+    /**
+     * @param properties the properties to set
+     */
+    public void setProperties(JSONObject properties) {
+        this.properties = properties;
+    }
+    
+    /**
+     * Adds a string based property to the application on host. Although this 
+     * doesn't change the energy model, it allows properties to be added which 
+     * can then change how any decision is made when performing adaptation.
+     * @param key The key for the property
+     * @param value The value for the property
+     */
+    public void addProperty(String key, String value) {
+        properties.put(key, value);
+    }
+    
+     /**
+     * Adds a string based property to the application on host. Although this 
+     * doesn't change the energy model, it allows properties to be added which 
+     * can then change how any decision is made when performing adaptation.
+     * @param key The key for the property
+     * @param value The value for the property
+     */
+    public void addProperty(String key, Object value) {
+        properties.put(key, value);
+    }   
+    
+    /**
+     * This gets the string representation of a named property
+     * @param key The key value of the property to return
+     * @return The string representation of a named property
+     */
+    public String getPropertyAsString(String key) {
+        return properties.get(key).toString();
+    }
+    
+    /**
+     * This gets the string representation of a named property
+     * @param key The key value of the property to return
+     * @return The string representation of a named property
+     */
+    public Object getProperty(String key) {
+        return properties.get(key);
+    }
+    
 }
