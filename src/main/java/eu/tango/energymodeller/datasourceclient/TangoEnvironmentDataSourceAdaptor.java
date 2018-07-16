@@ -60,7 +60,7 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource, Applic
     @Override
     public Host getHostByName(String hostname) {
         /**
-         * SLURM provides better information about the adaptors that are present
+         * SLURM provides better information about the hosts that are present
          * i.e. static information about the host
          */
         return slurm.getHostByName(hostname);
@@ -79,7 +79,7 @@ public class TangoEnvironmentDataSourceAdaptor implements HostDataSource, Applic
     @Override
     public List<Host> getHostList() {
         /**
-         * SLURM provides better information about the adaptors that are present
+         * SLURM provides better information about the hosts that are present
          * i.e. static information about the host
          */
         return slurm.getHostList();
