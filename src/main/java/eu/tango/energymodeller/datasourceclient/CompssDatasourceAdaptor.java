@@ -176,7 +176,13 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
     
     @Override
     public Host getHostByName(String hostname) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        List<Host> Hosts = getHostList();
+        for (Host host : Hosts) {
+            if (host.getHostName().equals(hostname)) {
+                return host;
+            }
+        }
+        return null;
     }
 
     @Override
