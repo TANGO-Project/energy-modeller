@@ -1,0 +1,291 @@
+/**
+ * Copyright 2017 University of Leeds
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ * This is being developed for the TANGO Project: http://tango-project.eu
+ *
+ */
+package eu.tango.energymodeller.datasourceclient;
+
+import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
+import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
+import eu.tango.energymodeller.types.energyuser.GeneralPurposePowerConsumer;
+import eu.tango.energymodeller.types.energyuser.Host;
+import eu.tango.energymodeller.types.energyuser.VmDeployed;
+import eu.tango.energymodeller.types.usage.CurrentUsageRecord;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * This adaptor allows for the gathering of environment information from both
+ * CollectD (via InfluxDB) and compss, this represents the most information that
+ * may be obtained from the Tango testbed.
+ *
+ * The reason for this class is the InfluxDB is very good at time series data, but
+ * compss has information that is useful such as a list of current applications that
+ * are running. It is therefore useful to get a hybrid data source that can get
+ * information from both.
+ *
+ * @author Richard Kavanagh
+ */
+public class TangoRemoteProcessingDataSourceAdaptor implements HostDataSource, ApplicationDataSource {
+
+    private final CompssDatasourceAdaptor compss = new CompssDatasourceAdaptor();
+    private final CollectDInfluxDbDataSourceAdaptor collectD = new CollectDInfluxDbDataSourceAdaptor();
+
+    private final HashMap<Host, Host> collectdToCompss = new HashMap<>();
+    private final HashMap<Host, Host> compssToCollectD = new HashMap<>();
+
+    /**
+     * This creates a new data source adaptor that queries both compss and CollectD.
+     */
+    public TangoRemoteProcessingDataSourceAdaptor() {
+        super();
+    }
+
+    @Override
+    public Host getHostByName(String hostname) {
+        /**
+         * Compss provides better information about the hosts that are present
+         * i.e. static information about the host
+         */
+        return compss.getHostByName(hostname);
+    }
+
+    @Override
+    public GeneralPurposePowerConsumer getGeneralPowerConsumerByName(String hostname) {
+        return compss.getGeneralPowerConsumerByName(hostname);
+    }
+
+    @Override
+    public VmDeployed getVmByName(String name) {
+        return compss.getVmByName(name);
+    }
+
+    @Override
+    public List<Host> getHostList() {
+        /**
+         * Compss provides better information about the hosts that are present
+         * i.e. static information about the host
+         */
+        return compss.getHostList();
+    }
+
+    @Override
+    public List<EnergyUsageSource> getHostAndVmList() {
+        /**
+         * Compss provides better information about the adaptors that are present
+         * i.e. static information about the host
+         */
+        return compss.getHostAndVmList();
+    }
+
+    @Override
+    public List<GeneralPurposePowerConsumer> getGeneralPowerConsumerList() {
+        return compss.getGeneralPowerConsumerList();
+    }
+
+    @Override
+    public List<VmDeployed> getVmList() {
+        return compss.getVmList();
+    }
+
+    @Override
+    public List<ApplicationOnHost> getHostApplicationList(ApplicationOnHost.JOB_STATUS state) {
+        /**
+         * Compss provides this information while CollectD does not.
+         */
+        return compss.getHostApplicationList(state);
+    }
+
+    @Override
+    public List<ApplicationOnHost> getHostApplicationList() {
+        /**
+         * Compss provides this information while CollectD does not.
+         */
+        return compss.getHostApplicationList();
+    }
+
+    @Override
+    public HostMeasurement getHostData(Host host) {
+        if (host == null) {
+            return null;
+        }
+        HostMeasurement answer = compss.getHostData(host);
+        //Adds various information such as memory usage, including static upper bound values.
+        Host collectDhost = convertNames(host);
+        if (collectDhost != null) {
+            if (answer == null) {
+                answer = collectD.getHostData(collectDhost);
+                answer.setHost(host); //This ensures a collectD host is not leaked
+            } else {
+                HostMeasurement data = collectD.getHostData(collectDhost);
+                if (data.metricExists(KpiList.CPU_IDLE_KPI_NAME)) {
+                    //Ensure that collectd based measures of utilisation take precedence
+                    answer.deleteMetric(KpiList.CPU_IDLE_KPI_NAME);
+                    answer.deleteMetric(KpiList.CPU_SPOT_USAGE_KPI_NAME);                    
+                    answer.addMetric(data.getMetric(KpiList.CPU_IDLE_KPI_NAME));
+                    answer.addMetric(data.getMetric(KpiList.CPU_SPOT_USAGE_KPI_NAME));
+                }
+                answer.addMetrics(data);
+                
+            }
+        }
+        return answer;
+    }
+
+    @Override
+    public List<HostMeasurement> getHostData() {
+        List<HostMeasurement> answer = new ArrayList<>();
+        for (Host host : compss.getHostList()) {
+            HostMeasurement measurement = getHostData(host);
+            if (measurement != null) {
+                answer.add(measurement);
+            }
+        }
+        return answer;
+    }
+
+    @Override
+    public List<HostMeasurement> getHostData(List<Host> hostList) {
+        if (hostList == null) {
+            hostList = new ArrayList<>();
+        }
+        List<HostMeasurement> answer = new ArrayList<>();
+        for (Host host : hostList) {
+            HostMeasurement measurement = getHostData(host);
+            if (measurement != null) {
+                answer.add(measurement);
+                measurement.setHost(host);
+            }
+        }
+        return answer;
+    }
+
+    @Override
+    public VmMeasurement getVmData(VmDeployed vm) {
+        return compss.getVmData(vm);
+    }
+
+    @Override
+    public List<VmMeasurement> getVmData() {
+        return compss.getVmData();
+    }
+
+    @Override
+    public List<VmMeasurement> getVmData(List<VmDeployed> vmList) {
+        return compss.getVmData(vmList);
+    }
+
+    @Override
+    public CurrentUsageRecord getCurrentEnergyUsage(Host host) {
+        Host collectDHost = convertNames(host);
+        if (collectDHost == null) {
+            Logger.getLogger(TangoRemoteProcessingDataSourceAdaptor.class.getName()).log(Level.WARNING,
+                        "Running Collectd host detection fix"); 
+            collectDHost = new Host(host.getId(), host.getHostName() + ".bullx", host);
+        }
+        CurrentUsageRecord answer = collectD.getCurrentEnergyUsage(collectDHost);
+        return answer;
+    }
+
+    @Override
+    public double getLowestHostPowerUsage(Host host) {
+        return collectD.getLowestHostPowerUsage(convertNames(host));
+    }
+
+    @Override
+    public double getHighestHostPowerUsage(Host host) {
+        return collectD.getHighestHostPowerUsage(convertNames(host));
+    }
+
+    @Override
+    public double getCpuUtilisation(Host host, int durationSeconds) {
+        return collectD.getCpuUtilisation(convertNames(host), durationSeconds);
+    }
+
+    public Host convertNames(Host host) {
+        //If it contains bullx then it is from collectd
+        if (host.getHostName().contains(".bullx")) {
+            if (collectdToCompss.containsKey(host)) {
+                return collectdToCompss.get(host);
+            } else {
+                collectdToCompss.put(host, compss.getHostByName(host.getHostName().substring(0, host.getHostName().length() - 6)));
+                compssToCollectD.put(compss.getHostByName(host.getHostName().substring(0, host.getHostName().length() - 6)), host);
+            }
+        } else { //Compss host received to get the collectd host
+            if (compssToCollectD.containsKey(host)) {
+                return compssToCollectD.get(host);
+            } else {
+                Host collectDHost = collectD.getHostByName(host.getHostName() + ".bullx");
+                if (collectDHost == null) {
+                    Logger.getLogger(TangoRemoteProcessingDataSourceAdaptor.class.getName()).log(Level.WARNING,
+                        "Running Collectd host detection fix"); 
+                    collectDHost = new Host(host.getId(), host.getHostName() + ".bullx", host);
+                }
+                collectdToCompss.put(collectDHost, host);
+                compssToCollectD.put(host, collectDHost);
+            }
+        }
+        return collectdToCompss.get(host);
+    }
+
+    @Override
+    public ApplicationMeasurement getApplicationData(ApplicationOnHost application) {
+        return compss.getApplicationData(application);
+    }
+
+    @Override
+    public List<ApplicationMeasurement> getApplicationData() {
+        return compss.getApplicationData();
+    }
+
+    @Override
+    public List<ApplicationMeasurement> getApplicationData(List<ApplicationOnHost> appList) {
+        return compss.getApplicationData(appList);
+    }
+    
+    /**
+     * This writes the log data out directly to influx db
+     * @param host The host to write the data out for
+     * @param power The power consumption information to write out
+     * @param estimated indicates if the power consumption is estimated or if
+     * they derive from actual measurement
+     */    
+    public void writeOutHostValuesToInflux(Host host, double power, boolean estimated) {
+        collectD.writeOutHostValuesToInflux(host, power, estimated);
+    }
+    
+    /**
+     * This writes the log data out directly to influx db
+     * @param host The host to write the data out for
+     * @param power The power consumption information to write out
+     */
+    public void writeOutHostValuesToInflux(Host host, double power) {
+        collectD.writeOutHostValuesToInflux(host, power);
+    }    
+    
+    /**
+     * This writes the log data out directly to influx db
+     * @param app The application to write the data out for
+     * @param power The power consumption information to write out
+     */
+    public void writeOutApplicationValuesToInflux(ApplicationOnHost app, double power) {
+        collectD.writeOutApplicationValuesToInflux(app, power);
+    }    
+
+}
