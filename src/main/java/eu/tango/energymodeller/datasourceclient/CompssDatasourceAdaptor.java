@@ -144,9 +144,31 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
             } });
         //get the newest folder if it exists
         for (File file : files) {
-            return file.getAbsoluteFile() + monitoringFile;
+            if (new File(file.getAbsoluteFile() + monitoringFile).exists()) {
+                return file.getAbsoluteFile() + monitoringFile;
+            } else {// the monitoring file doesn't exist so wait a few seconds and try again.
+                sleep();
+                if (new File(file.getAbsoluteFile() + monitoringFile).exists()) {
+                    return file.getAbsoluteFile() + monitoringFile;
+                } else {
+                    Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.WARNING, 
+                            "Compss file was not found, I waited but it was still not found.");                    
+                }
+            }
         }
         return answer;
+    }
+    
+    /**
+     * Sleeps the thread for 3 seconds. This allows chance for a monitoring file 
+     * that is to be read to be written to disk if needed
+     */
+    private void sleep() {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.SEVERE, null, ex);
+        }        
     }
 
     public String getMonitoringDirectory() {
