@@ -146,9 +146,13 @@ public class CompssResource extends JsonObjectWrapper {
         ArrayList<String> answer = new ArrayList<>();
         if (json.has("Actions") && json.get("Actions") instanceof JSONObject) {
             JSONObject actions = json.getJSONObject("Actions");
-            JSONArray action = actions.getJSONArray("Action");
-            for(int i = 0; i < action.length() ; i++) {
-                answer.add(action.getString(i));
+            if (actions.get("Action") instanceof JSONArray) {
+                JSONArray action = actions.getJSONArray("Action");
+                for(int i = 0; i < action.length() ; i++) {
+                    answer.add(action.getString(i));
+                }
+            } else if (actions.get("Action") instanceof String) {
+                answer.add(actions.getString("Action"));
             }
         }
         return answer;
