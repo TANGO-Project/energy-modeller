@@ -279,7 +279,7 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
         ArrayList<ApplicationOnHost> answer = new ArrayList<>();
         List<ApplicationOnHost> allApps = getHostApplicationList();
         for (ApplicationOnHost app : allApps) {
-            if (app.getStatus().toString().equals(state)) {
+            if ((app.getStatus() == null || state == null) || app.getStatus().toString().equals(state)) {
                 answer.add(app);
             }
         }
