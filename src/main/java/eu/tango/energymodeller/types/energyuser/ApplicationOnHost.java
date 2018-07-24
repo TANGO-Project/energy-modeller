@@ -553,6 +553,38 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
     }
     
     /**
+     * This gets the Integer representation of a named property
+     * @param key The key value of the property to return
+     * @return The Integer representation of a named property
+     */
+    public Integer getPropertyAsInteger(String key) {
+        if (properties == null) {
+            return null;
+        }
+        if (properties.get(key) instanceof Integer) {
+            return properties.getInt(key);
+        }
+        //Backup option to return null
+        return null;
+    }
+    
+    /**
+     * This gets the double representation of a named property
+     * @param key The key value of the property to return
+     * @return The double representation of a named property
+     */
+    public Double getPropertyAsDouble(String key) {
+        if (properties == null) {
+            return null;
+        }
+        if (properties.get(key) instanceof Double) {
+            return properties.getDouble(key);
+        }
+        //Backup option to return null
+        return null;
+    }      
+    
+    /**
      * This gets the string representation of a named property
      * @param key The key value of the property to return
      * @return The string representation of a named property. Null if no properties
