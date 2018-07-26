@@ -144,11 +144,12 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
             } });
         //get the newest folder if it exists
         for (File file : files) {
-            if (new File(file.getAbsoluteFile() + monitoringFile).exists()) {
+            File monFile = new File(file.getAbsoluteFile() + monitoringFile);
+            if (monFile.exists() && monFile.length() > 0) {
                 return file.getAbsoluteFile() + monitoringFile;
             } else {// the monitoring file doesn't exist so wait a few seconds and try again.
                 sleep();
-                if (new File(file.getAbsoluteFile() + monitoringFile).exists()) {
+            if (monFile.exists() && monFile.length() > 0) {
                     return file.getAbsoluteFile() + monitoringFile;
                 } else {
                     Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.WARNING, 
