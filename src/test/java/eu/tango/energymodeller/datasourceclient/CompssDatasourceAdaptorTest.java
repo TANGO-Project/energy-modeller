@@ -81,6 +81,17 @@ public class CompssDatasourceAdaptorTest {
             System.out.println(item);
         }
     }
+    
+    @Test
+    public void testGetCurrentMonitoringJobId() {
+        System.out.println("getMonitoringFile");
+        CompssDatasourceAdaptor instance = new CompssDatasourceAdaptor();
+        instance.setMonitoringDirectory("./test_example_files");
+        instance.setMonitoringFile("/COMPSs_state.xml");            
+        String expResult = "example_run_01";
+        String result = instance.getCurrentMonitoringJobId();
+        assertEquals(expResult, result);        
+    }
 
     /**
      * Test of getMonitoringFile method, of class ProgrammingModelClient.

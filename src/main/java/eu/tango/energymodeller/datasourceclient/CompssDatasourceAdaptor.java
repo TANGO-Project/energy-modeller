@@ -160,6 +160,38 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
     }
     
     /**
+     * This obtains the job id of the application that is current undergoing monitoring 
+     * its name forms the latest folder in the compss directory (~/.COMPSs/).
+     * @return The master job id of the application been monitored. such as: EmulateRemote_01
+     */
+    public String getCurrentMonitoringJobId() {
+        String answer = "";
+        File[] files = new File(monitoringDirectory).listFiles(filter);
+
+        Arrays.sort(files, new Comparator<File>(){
+            @Override
+            public int compare(File f1, File f2)
+            {
+                return Long.valueOf(f2.lastModified()).compareTo(f1.lastModified());
+            } });
+        //get the newest folder if it exists
+        for (File file : files) {
+            if (new File(file.getAbsoluteFile() + monitoringFile).exists()) {
+                return file.getName();
+            } else {// the monitoring file doesn't exist so wait a few seconds and try again.
+                sleep();
+                if (new File(file.getAbsoluteFile() + monitoringFile).exists()) {
+                    return file.getName();
+                } else {
+                    Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.WARNING, 
+                            "Compss file was not found, I waited but it was still not found.");                    
+                }
+            }
+        }
+        return answer;
+    }    
+    
+    /**
      * Sleeps the thread for 3 seconds. This allows chance for a monitoring file 
      * that is to be read to be written to disk if needed
      */
