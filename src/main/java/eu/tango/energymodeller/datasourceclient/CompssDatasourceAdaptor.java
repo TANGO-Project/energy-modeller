@@ -152,7 +152,8 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
                     return file.getAbsoluteFile() + monitoringFile;
                 } else {
                     Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.WARNING, 
-                            "Compss file was not found, I waited but it was still not found.");                    
+                            "Compss file was not found, I waited but it was still not found. "
+                                    + "Trying to read {0}", file.getAbsoluteFile() + monitoringFile);                    
                 }
             }
         }
