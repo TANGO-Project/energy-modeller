@@ -57,6 +57,8 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
      */
     private String monitoringDirectory = System.getProperty("user.home") + "/.COMPSs/";
     private String monitoringFile = "/monitor/COMPSs_state.xml";
+    private static final String COMPSSS_STATE = "COMPSsState";
+    private static final String RESOURCE_INFO = "ResourceInfo";
     
     /**
      * This filter is for directories. The most relevant program to query is the
@@ -96,8 +98,15 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
     public List<CompssResource> getCompssResources() {
         try {
             JSONObject items = readJsonFromXMLFile(getCurrentMonitoringFile());
-            JSONObject compssState = items.getJSONObject("COMPSsState");  
-            JSONObject resourceInfo = compssState.getJSONObject("ResourceInfo");
+            if (!items.has(COMPSSS_STATE)) {
+                /**
+                 * The file to be parsed might not be fully populated, if it isn't
+                 * then this avoids parse errors.
+                 */
+                return new ArrayList<>();
+            }              
+            JSONObject compssState = items.getJSONObject(COMPSSS_STATE);  
+            JSONObject resourceInfo = compssState.getJSONObject(RESOURCE_INFO);
             return CompssResource.getCompssResouce(resourceInfo);
         } catch (IOException | JSONException ex) {
             Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.SEVERE, "parse error", ex);
@@ -118,7 +127,14 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
     public List<CompssImplementation> getCompssImplementation() {
         try {
             JSONObject items = readJsonFromXMLFile(getCurrentMonitoringFile());
-            JSONObject compssState = items.getJSONObject("COMPSsState");            
+            if (!items.has(COMPSSS_STATE)) {
+                /**
+                 * The file to be parsed might not be fully populated, if it isn't
+                 * then this avoids parse errors.
+                 */
+                return new ArrayList<>();
+            }            
+            JSONObject compssState = items.getJSONObject(COMPSSS_STATE);           
             JSONObject coresInfo = compssState.getJSONObject("CoresInfo");            
             return CompssImplementation.getCompssImplementation(coresInfo);
         } catch (IOException | JSONException ex) {
@@ -261,8 +277,15 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
         List<Host> answer = new ArrayList<>();
         try {
             JSONObject items = readJsonFromXMLFile(getCurrentMonitoringFile());
-            JSONObject compssState = items.getJSONObject("COMPSsState");             
-            JSONObject resourceInfo = compssState.getJSONObject("ResourceInfo");
+            if (!items.has(COMPSSS_STATE)) {
+                /**
+                 * The file to be parsed might not be fully populated, if it isn't
+                 * then this avoids parse errors.
+                 */
+                return answer;
+            }
+            JSONObject compssState = items.getJSONObject(COMPSSS_STATE);             
+            JSONObject resourceInfo = compssState.getJSONObject(RESOURCE_INFO);
             List<CompssResource> resourceListing = CompssResource.getCompssResouce(resourceInfo);
             for (CompssResource resource : resourceListing) {
                 Host host = new Host(Integer.parseInt(
@@ -329,8 +352,15 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
         List<ApplicationOnHost> answer = new ArrayList<>();
         try {
             JSONObject items = readJsonFromXMLFile(getCurrentMonitoringFile());
-            JSONObject compssState = items.getJSONObject("COMPSsState");             
-            JSONObject resourceInfo = compssState.getJSONObject("ResourceInfo");
+            if (!items.has(COMPSSS_STATE)) {
+                /**
+                 * The file to be parsed might not be fully populated, if it isn't
+                 * then this avoids parse errors.
+                 */
+                return answer;
+            }            
+            JSONObject compssState = items.getJSONObject(COMPSSS_STATE);             
+            JSONObject resourceInfo = compssState.getJSONObject(RESOURCE_INFO);
             List<CompssResource> resourceListing = CompssResource.getCompssResouce(resourceInfo);
             for (CompssResource resource : resourceListing) {
                 Host host = new Host(Integer.parseInt(
