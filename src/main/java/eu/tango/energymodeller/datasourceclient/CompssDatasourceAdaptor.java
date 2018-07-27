@@ -288,11 +288,13 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
             JSONObject resourceInfo = compssState.getJSONObject(RESOURCE_INFO);
             List<CompssResource> resourceListing = CompssResource.getCompssResouce(resourceInfo);
             for (CompssResource resource : resourceListing) {
-                if (resource.getHostname().isEmpty()) {
+                if (resource.getHostname().isEmpty() || resource.getHostname().replaceAll("[^0-9]", "").isEmpty()) {
                     /**
                      * This avoids parsing errors at the point a new resource is 
                      * added to the job, but before the host is fully detected.
                      */
+                    Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.WARNING, 
+                            "Host {0} not correctly detected", resource.getHostname());  
                     continue;
                 }
                 Host host = new Host(Integer.parseInt(
