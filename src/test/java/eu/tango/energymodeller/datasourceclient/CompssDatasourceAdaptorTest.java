@@ -262,6 +262,9 @@ public class CompssDatasourceAdaptorTest {
         assert(result.size() == 2);
         for (ApplicationOnHost item : result) {
             System.out.println(item);
+            System.out.println(item.getProperty("ACTION"));
+            System.out.println(item.getProperty("CE_NAME"));
+            
         }
     }
 

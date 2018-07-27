@@ -395,7 +395,15 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
                     host.setState("IDLE");
                 }
                 for(String action : resource.getCurrentActions()) {
-                    ApplicationOnHost app = new ApplicationOnHost(Integer.parseInt(action.replaceAll("[^0-9]", "")), action, host);
+                    String appNameAndId = getCurrentMonitoringJobId();
+                    ApplicationOnHost app = new ApplicationOnHost(Integer.parseInt(appNameAndId.replaceAll("[^0-9]", "")), appNameAndId.replaceAll("[_0-9]", ""), host);
+                    /**
+                     * //action = A string such as: "ExecutionAction ( Task 4, CE name multiplyBlocks)"
+                    //"CE name multiplyBlocks" identifies the core implementation of the core element 
+                    * but the string as a whole keeps changing so fast events can't be usefully injected into the system.
+                     */
+                    app.addProperty("ACTION", action);
+                    app.addProperty("CE_NAME", action.substring(action.indexOf("CE name ") + 8, action.length() - 1)) ;
                     answer.add(app);
                 }
             }
