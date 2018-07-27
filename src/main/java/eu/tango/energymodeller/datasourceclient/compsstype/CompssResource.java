@@ -87,7 +87,9 @@ public class CompssResource extends JsonObjectWrapper {
                         answer.add(new CompssResource(compssResource.getString("id"), compssResource));
                     }
                 }
+                return answer;
             }
+            //Should be a JSONObject
             JSONObject compssResource = items.getJSONObject("Resource");
             answer.add(new CompssResource(compssResource.getString("id"), compssResource));
             return answer;
