@@ -771,7 +771,7 @@ public class DataGatherer implements Runnable {
         ArrayList<VmDeployed> answer = new ArrayList<>();
         for (VmDeployed vm : knownVms.values()) {
             validateVMInformation(vm);
-            if (host.equals(vm.getAllocatedTo()) && currentVMs.contains(vm)) {
+            if (vm != null && host.equals(vm.getAllocatedTo()) && currentVMs.contains(vm)) {
                 answer.add(vm);
             }
         }
