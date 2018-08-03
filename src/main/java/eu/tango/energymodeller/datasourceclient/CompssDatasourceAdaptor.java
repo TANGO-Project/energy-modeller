@@ -420,11 +420,33 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
     }
 
     /**
+     * This gets the list of tasks that are currently in the running state
+     * @return 
+     */
+    public int getRunningTaskCount() {
+        try {
+            JSONObject items = readJsonFromXMLFile(getCurrentMonitoringFile());
+            if (!items.has(COMPSSS_STATE)) {
+                /**
+                 * The file to be parsed might not be fully populated, if it isn't
+                 * then this avoids parse errors.
+                 */
+                return 0;
+            }            
+            JSONObject compssState = items.getJSONObject(COMPSSS_STATE);             
+            return getRunningTaskCount(compssState);
+        } catch (IOException | JSONException ex) {
+            Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.SEVERE, "parse error", ex);
+        }
+        return 0;
+    }
+    
+    /**
      * This gets the list of tasks that are to yet to be processed.
      * @param compssState The compss state object to parse
      * @return The amount of tasks that are in progress.
      */
-    public int getRunningTaskCount(JSONObject compssState) {
+    private int getRunningTaskCount(JSONObject compssState) {
         JSONObject taskInfo = compssState.getJSONObject(TASK_INFO);
         if (taskInfo != null && taskInfo.has("Application")) {
             JSONObject application = taskInfo.getJSONObject("Application");
