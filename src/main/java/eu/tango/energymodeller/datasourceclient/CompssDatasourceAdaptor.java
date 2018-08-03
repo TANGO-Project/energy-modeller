@@ -424,7 +424,7 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
      * @param compssState The compss state object to parse
      * @return The amount of tasks that are in progress.
      */
-    private int getRunningTaskCount(JSONObject compssState) {
+    public int getRunningTaskCount(JSONObject compssState) {
         JSONObject taskInfo = compssState.getJSONObject(TASK_INFO);
         if (taskInfo != null && taskInfo.has("Application")) {
             JSONObject application = taskInfo.getJSONObject("Application");
