@@ -83,7 +83,7 @@ public class LoadBasedDivisionWithIdleEnergy extends AbstractHistoricLoadBasedDi
             HostEnergyUserLoadFraction load2 = loadFraction.get(i + 1);
             if (load1.getEnergyUsageSources().contains(energyUser) && load2.getEnergyUsageSources().contains(energyUser)) {
                 long timePeriod = energy2.getTime() - energy1.getTime();
-                double userCount = load1.getEnergyUsageSources().size() + load2.getEnergyUsageSources().size() / 2;
+                double userCount = load1.getEnergyUsageSources().size() + load2.getEnergyUsageSources().size() / 2d;
                 double eUserIdlePower = idlePower / userCount;
                 double idleEnergy = idlePower * (((double) timePeriod) / 3600);
                 double idleUserEnergy = eUserIdlePower * (((double) timePeriod) / 3600);

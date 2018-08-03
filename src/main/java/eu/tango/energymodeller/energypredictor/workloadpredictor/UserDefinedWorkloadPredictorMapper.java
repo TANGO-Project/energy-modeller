@@ -22,11 +22,14 @@ import eu.ascetic.ioutils.io.ResultsStore;
 import eu.tango.energymodeller.types.energyuser.Host;
 import eu.tango.energymodeller.types.energyuser.VM;
 import eu.tango.energymodeller.types.energyuser.VmDiskImage;
+import eu.tango.energymodeller.types.energyuser.WorkloadSource;
 import eu.tango.energymodeller.types.usage.VmLoadHistoryRecord;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class is designed to allow on the detection of A VMs property such as
@@ -41,7 +44,7 @@ public class UserDefinedWorkloadPredictorMapper extends AbstractVMHistoryWorkloa
     private final ArrayList<PredictorUsageRule> predictorRules = new ArrayList<>();
     private final HashSet<String> validAppTags = new HashSet<>();
     private final HashSet<String> validDiskRefs = new HashSet<>();
-    private final WorkloadEstimator defaultEstimator = new CpuRecentHistoryWorkloadPredictor();
+    private final WorkloadEstimator<WorkloadSource> defaultEstimator = new CpuRecentHistoryWorkloadPredictor();
     private final ArrayList<AbstractVMHistoryWorkloadEstimator> estimatorList = new ArrayList<>();
 
     public UserDefinedWorkloadPredictorMapper() {
@@ -119,7 +122,7 @@ public class UserDefinedWorkloadPredictorMapper extends AbstractVMHistoryWorkloa
             }            
             return sumCpuUtilisation / vmCount;
         }
-        return defaultEstimator.getCpuUtilisation(host, virtualMachines);
+        return defaultEstimator.getCpuUtilisation(host, new ArrayList<WorkloadSource>(virtualMachines));
     }
 
     /**
@@ -178,7 +181,10 @@ public class UserDefinedWorkloadPredictorMapper extends AbstractVMHistoryWorkloa
                 }
             }
         }
-        return null; //No rule was detected.
+        //No rule was detected, using a basic default
+        Logger.getLogger(UserDefinedWorkloadPredictorMapper.class.getName()).log(Level.WARNING, 
+                            "Reverting to a basic average of cpu utilisation for workload prediction");           
+        return new BasicAverageCpuWorkloadPredictor(); 
     }
 
     @Override
