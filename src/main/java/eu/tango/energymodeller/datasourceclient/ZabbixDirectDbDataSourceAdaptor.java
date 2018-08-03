@@ -15,7 +15,6 @@
  */
 package eu.tango.energymodeller.datasourceclient;
 
-import eu.tango.energymodeller.datastore.MySqlDatabaseConnector;
 import static eu.tango.energymodeller.datasourceclient.KpiList.BOOT_TIME_KPI_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.CPU_COUNT_KPI_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.CPU_IDLE_KPI_NAME;
@@ -25,6 +24,7 @@ import static eu.tango.energymodeller.datasourceclient.KpiList.MEMORY_TOTAL_KPI_
 import static eu.tango.energymodeller.datasourceclient.KpiList.POWER_KPI_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.VM_PHYSICAL_HOST_NAME;
 import static eu.tango.energymodeller.datasourceclient.KpiList.VM_PHYSICAL_HOST_NAME_2;
+import eu.tango.energymodeller.datastore.MySqlDatabaseConnector;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost.JOB_STATUS;
 import eu.tango.energymodeller.types.energyuser.EnergyUsageSource;
@@ -241,11 +241,13 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
             preparedStatement.setString(2, hostname);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 ArrayList<ArrayList<Object>> results = resultSetToArray(resultSet);
-                for (ArrayList<Object> hostData : results) {
-                    Host answer = new Host(((Long) hostData.get(0)).intValue(), (String) hostData.get(1));
-                    answer = fullyDescribeHost(answer, getHostData(answer).getMetrics().values());
-                    return answer;
+                if (results.isEmpty()) {
+                    return null;
                 }
+                ArrayList<Object> hostData = results.get(0);
+                Host answer = new Host(((Long) hostData.get(0)).intValue(), (String) hostData.get(1));
+                answer = fullyDescribeHost(answer, getHostData(answer).getMetrics().values());
+                return answer;
             }
         } catch (SQLException ex) {
             DB_LOGGER.log(Level.SEVERE, null, ex);
@@ -265,11 +267,13 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
             preparedStatement.setString(2, hostname);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 ArrayList<ArrayList<Object>> results = resultSetToArray(resultSet);
-                for (ArrayList<Object> hostData : results) {
-                    GeneralPurposePowerConsumer answer = new GeneralPurposePowerConsumer(((Long) hostData.get(0)).intValue(), (String) hostData.get(1));
-                    answer = (GeneralPurposePowerConsumer) fullyDescribeHost(answer, getHostData(answer).getMetrics().values());
-                    return answer;
+                if (results.isEmpty()) {
+                    return null;
                 }
+                ArrayList<Object> hostData = results.get(0);
+                GeneralPurposePowerConsumer answer = new GeneralPurposePowerConsumer(((Long) hostData.get(0)).intValue(), (String) hostData.get(1));
+                answer = (GeneralPurposePowerConsumer) fullyDescribeHost(answer, getHostData(answer).getMetrics().values());
+                return answer;
             }
         } catch (SQLException ex) {
             DB_LOGGER.log(Level.SEVERE, null, ex);
@@ -289,11 +293,13 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
             preparedStatement.setString(2, name);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 ArrayList<ArrayList<Object>> results = resultSetToArray(resultSet);
-                for (ArrayList<Object> hostData : results) {
-                    VmDeployed answer = new VmDeployed(((Long) hostData.get(0)).intValue(), (String) hostData.get(1));
-                    answer = fullyDescribeVM(answer, getVmData(answer).getMetrics().values());
-                    return answer;
+                if (results.isEmpty()) {
+                    return null;
                 }
+                ArrayList<Object> hostData = results.get(0);
+                VmDeployed answer = new VmDeployed(((Long) hostData.get(0)).intValue(), (String) hostData.get(1));
+                answer = fullyDescribeVM(answer, getVmData(answer).getMetrics().values());
+                return answer;
             }
         } catch (SQLException ex) {
             DB_LOGGER.log(Level.SEVERE, null, ex);
@@ -360,11 +366,11 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
         for (MetricValue item : items) {
             if (item.getKey().equals(MEMORY_TOTAL_KPI_NAME)) { //Convert to Mb
                 //Original value given in bytes. 1024 * 1024 = 1048576
-                vm.setRamMb((int) (Double.valueOf(item.getValue()) / 1048576));
+                vm.setRamMb((int) (item.getValue() / 1048576));
             }
             if (item.getKey().equals(DISK_TOTAL_KPI_NAME)) { //covert to Gb
                 //Original value given in bytes. 1024 * 1024 * 1024 = 1073741824
-                vm.setDiskGb((Double.valueOf(item.getValue()) / 1073741824));
+                vm.setDiskGb((item.getValue() / 1073741824));
             }
             if (item.getKey().equals(BOOT_TIME_KPI_NAME)) {
                 Calendar cal = new GregorianCalendar();
@@ -761,7 +767,7 @@ public class ZabbixDirectDbDataSourceAdaptor extends MySqlDatabaseConnector impl
     private double sumArray(List<Double> list) {
         double answer = 0.0;
         for (Double current : list) {
-            answer = answer + current.doubleValue();
+            answer = answer + current;
         }
         return answer;
     }
