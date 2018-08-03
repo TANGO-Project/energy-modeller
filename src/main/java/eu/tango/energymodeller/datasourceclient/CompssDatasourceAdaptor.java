@@ -59,6 +59,7 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
     private String monitoringFile = "/monitor/COMPSs_state.xml";
     private static final String COMPSSS_STATE = "COMPSsState";
     private static final String RESOURCE_INFO = "ResourceInfo";
+    private static final String TASK_INFO = "TasksInfo";
     
     /**
      * This filter is for directories. The most relevant program to query is the
@@ -369,6 +370,10 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
             JSONObject compssState = items.getJSONObject(COMPSSS_STATE);             
             JSONObject resourceInfo = compssState.getJSONObject(RESOURCE_INFO);
             List<CompssResource> resourceListing = CompssResource.getCompssResouce(resourceInfo);
+            //Prevent old completed tasks from appearing as still running
+            if (getRunningTaskCount(compssState) == 0) {
+                return answer;
+            }
             for (CompssResource resource : resourceListing) {
                 if (resource.getHostname().contains("requested new VM")) {
                     /**
@@ -414,6 +419,23 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
         return answer;
     }
 
+    /**
+     * This gets the list of tasks that are to yet to be processed.
+     * @param compssState The compss state object to parse
+     * @return The amount of tasks that are in progress.
+     */
+    private int getRunningTaskCount(JSONObject compssState) {
+        JSONObject taskInfo = compssState.getJSONObject(TASK_INFO);
+        if (taskInfo != null && taskInfo.has("Application")) {
+            JSONObject application = taskInfo.getJSONObject("Application");
+            if (application != null && application.has("InProgress")) {
+                //Other options are "TotalCount" or "Completed"
+                return application.getInt("InProgress");
+            }
+        }
+        return 0;
+    }
+    
     @Override
     public HostMeasurement getHostData(Host host) {
         return new HostMeasurement(host);
