@@ -277,11 +277,15 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
                     }
                     if (value.size() >= 5) {
                         metricName = metricName + ":" + (value.get(4) == null ? "" : value.get(4));
-                    }                     
-                    if (metricName.equals("power_value:estimated:power")) {
+                    }
+                    if (metricName.equals("power_value:estimated::power")) {
                         MetricValue estimatedPower = new MetricValue(KpiList.ESTIMATED_POWER_KPI_NAME, KpiList.ESTIMATED_POWER_KPI_NAME, value.get(1).toString(), time.getEpochSecond());
                         answer.addMetric(estimatedPower);
-                    }            
+                    }
+                    if (metricName.equals("power_value:measured::power")) {
+                        MetricValue estimatedPower = new MetricValue(KpiList.POWER_KPI_NAME, KpiList.POWER_KPI_NAME, value.get(1).toString(), time.getEpochSecond());
+                        answer.addMetric(estimatedPower);
+                    }                      
                     /**
                      * This counts up all power consumed and reported by the
                      * monitoring infrastructure usually in the format:
@@ -587,6 +591,9 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
     public ApplicationMeasurement getApplicationData(ApplicationOnHost application) {
         Host host = application.getAllocatedTo();
         HostMeasurement measure = getHostData(host);
+        if (measure == null) {
+            return null;
+        }
         ApplicationMeasurement answer = new ApplicationMeasurement(
             application,
             measure.getClock());
@@ -649,7 +656,10 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
         }
         ArrayList<ApplicationMeasurement> answer = new ArrayList<>();
         for (ApplicationOnHost app : appList) {
-            answer.add(getApplicationData(app));
+            ApplicationMeasurement measurement = getApplicationData(app);
+            if (measurement != null) {
+                answer.add(measurement);
+            }
         }
         return answer;
     }

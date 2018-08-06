@@ -24,6 +24,7 @@ import eu.tango.energymodeller.datasourceclient.CollectDInfluxDbDataSourceAdapto
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
 import eu.tango.energymodeller.datasourceclient.HostMeasurement;
 import eu.tango.energymodeller.datasourceclient.TangoEnvironmentDataSourceAdaptor;
+import eu.tango.energymodeller.datasourceclient.TangoRemoteProcessingDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyShareRule;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
@@ -366,6 +367,7 @@ public class DataGatherer implements Runnable {
             Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Writing out host information");
             double power = measurement.getPower(true);
             if (power == -1) {
+                Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: No Power data was found");                
                 return; //This guards against not having a Watt meter attached.                    
             }
             double energy = 0;
@@ -379,6 +381,13 @@ public class DataGatherer implements Runnable {
                 * the application's power consumption derives from.
                 */                
                 ((TangoEnvironmentDataSourceAdaptor)datasource).writeOutHostValuesToInflux(host, measurement.getPower(true));
+            }            
+            if (datasource instanceof TangoRemoteProcessingDataSourceAdaptor) {
+                /**
+                * The next line writes host power values. This helps demonstrate where 
+                * the application's power consumption derives from.
+                */
+                ((TangoRemoteProcessingDataSourceAdaptor)datasource).writeOutHostValuesToInflux(host, measurement.getPower(true));
             }
             if (datasource instanceof CollectDInfluxDbDataSourceAdaptor) {
                 /**
@@ -407,9 +416,12 @@ public class DataGatherer implements Runnable {
             }
             List<ApplicationOnHost> apps = datasource.getHostApplicationList(ApplicationOnHost.JOB_STATUS.RUNNING);
             apps = ApplicationOnHost.filter(apps, host);
-            if (!apps.isEmpty() && datasource instanceof ApplicationDataSource) {
+            if (!apps.isEmpty() && datasource instanceof ApplicationDataSource) {    
                 Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Obtaining specific app information");
                 List<ApplicationMeasurement> appMeasurements = ((ApplicationDataSource) datasource).getApplicationData(apps);
+                if (appMeasurements.isEmpty()) {
+                    return;
+                }
                 HostEnergyUserLoadFraction fraction = new HostEnergyUserLoadFraction(host, measurement.getClock());
                 fraction.setApplicationFraction(appMeasurements);
                 fraction.setHostPowerOffset(hostOffset);
