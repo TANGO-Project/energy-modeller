@@ -629,6 +629,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
      * over its lifetime.
      * @param applicationName The application to query.
      * @param hostname The hostname to query against, if null or empty runs against all hosts.
+     * @return average power consumption for the application
      */
     public double getAverageAppPower(String applicationName, String hostname) {
         String hostQueryString = "";
