@@ -19,7 +19,6 @@
 package eu.tango.energymodeller;
 
 import eu.ascetic.utils.ovf.api.OvfDefinition;
-import eu.tango.energymodeller.datasourceclient.CollectDInfluxDbDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
 import eu.tango.energymodeller.datasourceclient.SlurmDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.WattsUpMeterDataSourceAdaptor;
@@ -120,7 +119,7 @@ public class EnergyModeller {
          * instances should read from the database only.
          */
         EnergyModeller modeller = new EnergyModeller(true);
-        Logger.getLogger(EnergyModeller.class.getName()).log(Level.SEVERE,
+        Logger.getLogger(EnergyModeller.class.getName()).log(Level.INFO,
                 "The logger for the energy modeller has now started");
         while (running) {
             try {
@@ -231,7 +230,7 @@ public class EnergyModeller {
             dataGatherThread.setDaemon(true);
             dataGatherThread.start();
         } catch (Exception ex) {
-            Logger.getLogger(EnergyModeller.class.getName()).log(Level.SEVERE, "The energry modeller failed to start correctly", ex);
+            Logger.getLogger(EnergyModeller.class.getName()).log(Level.SEVERE, "The energy modeller failed to start correctly", ex);
         }
     }
 
