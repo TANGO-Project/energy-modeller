@@ -18,6 +18,9 @@
  */
 package eu.tango.energymodeller.datasourceclient;
 
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_ALLOCATED_TO_HOST_COUNT;
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_RUNNING_ON_HOST_COUNT;
+import static eu.tango.energymodeller.datasourceclient.KpiList.APPS_STATUS;
 import eu.tango.energymodeller.datasourceclient.compsstype.CompssImplementation;
 import eu.tango.energymodeller.datasourceclient.compsstype.CompssResource;
 import static eu.tango.energymodeller.datasourceclient.compsstype.JsonUtils.readJsonFromXMLFile;
@@ -409,6 +412,7 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
                      */
                     app.addProperty("ACTION", action);
                     app.addProperty("CE_NAME", action.substring(action.indexOf("CE name ") + 8, action.length() - 1)) ;
+                    app.setStatus(ApplicationOnHost.JOB_STATUS.RUNNING);
                     answer.add(app);
                 }
             }
@@ -507,20 +511,84 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
     public double getCpuUtilisation(Host host, int durationSeconds) {
         throw new UnsupportedOperationException("Not supported by this adaptor.");
     }
+    
+    /**
+     * This filters a list of applications by their current status
+     *
+     * @param apps The list of applications to filter
+     * @param state The status to filter the job by
+     * @return The list of filtered applications
+     */
+    public List<ApplicationOnHost> getHostApplicationList(List<ApplicationOnHost> apps, ApplicationOnHost.JOB_STATUS state) {
+        List<ApplicationOnHost> answer = new ArrayList<>();
+        if (apps == null) {
+            return answer;
+        }
+        for (ApplicationOnHost app : apps) {
+            if (app != null && app.getStatus().equals(state)) {
+                answer.add(app);
+            }
+        }
+        return answer;
+    }    
+    
+    /**
+     * This takes an application measurement and adds onto it the metrics for
+     * the applications status, along with a count of applications both running
+     * and allocated to the host
+     *
+     * @param appData The application specific data
+     * @param measure The host measurement to take the data from
+     * @return The application measurement with more data appended into it.
+     */
+    private ApplicationMeasurement appendApplicationData(ApplicationMeasurement appData, HostMeasurement measure) {
+        List<ApplicationOnHost> appsOnThisHost = ApplicationOnHost.filter(getHostApplicationList(), measure.getHost());
+        List<ApplicationOnHost> appsRunningOnThisHost = getHostApplicationList(appsOnThisHost, ApplicationOnHost.JOB_STATUS.RUNNING);
+        //loop through the refreshed data and update the apps job status.
+        for (ApplicationOnHost app : appsOnThisHost) {
+            if (app.equals(appData.getApplication())) {
+                appData.getApplication().setStatus(app.getStatus());
+                break;
+            }
+        }
+        appData.addMetric(new MetricValue(APPS_STATUS, APPS_STATUS, appData.getApplication().getStatus().name(), measure.getClock()));
+        appData.addMetric(new MetricValue(APPS_ALLOCATED_TO_HOST_COUNT, APPS_ALLOCATED_TO_HOST_COUNT, appsOnThisHost.size() + "", measure.getClock()));
+        appData.addMetric(new MetricValue(APPS_RUNNING_ON_HOST_COUNT, APPS_RUNNING_ON_HOST_COUNT, appsRunningOnThisHost.size() + "", measure.getClock()));
+        return appData;
+    }    
 
     @Override
     public ApplicationMeasurement getApplicationData(ApplicationOnHost application) {
-        throw new UnsupportedOperationException("Not supported by this adaptor.");
+        if (application == null) {
+            return null;
+        }
+        HostMeasurement measure = getHostData(application.getAllocatedTo());
+        ApplicationMeasurement appData = new ApplicationMeasurement(
+                application,
+                measure.getClock());
+        appData.setMetrics(measure.getMetrics());
+        appendApplicationData(appData, measure);
+        return appData;
     }
 
     @Override
     public List<ApplicationMeasurement> getApplicationData() {
-        throw new UnsupportedOperationException("Not supported by this adaptor.");
+        return getApplicationData(getHostApplicationList());
     }
 
     @Override
     public List<ApplicationMeasurement> getApplicationData(List<ApplicationOnHost> appList) {
-        throw new UnsupportedOperationException("Not supported by this adaptor.");
+        if (appList == null) {
+            appList = getHostApplicationList();
+        }
+        ArrayList<ApplicationMeasurement> answer = new ArrayList<>();
+        for (ApplicationOnHost app : appList) {
+            ApplicationMeasurement measurement = getApplicationData(app);
+            if (measurement != null) {
+                answer.add(measurement);
+            }
+        }
+        return answer;
     }
     
 }

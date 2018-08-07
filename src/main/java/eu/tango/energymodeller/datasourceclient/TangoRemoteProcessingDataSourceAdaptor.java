@@ -246,17 +246,35 @@ public class TangoRemoteProcessingDataSourceAdaptor implements HostDataSource, A
 
     @Override
     public ApplicationMeasurement getApplicationData(ApplicationOnHost application) {
-        return collectD.getApplicationData(application);
+        ApplicationMeasurement answer = compss.getApplicationData(application);
+        ApplicationMeasurement answer2 = collectD.getApplicationData(application);
+        if (answer == null && answer2 != null) {
+            return answer2;
+        }
+        if (answer != null && answer2 != null) {
+            answer.addMetrics(answer2.getMetrics().values());
+        }
+        return answer;
     }
 
     @Override
     public List<ApplicationMeasurement> getApplicationData() {
-        return collectD.getApplicationData();
+        return getApplicationData(getHostApplicationList());
     }
 
     @Override
     public List<ApplicationMeasurement> getApplicationData(List<ApplicationOnHost> appList) {
-        return collectD.getApplicationData(appList);
+        if (appList == null) {
+            appList = getHostApplicationList();
+        }
+        ArrayList<ApplicationMeasurement> answer = new ArrayList<>();
+        for (ApplicationOnHost app : appList) {
+            ApplicationMeasurement measurement = getApplicationData(app);
+            if (measurement != null) {
+                answer.add(measurement);
+            }
+        }
+        return answer;
     }
     
     /**
