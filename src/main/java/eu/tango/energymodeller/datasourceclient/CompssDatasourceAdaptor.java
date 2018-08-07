@@ -60,7 +60,7 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
      */
     private String monitoringDirectory = System.getProperty("user.home") + "/.COMPSs/";
     private String monitoringFile = "/monitor/COMPSs_state.xml";
-    private static final String COMPSSS_STATE = "COMPSsState";
+    private static final String COMPSS_STATE = "COMPSsState";
     private static final String RESOURCE_INFO = "ResourceInfo";
     private static final String TASK_INFO = "TasksInfo";
     
@@ -102,14 +102,14 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
     public List<CompssResource> getCompssResources() {
         try {
             JSONObject items = readJsonFromXMLFile(getCurrentMonitoringFile());
-            if (!items.has(COMPSSS_STATE)) {
+            if (!items.has(COMPSS_STATE)) {
                 /**
                  * The file to be parsed might not be fully populated, if it isn't
                  * then this avoids parse errors.
                  */
                 return new ArrayList<>();
             }              
-            JSONObject compssState = items.getJSONObject(COMPSSS_STATE);  
+            JSONObject compssState = items.getJSONObject(COMPSS_STATE);  
             JSONObject resourceInfo = compssState.getJSONObject(RESOURCE_INFO);
             return CompssResource.getCompssResouce(resourceInfo);
         } catch (IOException | JSONException ex) {
@@ -131,14 +131,14 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
     public List<CompssImplementation> getCompssImplementation() {
         try {
             JSONObject items = readJsonFromXMLFile(getCurrentMonitoringFile());
-            if (!items.has(COMPSSS_STATE)) {
+            if (!items.has(COMPSS_STATE)) {
                 /**
                  * The file to be parsed might not be fully populated, if it isn't
                  * then this avoids parse errors.
                  */
                 return new ArrayList<>();
             }            
-            JSONObject compssState = items.getJSONObject(COMPSSS_STATE);           
+            JSONObject compssState = items.getJSONObject(COMPSS_STATE);           
             JSONObject coresInfo = compssState.getJSONObject("CoresInfo");            
             return CompssImplementation.getCompssImplementation(coresInfo);
         } catch (IOException | JSONException ex) {
@@ -281,14 +281,14 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
         List<Host> answer = new ArrayList<>();
         try {
             JSONObject items = readJsonFromXMLFile(getCurrentMonitoringFile());
-            if (!items.has(COMPSSS_STATE)) {
+            if (!items.has(COMPSS_STATE)) {
                 /**
                  * The file to be parsed might not be fully populated, if it isn't
                  * then this avoids parse errors.
                  */
                 return answer;
             }
-            JSONObject compssState = items.getJSONObject(COMPSSS_STATE);             
+            JSONObject compssState = items.getJSONObject(COMPSS_STATE);             
             JSONObject resourceInfo = compssState.getJSONObject(RESOURCE_INFO);
             List<CompssResource> resourceListing = CompssResource.getCompssResouce(resourceInfo);
             for (CompssResource resource : resourceListing) {
@@ -363,14 +363,14 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
         List<ApplicationOnHost> answer = new ArrayList<>();
         try {
             JSONObject items = readJsonFromXMLFile(getCurrentMonitoringFile());
-            if (!items.has(COMPSSS_STATE)) {
+            if (!items.has(COMPSS_STATE)) {
                 /**
                  * The file to be parsed might not be fully populated, if it isn't
                  * then this avoids parse errors.
                  */
                 return answer;
             }            
-            JSONObject compssState = items.getJSONObject(COMPSSS_STATE);             
+            JSONObject compssState = items.getJSONObject(COMPSS_STATE);             
             JSONObject resourceInfo = compssState.getJSONObject(RESOURCE_INFO);
             List<CompssResource> resourceListing = CompssResource.getCompssResouce(resourceInfo);
             //Prevent old completed tasks from appearing as still running
@@ -430,14 +430,14 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
     public int getRunningTaskCount() {
         try {
             JSONObject items = readJsonFromXMLFile(getCurrentMonitoringFile());
-            if (!items.has(COMPSSS_STATE)) {
+            if (!items.has(COMPSS_STATE)) {
                 /**
                  * The file to be parsed might not be fully populated, if it isn't
                  * then this avoids parse errors.
                  */
                 return 0;
             }            
-            JSONObject compssState = items.getJSONObject(COMPSSS_STATE);             
+            JSONObject compssState = items.getJSONObject(COMPSS_STATE);             
             return getRunningTaskCount(compssState);
         } catch (IOException | JSONException ex) {
             Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.SEVERE, "parse error", ex);
