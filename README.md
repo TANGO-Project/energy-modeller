@@ -47,7 +47,7 @@ The energy modeller is also highly configurable and has several files that may b
 *energy-modeller.properties:* holds basic configuration specifying which data source and predictor to use.  
 *energy-modeller-db.properties:* Holds database information for the energy modeller.  
 *energy-modeller-predictor.properties:* Holds settings relating to the prediction of energy usage.  
-*energy-modeller-influx-db-config.properties:* Holds settings on how to connect to ConnectD's influxdb database directly, in the event the CollectDInfluxDbDatasoruceAdaptor or TangoEnvironmentDataSourceAdaptor are in use. This is the default.  
+*energy-modeller-influx-db-config.properties:* Holds settings on how to connect to ConnectD's influxdb database directly, in the event the CollectDInfluxDbDatasoruceAdaptor, TangoRemoteProcessingDataSourceAdaptor, TangoEnvironmentDataSourceAdaptor are in use. The TangoEnvironmentDataSourceAdaptor is the default datasource in use.  
 *energy-modeller-db-zabbix.properties:* Holds information on how to connect to the Zabbix database directly, in the event the ZabbixDirectDbDataSourceAdaptor is in use.  
 
 These settings must be tailored to the specific infrastructure. The settings are described below and an example of the settings is provided for reference.
@@ -78,6 +78,7 @@ The data source parameter indicates how the energy modeller's will gain the envi
 *CollectDInfluxDbDataSourceAdaptor:* This connector that directly accesses collectd's influxdb database for the information that it requires. This adaptor utilises the configuration file energy-modeller-influx-db-config.properties.  
 *SlurmDataSourceAdaptor:* This is an adaptor that connects the energy modeller into a SLURM job management based environment. Allowing access to information about the physical host.  
 *TangoEnvironmentDataSourceAdaptor:* This makes use of both the SlurmDataSourceAdaptor and the CollectDInfluxDbDataSourceAdaptor.  
+*TangoRemoteProcessingDataSourceAdaptor:* This makes use of the CollectDInfluxDbDataSourceAdaptor and additionally connects into the compss runtime environment, to gain further information about running jobs.
 *ZabbixDirectDbDataSourceAdaptor:* This connector that directly accesses the Zabbix database for the information that it requires. This adaptor utilises the configuration file energy-modeller-db-zabbix.properties.   
 *WattsUpMeterDataSourceAdaptor:* for local usage of the energy modeller.
 
