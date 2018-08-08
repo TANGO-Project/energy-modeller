@@ -127,7 +127,7 @@ Day of Week (DoW) Workload predictors: give an estimate of the workload based up
 
 #### energy-modeller-influx-db-config.properties:
 
-This is the configuration file used to configure the energy modeller when using the CollectDInfluxDbDataSourceAdaptor. It holds the database connection settings used to connect directly to the collectd influxdb database.
+This configuration file is used to configure the energy modeller when using the CollectDInfluxDbDataSourceAdaptor, TangoRemoteProcessingDataSourceAdaptor or TangoEnvironmentDataSourceAdaptor adaptors. It holds the database connection settings used to connect directly to the collectd influxdb database.
 
 ```
 energy.modeller.influx.db.hostname = http://ns54.bullx:8086
