@@ -48,7 +48,7 @@ import org.influxdb.dto.QueryResult;
  *
  * @author Richard Kavanagh
  */
-public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, ApplicationDataSource {
+public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, ApplicationDataSource, InfluxDbBasedDataSourceAdaptor {
 
     private final Settings settings = new Settings(CONFIG_FILE);
     private static final String CONFIG_FILE = "energy-modeller-influx-db-config.properties";

@@ -20,11 +20,9 @@ package eu.tango.energymodeller.datastore;
 
 import eu.tango.energymodeller.datasourceclient.ApplicationDataSource;
 import eu.tango.energymodeller.datasourceclient.ApplicationMeasurement;
-import eu.tango.energymodeller.datasourceclient.CollectDInfluxDbDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.HostDataSource;
 import eu.tango.energymodeller.datasourceclient.HostMeasurement;
-import eu.tango.energymodeller.datasourceclient.TangoEnvironmentDataSourceAdaptor;
-import eu.tango.energymodeller.datasourceclient.TangoRemoteProcessingDataSourceAdaptor;
+import eu.tango.energymodeller.datasourceclient.InfluxDbBasedDataSourceAdaptor;
 import eu.tango.energymodeller.datasourceclient.VmMeasurement;
 import eu.tango.energymodeller.energypredictor.vmenergyshare.EnergyShareRule;
 import eu.tango.energymodeller.types.energyuser.ApplicationOnHost;
@@ -375,27 +373,13 @@ public class DataGatherer implements Runnable {
                 energy = measurement.getEnergy();
             }
             database.writeHostHistoricData(host, measurement.getClock(), power, energy);
-            if (datasource instanceof TangoEnvironmentDataSourceAdaptor) {
+            if (datasource instanceof InfluxDbBasedDataSourceAdaptor) {
                 /**
                 * The next line writes host power values. This helps demonstrate where 
                 * the application's power consumption derives from.
                 */                
-                ((TangoEnvironmentDataSourceAdaptor)datasource).writeOutHostValuesToInflux(host, measurement.getPower(true));
-            }            
-            if (datasource instanceof TangoRemoteProcessingDataSourceAdaptor) {
-                /**
-                * The next line writes host power values. This helps demonstrate where 
-                * the application's power consumption derives from.
-                */
-                ((TangoRemoteProcessingDataSourceAdaptor)datasource).writeOutHostValuesToInflux(host, measurement.getPower(true));
-            }
-            if (datasource instanceof CollectDInfluxDbDataSourceAdaptor) {
-                /**
-                * The next line writes host power values. This helps demonstrate where 
-                * the application's power consumption derives from.
-                */                
-                ((CollectDInfluxDbDataSourceAdaptor)datasource).writeOutHostValuesToInflux(host, measurement.getPower(true));
-            }            
+                ((InfluxDbBasedDataSourceAdaptor)datasource).writeOutHostValuesToInflux(host, measurement.getPower(true));
+            }           
             Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Obtaining list of vms on host {0}", host.getHostName());
             ArrayList<VmDeployed> vms = getVMsOnHost(host, vmList);
             if (!vms.isEmpty()) {
@@ -416,7 +400,7 @@ public class DataGatherer implements Runnable {
             }
             List<ApplicationOnHost> apps = datasource.getHostApplicationList(ApplicationOnHost.JOB_STATUS.RUNNING);
             apps = ApplicationOnHost.filter(apps, host);
-            if (!apps.isEmpty() && datasource instanceof ApplicationDataSource) {    
+            if (!apps.isEmpty() && datasource instanceof ApplicationDataSource) {
                 Logger.getLogger(DataGatherer.class.getName()).log(Level.FINE, "Data gatherer: Obtaining specific app information");
                 List<ApplicationMeasurement> appMeasurements = ((ApplicationDataSource) datasource).getApplicationData(apps);
                 if (appMeasurements.isEmpty()) {

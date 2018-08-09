@@ -42,7 +42,7 @@ import java.util.logging.Logger;
  *
  * @author Richard Kavanagh
  */
-public class TangoEnvironmentDataSourceAdaptor implements HostDataSource, ApplicationDataSource {
+public class TangoEnvironmentDataSourceAdaptor implements HostDataSource, ApplicationDataSource, InfluxDbBasedDataSourceAdaptor {
 
     private final SlurmDataSourceAdaptor slurm = new SlurmDataSourceAdaptor();
     private final CollectDInfluxDbDataSourceAdaptor collectD = new CollectDInfluxDbDataSourceAdaptor();

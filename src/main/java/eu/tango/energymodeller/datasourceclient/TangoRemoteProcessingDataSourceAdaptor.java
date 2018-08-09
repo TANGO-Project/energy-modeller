@@ -42,7 +42,7 @@ import java.util.logging.Logger;
  *
  * @author Richard Kavanagh
  */
-public class TangoRemoteProcessingDataSourceAdaptor implements HostDataSource, ApplicationDataSource {
+public class TangoRemoteProcessingDataSourceAdaptor implements HostDataSource, ApplicationDataSource, InfluxDbBasedDataSourceAdaptor {
 
     private final CompssDatasourceAdaptor compss = new CompssDatasourceAdaptor();
     private final CollectDInfluxDbDataSourceAdaptor collectD = new CollectDInfluxDbDataSourceAdaptor();
