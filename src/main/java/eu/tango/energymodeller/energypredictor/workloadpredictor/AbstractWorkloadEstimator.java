@@ -76,10 +76,10 @@ public abstract class AbstractWorkloadEstimator<AT extends WorkloadSource> imple
         if (!host.hasAccelerator()) {
             return answer;
         }
+        HostMeasurement measurement = datasource.getHostData(host);
         HashSet<Accelerator> accelerators = host.getAccelerators();
         for (Accelerator accelerator : accelerators) {
             Set<String> params = accelerator.getMetricsInCalibrationData();
-            HostMeasurement measurement = datasource.getHostData(host);
             if (measurement != null) { //Guards against hosts that are down
                 answer.put(accelerator, filterHostsAcceleratorMeasurements(measurement, params));
             }
