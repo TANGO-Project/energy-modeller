@@ -451,13 +451,21 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
      * @return The amount of tasks that are in progress.
      */
     private int getRunningTaskCount(JSONObject compssState) {
-        JSONObject taskInfo = compssState.getJSONObject(TASK_INFO);
-        if (taskInfo != null && taskInfo.has("Application")) {
-            JSONObject application = taskInfo.getJSONObject("Application");
-            if (application != null && application.has("InProgress")) {
-                //Other options are "TotalCount" or "Completed"
-                return application.getInt("InProgress");
+        try {
+            if (compssState.get(TASK_INFO) instanceof JSONObject) {
+                JSONObject taskInfo = compssState.getJSONObject(TASK_INFO);
+                if (taskInfo != null && taskInfo.has("Application")) {
+                    JSONObject application = taskInfo.getJSONObject("Application");
+                    if (application != null && application.has("InProgress")) {
+                        //Other options are "TotalCount" or "Completed"
+                        return application.getInt("InProgress");
+                    }
+                } 
+            } else {
+                Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.SEVERE, "parse error " + TASK_INFO + " was of type {0}", compssState.get(TASK_INFO).getClass().toString());
             }
+        } catch (JSONException ex) {
+            Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.SEVERE, "parse error", ex);
         }
         return 0;
     }
