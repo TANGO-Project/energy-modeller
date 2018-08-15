@@ -452,6 +452,12 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
      */
     private int getRunningTaskCount(JSONObject compssState) {
         try {
+            if (compssState.get(TASK_INFO) instanceof String) {
+                if (compssState.getString(TASK_INFO).isEmpty()) {
+                    Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.WARNING, "Task info was emptry");
+                    return 0;
+                }
+            }
             if (compssState.get(TASK_INFO) instanceof JSONObject) {
                 JSONObject taskInfo = compssState.getJSONObject(TASK_INFO);
                 if (taskInfo != null && taskInfo.has("Application")) {
