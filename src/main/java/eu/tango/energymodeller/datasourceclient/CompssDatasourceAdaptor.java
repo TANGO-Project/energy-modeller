@@ -452,11 +452,13 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
      */
     private int getRunningTaskCount(JSONObject compssState) {
         try {
-            if (compssState.get(TASK_INFO) instanceof String) {
-                if (compssState.getString(TASK_INFO).isEmpty()) {
-                    Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.WARNING, "Task info was emptry");
+            /**
+             * Guard against empty strings, when a json object is expected
+             * This happens when there are no tasks running
+             */
+            if (compssState.get(TASK_INFO) instanceof String && 
+                    compssState.getString(TASK_INFO).isEmpty()) {
                     return 0;
-                }
             }
             if (compssState.get(TASK_INFO) instanceof JSONObject) {
                 JSONObject taskInfo = compssState.getJSONObject(TASK_INFO);
@@ -468,10 +470,13 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
                     }
                 } 
             } else {
-                Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.SEVERE, "parse error " + TASK_INFO + " was of type {0}", compssState.get(TASK_INFO).getClass().toString());
+                Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.SEVERE, 
+                        "parse error " + TASK_INFO + " was not of the expected type. "
+                                + "It was of type {0}", compssState.get(TASK_INFO).getClass());
             }
         } catch (JSONException ex) {
-            Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.SEVERE, "parse error", ex);
+            Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.SEVERE, 
+                    "parse error", ex);
         }
         return 0;
     }
