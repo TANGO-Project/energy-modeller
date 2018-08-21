@@ -387,23 +387,7 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
                      */ 
                     continue;
                 }                
-                Host host = new Host(Integer.parseInt(
-                                resource.getHostname().replaceAll("[^0-9]", "")), 
-                                resource.getHostname());
-                host.setDiskGb((resource.getDiskSize() < 0 ? 0 : resource.getDiskSize()));
-                host.setCoreCount(resource.getCoreCount());
-                if (resource.getGpuCount() > 0) {
-                    host.addAccelerator(new Accelerator("gpu", resource.getGpuCount(), Accelerator.AcceleratorType.GPU));
-                }
-                if (resource.getFpgaCount() > 0) {
-                    host.addAccelerator(new Accelerator("fpga", resource.getGpuCount(), Accelerator.AcceleratorType.FPGA));
-                }
-                //compss considers a host in the "running" state to be available
-                host.setAvailable(resource.getState().trim().equalsIgnoreCase("Running"));
-                host.setState(resource.getState());
-                if (resource.isIdle()) {
-                    host.setState("IDLE");
-                }
+                Host host = getHostFromResource(resource);
                 for(String action : resource.getCurrentActions()) {
                     String appNameAndId = getCurrentMonitoringJobId();
                     ApplicationOnHost app = new ApplicationOnHost(Integer.parseInt(appNameAndId.replaceAll("[^0-9]", "")), appNameAndId.replaceAll("[_0-9]", ""), host);
@@ -421,6 +405,64 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
             
         } catch (IOException | JSONException ex) {
             Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.SEVERE, "parse error", ex);
+        }
+        return answer;
+    }
+    
+    /**
+     * This converts compss resource into a host
+     * @param resource The resource to convert
+     * @return The host representation of the resource
+     */
+    private Host getHostFromResource(CompssResource resource) {
+        Host host = new Host(Integer.parseInt(
+                                resource.getHostname().replaceAll("[^0-9]", "")), 
+                                resource.getHostname());
+        host.setDiskGb((resource.getDiskSize() < 0 ? 0 : resource.getDiskSize()));
+        host.setCoreCount(resource.getCoreCount());
+        if (resource.getGpuCount() > 0) {
+            host.addAccelerator(new Accelerator("gpu", resource.getGpuCount(), Accelerator.AcceleratorType.GPU));
+        }
+        if (resource.getFpgaCount() > 0) {
+            host.addAccelerator(new Accelerator("fpga", resource.getGpuCount(), Accelerator.AcceleratorType.FPGA));
+        }
+        //compss considers a host in the "running" state to be available
+        host.setAvailable(resource.getState().trim().equalsIgnoreCase("Running"));
+        host.setState(resource.getState());
+        if (resource.isIdle()) {
+            host.setState("IDLE");
+        }
+        return host;
+    }
+    
+    /**
+     * This gets the list of idle resources
+     * @return This list of compss resources not doing any useful work
+     */
+    public List<CompssResource> getIdleResources() {
+        List<CompssResource> answer = new ArrayList<>();
+        for (CompssResource resource: getCompssResources()) {
+            if(resource.isIdle()) {
+                answer.add(resource);
+            }
+        }
+        return answer;
+    }    
+    
+    /**
+     * This gets the idle hosts as a set of tasks on the host.
+     * @return 
+     */
+    public List<ApplicationOnHost> getIdleResourcesAsDormantApplications() {
+        List<ApplicationOnHost> answer = new ArrayList<>();
+        List<CompssResource> idleResources = getIdleResources();
+        String appNameAndId = getCurrentMonitoringJobId();
+        for (CompssResource idleResource : idleResources) {
+            ApplicationOnHost app = new ApplicationOnHost(Integer.parseInt(appNameAndId.replaceAll("[^0-9]", "")), 
+                    appNameAndId.replaceAll("[_0-9]", ""), 
+                    getHostFromResource(idleResource));
+            app.setStatus(ApplicationOnHost.JOB_STATUS.PENDING);
+            answer.add(app);            
         }
         return answer;
     }
