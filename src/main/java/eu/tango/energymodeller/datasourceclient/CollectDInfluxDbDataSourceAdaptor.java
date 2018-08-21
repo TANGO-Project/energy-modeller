@@ -533,6 +533,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
      * @param host The host to write the data out for
      * @param power The power consumption information to write out
      */
+    @Override
     public void writeOutHostValuesToInflux(Host host, double power) {
         writeOutHostValuesToInflux(host, power, false);
     }
@@ -559,6 +560,38 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
                 .tag("type", "power")
                 .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
                 .addField("value", power)
+                .build();
+        batchPoints.point(dataPoint);
+        influxDB.write(batchPoints);
+    }    
+
+    /**
+     * This writes the log data out directly to influx db, parameters follow the 
+     * positions as shown in the following query:
+     * SELECT mean(value) FROM power_value WHERE host = "testhost50" AND type='power' 
+     * AND type_instance = 'estimated' 
+     * @param host The host to write the data out for
+     * @param series The data series, such as power_value or "cpu utilisation".
+     * @param type The type of data, such as "power" or "percent"
+     * @param typeInstance The type instance, such as "estimated" or "idle"
+     * @param value The measured value to write out to influx
+    */
+    public void writeOutHostValuesToInflux(Host host, String series, 
+            String type, String typeInstance, double value) {
+
+        BatchPoints batchPoints = BatchPoints
+                .database(dbName)
+                .tag("async", "true")
+                .consistency(InfluxDB.ConsistencyLevel.ALL)
+                .build();
+        //TODO Note fix here copes with name differences between sources.
+        String influxHostname = host.getHostName() + (host.getHostName().contains(".bullx") ? "" : ".bullx");
+        Point dataPoint = Point.measurement(series) //series i.e. power_value
+                .tag("type_instance", typeInstance) //i.e. such as estimated / measured
+                .tag("host", influxHostname)
+                .tag("type", type) //Such as "power"
+                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                .addField("value", value)
                 .build();
         batchPoints.point(dataPoint);
         influxDB.write(batchPoints);
