@@ -16,6 +16,14 @@ addons:
     organization: "richardkav-github"
     token:
       secure: 4bfd776407ac9a01b64454c66f5dcb811a7acc49
+  apt:
+    packages:
+      - oracle-java8-installer
+
+install: 
+  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 script:
-  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -q
-  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar
+  - sudo update-java-alternatives --set "java-8-oracle"
+  - export JAVA_HOME="/usr/lib/jvm/java-8-oracle"
+  
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install -DskipTests=true -Dmaven.javadoc.skip=true -B -V sonar:sonar
