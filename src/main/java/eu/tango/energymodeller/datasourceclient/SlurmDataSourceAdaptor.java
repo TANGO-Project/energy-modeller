@@ -859,7 +859,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
                 }
                 hosts.put(hostname, host);
             }
-            host.setAvailable(!state.isEmpty() && !state.equals("DOWN*"));
+            host.setAvailable(!state.isEmpty() && !state.equals("DOWN*") && !state.contains("DRAIN"));
             host.setState(state);
             /**
              * The further metrics from this host are not relevant and may cause
