@@ -174,7 +174,7 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
             if (monFile.exists() && monFile.length() > 0) {
                     return file.getAbsoluteFile() + monitoringFile;
                 } else {
-                    Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.WARNING, 
+                    Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.FINE, 
                             "Compss file was not found, I waited but it was still not found. "
                                     + "Trying to read {0}", file.getAbsoluteFile() + monitoringFile);                    
                 }
@@ -207,7 +207,7 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
                 if (new File(file.getAbsoluteFile() + monitoringFile).exists()) {
                     return file.getName();
                 } else {
-                    Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.WARNING, 
+                    Logger.getLogger(CompssDatasourceAdaptor.class.getName()).log(Level.FINE, 
                             "Compss file was not found, I waited but it was still not found.");                    
                 }
             }
