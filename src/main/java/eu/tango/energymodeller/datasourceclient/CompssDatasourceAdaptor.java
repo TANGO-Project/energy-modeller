@@ -184,6 +184,14 @@ public class CompssDatasourceAdaptor implements HostDataSource, ApplicationDataS
     }
     
     /**
+     * This returns the current last modified date of the monitoring file.
+     * @return The date as a long value
+     */
+    public long getMonitoringFileLastModifiedDate() {
+        return new File(getCurrentMonitoringFile()).lastModified();
+    }    
+    
+    /**
      * This obtains the job id of the application that is current undergoing monitoring 
      * its name forms the latest folder in the compss directory (~/.COMPSs/).
      * @return The master job id of the application been monitored. such as: EmulateRemote_01
