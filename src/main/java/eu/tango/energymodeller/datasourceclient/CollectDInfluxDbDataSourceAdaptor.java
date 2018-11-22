@@ -170,7 +170,7 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
      */
     private List<ApplicationOnHost> convertToApplication(QueryResult results) {
         if (results == null) {
-            return null;
+            return new ArrayList<>();
         }
         List<ApplicationOnHost> answer = new ArrayList<>();
         for (QueryResult.Result result : results.getResults()) {
@@ -595,7 +595,68 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
                 .build();
         batchPoints.point(dataPoint);
         influxDB.write(batchPoints);
+    }
+    
+    /**
+     * This writes the log data out directly to influx db, parameters follow the 
+     * positions as shown in the following query:
+     * SELECT mean(value) FROM power_value WHERE host = "testhost50" AND type='power' 
+     * AND type_instance = 'estimated' 
+     * @param hostname The host to write the data out for
+     * @param series The data series, such as power_value or "cpu utilisation".
+     * @param type The type of data, such as "power" or "percent"
+     * @param typeInstance The type instance, such as "estimated" or "idle"
+     * @param value The measured value to write out to influx
+    */
+    public void writeOutHostValuesToInflux(String hostname, String series, 
+            String type, String typeInstance, double value) {
+
+        BatchPoints batchPoints = BatchPoints
+                .database(dbName)
+                .tag("async", "true")
+                .consistency(InfluxDB.ConsistencyLevel.ALL)
+                .build();
+        //TODO Note fix here copes with name differences between sources.
+        String influxHostname = hostname + (hostname.contains(".bullx") ? "" : ".bullx");
+        Point dataPoint = Point.measurement(series) //series i.e. power_value
+                .tag("type_instance", typeInstance) //i.e. such as estimated / measured
+                .tag("host", influxHostname)
+                .tag("type", type) //Such as "power"
+                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                .addField("value", value)
+                .build();
+        batchPoints.point(dataPoint);
+        influxDB.write(batchPoints);
     }    
+
+    /**
+     * This writes the log data out directly to influx db, parameters follow the 
+     * positions as shown in the following query:
+     * SELECT mean(value) FROM compss_execution_count_value WHERE type='jobId' AND type_instance = 'COMPSs'
+     * @param series The data series, such as power_value or "compss_execution_count_value".
+     * @param type The type of data, such as "power" or "percent", or "job id"
+     * @param typeInstance The type instance, such as "estimated" or "idle" or "COMPSs"
+     * @param value The measured value to write out to influx
+    */
+    public void writeOutHostValuesToInflux(String series, 
+            String type, String typeInstance, double value) {
+
+        BatchPoints batchPoints = BatchPoints
+                .database(dbName)
+                .tag("async", "true")
+                .consistency(InfluxDB.ConsistencyLevel.ALL)
+                .build();
+        //TODO Note fix here copes with name differences between sources.
+        String influxHostname = hostname + (hostname.contains(".bullx") ? "" : ".bullx");
+        Point dataPoint = Point.measurement(series) //series i.e. power_value
+                .tag("type_instance", typeInstance) //i.e. such as estimated / measured
+                .tag("type", type) //Such as "power"
+                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                .addField("value", value)
+                .build();
+        batchPoints.point(dataPoint);
+        influxDB.write(batchPoints);
+    }     
     
     /**
      * This writes the log data out directly to influx db
