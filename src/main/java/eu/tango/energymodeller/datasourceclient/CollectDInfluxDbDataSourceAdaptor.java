@@ -176,16 +176,10 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
             List<ApplicationOnHost> answer = new ArrayList<>();
             for (QueryResult.Result result : results.getResults()) {
                 if (result == null || result.getSeries() == null) {
-                    Logger.getLogger(CollectDInfluxDbDataSourceAdaptor.class.getName()).log(Level.WARNING,
-                        "The conversion from InfluxDB to the programs internal "
-                        + "representation of an application on a host failed!");
                     return new ArrayList<>();
                 }
                 for (QueryResult.Series series : result.getSeries()) {
-                    if (series == null || series.getValues() == null) {
-                        Logger.getLogger(CollectDInfluxDbDataSourceAdaptor.class.getName()).log(Level.WARNING,
-                            "The conversion from InfluxDB to the programs internal "
-                            + "representation of an application on a host failed!");                    
+                    if (series == null || series.getValues() == null) {                 
                         return new ArrayList<>();
                     }
                     for (List<Object> value : series.getValues()) {
