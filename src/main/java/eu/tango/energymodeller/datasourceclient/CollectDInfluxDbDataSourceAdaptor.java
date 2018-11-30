@@ -169,41 +169,49 @@ public class CollectDInfluxDbDataSourceAdaptor implements HostDataSource, Applic
      * @return The host measurement
      */
     private List<ApplicationOnHost> convertToApplication(QueryResult results) {
-        if (results == null) {
-            return new ArrayList<>();
-        }
-        List<ApplicationOnHost> answer = new ArrayList<>();
-        for (QueryResult.Result result : results.getResults()) {
-            if (result == null || result.getSeries() == null) {
-                Logger.getLogger(CollectDInfluxDbDataSourceAdaptor.class.getName()).log(Level.WARNING,
-                    "The conversion from InfluxDB to the programs internal "
-                    + "representation of an application on a host failed!");
-                return null;
+        try {
+            if (results == null) {
+                return new ArrayList<>();
             }
-            for (QueryResult.Series series : result.getSeries()) {
-                if (series == null || series.getValues() == null) {
+            List<ApplicationOnHost> answer = new ArrayList<>();
+            for (QueryResult.Result result : results.getResults()) {
+                if (result == null || result.getSeries() == null) {
                     Logger.getLogger(CollectDInfluxDbDataSourceAdaptor.class.getName()).log(Level.WARNING,
                         "The conversion from InfluxDB to the programs internal "
-                        + "representation of an application on a host failed!");                    
-                    return null;
+                        + "representation of an application on a host failed!");
+                    return new ArrayList<>();
                 }
-                for (List<Object> value : series.getValues()) {
-                    /**
-                     * 
-                     * Example of metric: app_power:RK-Bench:3110
-                     * 
-                     * Clock, last(value), type, host, type_instance
-                     * Clock, 0.0, 3110, ns50, RK-BENCH
-                     * type_instance = app name
-                     * type = app id
-                     * 
-                     */
-                     ApplicationOnHost app = new ApplicationOnHost(Integer.getInteger(value.get(3) + ""), value.get(4) + "", getHostByName(value.get(3) + ""));
-                     answer.add(app);
+                for (QueryResult.Series series : result.getSeries()) {
+                    if (series == null || series.getValues() == null) {
+                        Logger.getLogger(CollectDInfluxDbDataSourceAdaptor.class.getName()).log(Level.WARNING,
+                            "The conversion from InfluxDB to the programs internal "
+                            + "representation of an application on a host failed!");                    
+                        return new ArrayList<>();
+                    }
+                    for (List<Object> value : series.getValues()) {
+                        /**
+                         * 
+                         * Example of metric: app_power:RK-Bench:3110
+                         * 
+                         * Clock, last(value), type, host, type_instance
+                         * Clock, 0.0, 3110, ns50, RK-BENCH
+                         * type_instance = app name
+                         * type = app id
+                         * 
+                         */
+                         ApplicationOnHost app = new ApplicationOnHost(Integer.getInteger(value.get(3) + ""), value.get(4) + "", getHostByName(value.get(3) + ""));
+                         answer.add(app);
+                    }
                 }
             }
+            return answer;
+        } catch (NullPointerException ex) {
+            /**
+             * A special guard incase there is an error in the data coming back
+             * from collectd.
+             */
+            return new ArrayList<>();
         }
-        return answer;
     }    
 
     @Override

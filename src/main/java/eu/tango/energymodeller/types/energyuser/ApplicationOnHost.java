@@ -462,6 +462,9 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
      */
     public static List<ApplicationOnHost> filter(List<ApplicationOnHost> applications, Host host) {
         List<ApplicationOnHost> answer = new ArrayList<>();
+        if (applications == null) {
+            return answer;
+        }
         for (ApplicationOnHost application : applications) {
             if (application.allocatedTo != null && application.allocatedTo.equals(host)) {
                 answer.add(application);
@@ -486,6 +489,9 @@ public class ApplicationOnHost extends EnergyUsageSource implements WorkloadSour
      */
     public static List<ApplicationOnHost> filter(List<ApplicationOnHost> applications, String name, int id) {
         List<ApplicationOnHost> answer = new ArrayList<>();
+        if (applications == null) {
+            return answer;
+        }
         for (ApplicationOnHost application : applications) {
             if (application.getName().equals(name) && (application.getId() == id || id < 0)) {
                 answer.add(application);
