@@ -125,15 +125,25 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
      * list of separate hosts. This method achieves this.
      *
      * @param hostList The list of hosts in a compressed format. examples
-     * include: "ns54" or "ns[54-56]" or "ns[54-56],ns[58-60]" or "ns54,ns56"
+     * include: "ns54" or "ns[54-56]" or "ns[54-56],ns[58-60]" or "ns54,ns56" 
+     * or ns[54-56,58-60]
+
      * @return The list of hosts in an array ready for processing.
      */
     private ArrayList<String> getHostList(String hostList) {
+        boolean endPrefixFound = false;
         ArrayList<String> answer = new ArrayList<>();
         String[] partialAnswer = hostList.split(",");
+        String hostPrefix = "";
         for (String part : partialAnswer) {
             if (part.contains("[")) { //test if host is in range i.e. node[51-54]
-                String hostPrefix = part.substring(0, part.indexOf("["));
+                hostPrefix = part.substring(0, part.indexOf("["));
+            } else if (part.contains("]")) { //test if host is in range i.e. node[51-54]
+                endPrefixFound = true;            
+            }
+            if (hostPrefix.isEmpty()) {
+                answer.add(part); //Host name is singular, e.g. ns54
+            } else { //This works for a ranged list
                 try (Scanner parser = new Scanner(part).useDelimiter("[^0-9]+")) {
                     int start = parser.nextInt();
                     int end = parser.nextInt();
@@ -141,8 +151,9 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
                         answer.add(hostPrefix + i);
                     }
                 }
-            } else {
-                answer.add(part); //Host name is singular, e.g. ns54
+            }
+            if (endPrefixFound) {
+                hostPrefix = "";
             }
         }
         return answer;
