@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -150,6 +151,10 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
                     for (int i = start; i <= end; i++) {
                         answer.add(hostPrefix + i);
                     }
+                } catch (NoSuchElementException ex) {
+                    Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE, "Error occoured while parsing: {0} in {1}", new Object[]{part, hostList});
+                } catch (Exception ex) {
+                    Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE, "Error occoured while parsing: " + part + " in " + hostList, ex);
                 }
             }
             if (endPrefixFound) {
