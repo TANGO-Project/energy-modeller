@@ -119,7 +119,7 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
 
         }
         return Double.NaN;
-    }    
+    }   
 
     /**
      * The host string from SLURM follows a format that must be parsed into a
@@ -128,10 +128,12 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
      * @param hostList The list of hosts in a compressed format. examples
      * include: "ns54" or "ns[54-56]" or "ns[54-56],ns[58-60]" or "ns54,ns56" 
      * or ns[54-56,58-60]
-
+     * 
+     * Another sequence of test strings are: "ns[54-56,58-60]" or "ns[54-56,58]"
+        "ns[55,57]" or "ns[55,57]" or "ns[55,57,59-62]" or "ns[55]"
      * @return The list of hosts in an array ready for processing.
      */
-    private ArrayList<String> getHostList(String hostList) {
+    private static ArrayList<String> getHostList(String hostList) {
         boolean endPrefixFound = false;
         ArrayList<String> answer = new ArrayList<>();
         String[] partialAnswer = hostList.split(",");
@@ -139,17 +141,21 @@ public class SlurmDataSourceAdaptor implements HostDataSource, ApplicationDataSo
         for (String part : partialAnswer) {
             if (part.contains("[")) { //test if host is in range i.e. node[51-54]
                 hostPrefix = part.substring(0, part.indexOf("["));
-            } else if (part.contains("]")) { //test if host is in range i.e. node[51-54]
+            } else if (part.contains("]")) { //test if host uses a prefix i.e. node[51-54] or node[51,54]
                 endPrefixFound = true;            
             }
             if (hostPrefix.isEmpty()) {
                 answer.add(part); //Host name is singular, e.g. ns54
-            } else { //This works for a ranged list
+            } else { //This works for prefixes i.e. node[51-54] or node[51,54]
                 try (Scanner parser = new Scanner(part).useDelimiter("[^0-9]+")) {
                     int start = parser.nextInt();
+                    if (part.contains("-")) { //ranged list i.e. node[51-54]
                     int end = parser.nextInt();
-                    for (int i = start; i <= end; i++) {
-                        answer.add(hostPrefix + i);
+                        for (int i = start; i <= end; i++) {
+                            answer.add(hostPrefix + i);
+                        }
+                    } else { //literal list i.e. node[51,54]
+                        answer.add(hostPrefix + start);
                     }
                 } catch (NoSuchElementException ex) {
                     Logger.getLogger(SlurmDataSourceAdaptor.class.getName()).log(Level.SEVERE, "Error occoured while parsing: {0} in {1}", new Object[]{part, hostList});
